@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ★ A. 圓形 Logo 樣式：給所有 Logo 用 -->
+    <style name="Widget.HealthyApp.Logo.Circle" parent="">
+        <!-- 固定大小視需要可調；如不想全站同尺寸，可只留 shape -->
+        <item name="android:layout_width">200dp</item>
+        <item name="android:layout_height">200dp</item>
+
+        <!-- 使用 ShapeableImageView 內建的 shapeAppearanceOverlay -->
+        <item name="shapeAppearanceOverlay">@style/Shape.Circle</item>
+
+        <!-- 其他通用屬性 -->
+        <item name="android:scaleType">centerCrop</item>
+        <item name="android:contentDescription">@string/logo_desc</item>
+    </style>
+
+    <!-- 定義真正的「圓形」遮罩 -->
+    <style name="Shape.Circle" parent="ShapeAppearanceOverlay.Material3">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- ★ B. 全站按鈕 → 實心 #56C8D8、24dp 圓角 -->
+    <style name="Widget.HealthyApp.Button.Filled" parent="Widget.Material3.Button">
+        <item name="backgroundTint">#56C8D8</item>
+        <item name="cornerSize">24dp</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+</resources>

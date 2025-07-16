@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".LoginActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingTop="40dp"
+        android:paddingBottom="40dp">
+
+        <!-- 🔵 圓形 LOGO 圖片 -->
+        <ImageView
+            android:id="@+id/logoImage"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_gravity="center"
+            android:src="@drawable/newlogo"
+            android:scaleType="centerCrop"
+            android:background="@drawable/circle_mask"
+            android:clipToOutline="true"
+            android:outlineProvider="background" />
+
+        <!-- 🟢 Welcome 文字 -->
+        <TextView
+            android:id="@+id/tvWelcome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Welcome"
+            android:textColor="#00796B"
+            android:textSize="35sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="20dp" />
+
+        <!-- 🟡 使用者名稱 -->
+        <EditText
+            android:id="@+id/etUsername"
+            android:layout_width="280dp"
+            android:layout_height="50dp"
+            android:hint="User Name"
+            android:padding="10dp"
+            android:background="@android:drawable/editbox_background_normal"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 🟣 出生年月日 -->
+        <EditText
+            android:id="@+id/etBirthday"
+            android:layout_width="280dp"
+            android:layout_height="50dp"
+            android:hint="出生年月日"
+            android:padding="10dp"
+            android:background="@android:drawable/editbox_background_normal"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 🔘 性別 -->
+        <RadioGroup
+            android:id="@+id/genderGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="24dp">
+
+            <RadioButton
+                android:id="@+id/rbMale"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="男生" />
+
+            <RadioButton
+                android:id="@+id/rbFemale"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="32dp"
+                android:text="女生" />
+        </RadioGroup>
+
+        <!-- 🔵 下一步按鈕 -->
+        <Button
+            android:id="@+id/btnNext"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:background="@drawable/btn_rounded"
+            android:text="Next"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp" />
+    </LinearLayout>
+</ScrollView>
