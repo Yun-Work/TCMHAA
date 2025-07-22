@@ -24,7 +24,6 @@ public class LoginActivity extends AppCompatActivity {
 
         etUsername = findViewById(R.id.etUsername);
         etBirthday = findViewById(R.id.etBirthday);
-        genderGroup = findViewById(R.id.genderGroup);
         btnNext = findViewById(R.id.btnNext);
 
         etBirthday.setOnClickListener(v -> showDatePicker());
@@ -32,9 +31,8 @@ public class LoginActivity extends AppCompatActivity {
         btnNext.setOnClickListener(v -> {
             String username = etUsername.getText().toString();
             String birthday = etBirthday.getText().toString();
-            int genderId = genderGroup.getCheckedRadioButtonId();
 
-            if (username.isEmpty() || birthday.isEmpty() || genderId == -1) {
+            if (username.isEmpty() || birthday.isEmpty() ) {
                 Toast.makeText(this, "請完整填寫所有欄位", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, "歡迎 " + username, Toast.LENGTH_SHORT).show();
