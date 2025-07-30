@@ -8,7 +8,7 @@
         <item name="android:layout_height">200dp</item>
 
         <!-- 使用 ShapeableImageView 內建的 shapeAppearanceOverlay -->
-        <item name="shapeAppearanceOverlay">@style/Shape.Circle</item>
+<!--        <item name="shapeAppearanceOverlay">@style/Shape.Circle</item>-->
 
         <!-- 其他通用屬性 -->
         <item name="android:scaleType">centerCrop</item>
@@ -16,10 +16,10 @@
     </style>
 
     <!-- 定義真正的「圓形」遮罩 -->
-    <style name="Shape.Circle" parent="ShapeAppearanceOverlay.Material3">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">50%</item>
-    </style>
+<!--    <style name="Shape.Circle" parent="ShapeAppearanceOverlay.Material3">-->
+<!--        <item name="cornerFamily">rounded</item>-->
+<!--        <item name="cornerSize">50%</item>-->
+<!--    </style>-->
 
     <!-- ★ B. 全站按鈕 → 實心 #56C8D8、24dp 圓角 -->
     <style name="Widget.HealthyApp.Button.Filled" parent="Widget.Material3.Button">

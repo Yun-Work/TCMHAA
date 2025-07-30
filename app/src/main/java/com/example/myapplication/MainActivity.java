@@ -7,7 +7,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Toast;
 
@@ -28,14 +27,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_login_1);
 
-        Button btn = findViewById(R.id.btn_showDialog); // 要在 layout 加這顆按鈕
-        btn.setOnClickListener(v -> showPermissionDialog());
     }
 
     private void showPermissionDialog() {
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_permissions, null);
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_permissions_2_2, null);
         CheckBox cbCamera = dialogView.findViewById(R.id.checkbox_camera);
         CheckBox cbStorage = dialogView.findViewById(R.id.checkbox_storage);
         CheckBox cbNotify = dialogView.findViewById(R.id.checkbox_notify);
@@ -76,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
         if (!neededPermissions.isEmpty()) {
             ActivityCompat.requestPermissions(this, neededPermissions.toArray(new String[0]), REQUEST_CODE);
         } else {
-            Toast.makeText(this, "所有權限已授予", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "所有權限已授權", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -86,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (requestCode == REQUEST_CODE) {
-            StringBuilder granted = new StringBuilder("已授予：\n");
+            StringBuilder granted = new StringBuilder("已授權：\n");
             StringBuilder denied = new StringBuilder("被拒絕：\n");
 
             for (int i = 0; i < permissions.length; i++) {
