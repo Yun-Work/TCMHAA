@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:padding="24dp">
+    <!-- 確認可刪 -->
+    <!-- LOGO 左上角 -->
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:src="@drawable/newlogo"
+        android:contentDescription="logo" />
+
+    <!-- 中間文字 -->
+    <TextView
+        android:id="@+id/text_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:text="親愛的用戶您好，\n謝謝您使用我們這款臉部健康檢測，\n希望未來能持續當您自主健康評估的小幫手！\n\n"
+        android:textColor="#5F67B2"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:lineSpacingExtra="6dp" />
+
+    <!-- 下一步按鈕 -->
+    <Button
+        android:id="@+id/btn_next"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/text_message"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"
+        android:text="下一步"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:backgroundTint="#56C8D8" />
+</RelativeLayout>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:padding="24dp">
+    <!-- 確認可刪 -->
+    <!-- LOGO 左上角 -->
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:src="@drawable/newlogo"
+        android:contentDescription="logo" />
+    <!-- 標題文字 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/logo"
+        android:layout_marginTop="55dp"
+        android:text="障礙物排除提醒"
+        android:textSize="30sp"
+        android:textColor="#5F67B2"/>
+    <!-- 中間文字 -->
+    <TextView
+        android:id="@+id/text_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:text="親愛的用戶您好，提醒您\n系統進行臉部辨識時有些區塊偵測到障礙物\n可能會影響判斷結果\n\n"
+        android:textColor="#5F67B2"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:lineSpacingExtra="6dp" />
+
+    <!-- 下一步按鈕 -->
+    <Button
+        android:id="@+id/btn_next"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/text_message"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"
+        android:text="下一步"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:backgroundTint="#56C8D8" />
+</RelativeLayout>

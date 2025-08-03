@@ -3,7 +3,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="20dp">
-
+    <!-- 確認可刪 -->
     <CheckBox
         android:id="@+id/checkbox_privacy"
         android:layout_width="wrap_content"
@@ -27,4 +27,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="是否允許存取手機相簿" />
+    <Button
+        android:id="@+id/btnConfirm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="確認"
+        android:layout_marginTop="16dp"/>
 </LinearLayout>
