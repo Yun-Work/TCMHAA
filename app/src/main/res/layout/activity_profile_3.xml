@@ -77,26 +77,29 @@
         android:orientation="horizontal">
 
         <RadioButton
-            android:id="@+id/radioFemale"
+            android:id="@+id/radioMale"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
             android:text="男" />
 
         <RadioButton
-            android:id="@+id/radioMale"
+            android:id="@+id/radioFemale"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="女" />
     </RadioGroup>
-
+    <!-- 可選：讓它像按鈕一樣 --><!-- 必須：讓它可以點擊 -->
     <TextView
         android:id="@+id/birthdayLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/genderGroup"
-        android:layout_marginTop="24dp"
         android:layout_marginStart="40dp"
+        android:layout_marginTop="24dp"
+        android:clickable="true"
+        android:focusable="false"
+        android:minHeight="48dp"
         android:text="出生年月日(YYYY/MM/DD)"
         android:textColor="#8E9CD6"
         android:textSize="16sp"

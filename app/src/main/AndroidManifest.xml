@@ -3,11 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- ✅ 權限宣告 -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"  />
-<!--    android:maxSdkVersion="32"-->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+<!--    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />-->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
 
     <application
         android:allowBackup="true"
@@ -17,8 +18,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.TCMHAA"
-        tools:targetApi="31">
+        android:theme="@style/Theme.TCMHAA">
 
         <!-- 首頁或主入口 -->
 
@@ -33,7 +33,9 @@
         <activity android:name=".MainActivity" />
 
         <activity android:name=".CheckActivity" />
-
+        <activity android:name=".ProfileActivity" />
+        <activity android:name=".WelcomeActivity" />
+        <activity android:name=".WarningActivity" />
 
 
     </application>
