@@ -11,7 +11,7 @@ public class WarningActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_warning_5); // 請確認 layout 名稱
+        setContentView(R.layout.activity_warning_n); // 請確認 layout 名稱
 
         Button nextButton = findViewById(R.id.btn_next);
 
