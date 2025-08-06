@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <!-- 上方內容 -->
+    <LinearLayout
+        android:id="@+id/topContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"
+        android:gravity="center_horizontal">
+
+        <!-- Logo -->
+        <ImageView
+            android:id="@+id/imageLogo"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:src="@drawable/newlogo"
+        android:layout_gravity="center"
+        android:contentDescription="健康圖示" />
+
+        <!-- 標題 -->
+        <TextView
+            android:id="@+id/textTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="健康分析"
+            android:textSize="35sp"
+            android:textStyle="bold"
+            android:textColor="#9090D8"
+            android:layout_marginTop="8dp" />
+    </LinearLayout>
+
+    <!-- 選擇照片按鈕 -->
+    <Button
+        android:id="@+id/buttonChoosePhoto"
+        android:layout_width="250dp"
+        android:layout_height="60dp"
+        android:text="選擇照片"
+        android:textSize="20sp"
+        android:textColor="#003060"
+        android:backgroundTint="#56C8D8"
+        android:layout_below="@id/topContent"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="45dp" />
+
+    <!-- 拍攝照片按鈕 -->
+    <Button
+        android:id="@+id/buttonTakePhoto"
+        android:layout_width="250dp"
+        android:layout_height="60dp"
+        android:text="拍攝照片"
+        android:textSize="20sp"
+        android:textColor="#003060"
+        android:backgroundTint="#56C8D8"
+        android:layout_below="@id/buttonChoosePhoto"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp" />
+
+    <!-- 底部導覽欄 -->
+    <LinearLayout
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="87dp"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:background="#E4F8FC"
+        android:gravity="center">
+
+        <!-- 四個導覽圖示與文字 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:layout_width="57dp"
+                android:layout_height="57dp"
+                android:src="@drawable/healthy_1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="健康偵測"
+                android:textColor="#6E7BA2"
+                android:textSize="17sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:layout_width="57dp"
+                android:layout_height="57dp"
+                android:src="@drawable/healthy_2" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="健康分析"
+                android:textColor="#6E7BA2"
+                android:textSize="17sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:layout_width="57dp"
+                android:layout_height="57dp"
+                android:src="@drawable/healthy_3" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="歷史分析"
+                android:textColor="#6E7BA2"
+                android:textSize="17sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:layout_width="57dp"
+                android:layout_height="57dp"
+                android:src="@drawable/healthy_4" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="設定"
+                android:textColor="#6E7BA2"
+                android:textSize="17sp" />
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>
