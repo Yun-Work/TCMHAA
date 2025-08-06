@@ -1,6 +1,5 @@
-package com.example.myapplication;
+package com.example.tcmhaa;
 
-import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
@@ -9,65 +8,57 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.Calendar;
-
 public class LoginActivity extends AppCompatActivity {
 
-    EditText etUsername, etBirthday;
-    Button btnNext, btnRegister, btnConfirmPassword;
+    EditText etUsername, etPassword;
+    Button btnNext, btnRegister;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login_1);
+        setContentView(R.layout.activity_login_1); // ⚠️ 確保這 layout 名稱是對的
 
         etUsername = findViewById(R.id.etUsername);
-        etBirthday = findViewById(R.id.etBirthday);
+        etPassword = findViewById(R.id.etBirthday); // ⚠️ 你 layout 中雖然是密碼，但 id 還是叫 etBirthday，未來請改成 etPassword
         btnNext = findViewById(R.id.btnNext);
         btnRegister = findViewById(R.id.btnRegister);
-//        btnConfirmPassword = findViewById(R.id.btnConfirmPassword);
 
-        // 點選生日欄位出現日期選擇器
-        etBirthday.setOnClickListener(v -> showDatePicker());
+        btnNext.setOnClickListener(v -> {
+            String username = etUsername.getText().toString().trim();
+            String password = etPassword.getText().toString().trim();
 
-        // 按下確認按鈕，檢查密碼格式
-        btnConfirmPassword.setOnClickListener(v -> {
-            String password = etBirthday.getText().toString();
+            if (username.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "請完整填寫所有欄位", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             if (!password.matches(".*[A-Za-z].*") || !password.matches(".*\\d.*")) {
                 Toast.makeText(this, "密碼需包含英文字母與數字", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "密碼格式正確", Toast.LENGTH_SHORT).show();
+                return;
             }
-        });
 
-        // 登入按鈕 -> 檢查欄位是否填寫，然後跳轉
-        btnNext.setOnClickListener(v -> {
-            String username = etUsername.getText().toString();
-            String birthday = etBirthday.getText().toString();
-
-            if (username.isEmpty() || birthday.isEmpty()) {
-                Toast.makeText(this, "請完整填寫所有欄位", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "歡迎 " + username, Toast.LENGTH_SHORT).show();
-                // ✅ 跳轉到通知設定 MainActivity
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(intent);
-            }
+            Toast.makeText(this, "歡迎 " + username, Toast.LENGTH_SHORT).show();
+            // 顯示彈跳視窗（權限）
+            showPermissionDialog();
         });
 
         btnRegister.setOnClickListener(v -> {
-            // ✅ 跳轉到註冊輸入畫面 CheckActivity
             Intent intent = new Intent(LoginActivity.this, CheckActivity.class);
             startActivity(intent);
         });
     }
 
-    private void showDatePicker() {
-        final Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR), month = calendar.get(Calendar.MONTH), day = calendar.get(Calendar.DAY_OF_MONTH);
+    private void showPermissionDialog() {
+        android.app.Dialog dialog = new android.app.Dialog(this);
+        dialog.setContentView(R.layout.dialog_permissions_2_2); // ⚠️ 確保這個 layout 存在
+        dialog.setCancelable(true);
 
-        new DatePickerDialog(this, (view, y, m, d) ->
-                etBirthday.setText(y + "-" + (m + 1) + "-" + d),
-                year, month, day).show();
+        Button btnConfirm = dialog.findViewById(R.id.btnConfirm); // ⚠️ layout 要有這個按鈕
+        btnConfirm.setOnClickListener(v -> {
+            dialog.dismiss();
+            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+        });
+
+        dialog.show();
     }
 }

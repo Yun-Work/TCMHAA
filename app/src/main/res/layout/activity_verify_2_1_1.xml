@@ -41,27 +41,29 @@
         android:textSize="18sp" />
 
     <!-- 可以點擊的連結文字 -->
+
+    <!-- 確認按鈕 -->
     <TextView
         android:id="@+id/resendText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/otpEditText"
-        android:layout_marginTop="16dp"
         android:layout_marginStart="40dp"
-        android:text="沒有收到驗證碼？"
-        android:textColor="#000000"
-        android:textStyle="bold"
+        android:layout_marginTop="16dp"
         android:clickable="true"
-        android:focusable="true" />
+        android:focusable="true"
+        android:minHeight="48dp"
+        android:text="\n沒有收到驗證碼？"
+        android:textColor="#000000"
+        android:textStyle="bold" />
 
-    <!-- 確認按鈕 -->
     <Button
         android:id="@+id/confirmButton"
         android:layout_width="100dp"
         android:layout_height="50dp"
         android:layout_below="@id/resendText"
         android:layout_marginStart="40dp"
-        android:layout_marginTop="22dp"
+        android:layout_marginTop="25dp"
         android:backgroundTint="#56C8D8"
         android:text="確認"
         android:textStyle="bold" />

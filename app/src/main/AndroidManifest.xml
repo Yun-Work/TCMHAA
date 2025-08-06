@@ -19,18 +19,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TCMHAA"
         tools:targetApi="31">
-        <!-- 🔐 登入畫面 -->
-        <activity android:name=".LoginActivity" />
-        <!-- 首頁或主入口 -->
-        <activity
-            android:name=".MainActivity"
 
+        <!-- 首頁或主入口 -->
+
+        <activity android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- 🔐 登入畫面 -->
+        <activity android:name=".MainActivity" />
 
         <activity android:name=".CheckActivity" />
 
