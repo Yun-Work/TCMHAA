@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,16 +13,18 @@ public class LoginActivity extends AppCompatActivity {
 
     EditText etUsername, etPassword;
     Button btnNext, btnRegister;
+    TextView tvForgotPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login_1); // ⚠️ 確保這 layout 名稱是對的
+        setContentView(R.layout.activity_login_1);
 
         etUsername = findViewById(R.id.etUsername);
-        etPassword = findViewById(R.id.etBirthday); // ⚠️ 你 layout 中雖然是密碼，但 id 還是叫 etBirthday，未來請改成 etPassword
+        etPassword = findViewById(R.id.etBirthday); // 請記得之後換成 etPassword
         btnNext = findViewById(R.id.btnNext);
         btnRegister = findViewById(R.id.btnRegister);
+        tvForgotPassword = findViewById(R.id.tvForgotPassword);
 
         btnNext.setOnClickListener(v -> {
             String username = etUsername.getText().toString().trim();
@@ -38,7 +41,6 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             Toast.makeText(this, "歡迎 " + username, Toast.LENGTH_SHORT).show();
-            // 顯示彈跳視窗（權限）
             showPermissionDialog();
         });
 
@@ -46,14 +48,20 @@ public class LoginActivity extends AppCompatActivity {
             Intent intent = new Intent(LoginActivity.this, CheckActivity.class);
             startActivity(intent);
         });
+
+        // ➕ 忘記密碼導向
+        tvForgotPassword.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, ForgetActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void showPermissionDialog() {
         android.app.Dialog dialog = new android.app.Dialog(this);
-        dialog.setContentView(R.layout.dialog_permissions_2_2); // ⚠️ 確保這個 layout 存在
+        dialog.setContentView(R.layout.dialog_permissions_2_2);
         dialog.setCancelable(true);
 
-        Button btnConfirm = dialog.findViewById(R.id.btnConfirm); // ⚠️ layout 要有這個按鈕
+        Button btnConfirm = dialog.findViewById(R.id.btnConfirm);
         btnConfirm.setOnClickListener(v -> {
             dialog.dismiss();
             startActivity(new Intent(LoginActivity.this, MainActivity.class));
