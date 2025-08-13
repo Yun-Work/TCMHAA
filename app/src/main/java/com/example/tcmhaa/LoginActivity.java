@@ -126,4 +126,15 @@ public class LoginActivity extends AppCompatActivity {
         });
         dialog.show();
     }
+
+@Override
+protected void onResume() {
+    super.onResume();
+    String email = getSharedPreferences("tmp", MODE_PRIVATE)
+            .getString("email", "");
+    String pwd = getSharedPreferences("tmp", MODE_PRIVATE)
+            .getString("password", "");
+    if (!email.isEmpty()) etUsername.setText(email);
+    if (!pwd.isEmpty()) etPassword.setText(pwd);
+}
 }
