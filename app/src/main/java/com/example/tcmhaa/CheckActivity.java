@@ -18,7 +18,7 @@ import retrofit2.Response;
 
 public class CheckActivity extends AppCompatActivity {
 
-    private EditText etUsername, etGmail, etPassword, etConfirmPassword;
+    private EditText etGmail, etPassword, etConfirmPassword;
     private Button btnSubmit;
     private AuthApi api;
 
@@ -27,7 +27,6 @@ public class CheckActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_check_2_1);
 
-        etUsername        = findViewById(R.id.etUsername);
         etGmail           = findViewById(R.id.etGmail);
         etPassword        = findViewById(R.id.etPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
@@ -36,13 +35,11 @@ public class CheckActivity extends AppCompatActivity {
         api = ApiClient.get().create(AuthApi.class);
 
         btnSubmit.setOnClickListener(view -> {
-            String name     = etUsername.getText().toString().trim();
             String email    = etGmail.getText().toString().trim();
             String password = etPassword.getText().toString();
             String confirm  = etConfirmPassword.getText().toString();
 
             // 前端驗證（與後端對齊）
-            if (name.isEmpty()) { toast("請輸入用戶名"); return; }
             if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) { toast("請輸入正確的 Email"); return; }
             if (!password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$")) {
                 toast("密碼需包含英文字母與數字，長度至少6位"); return;
@@ -51,33 +48,35 @@ public class CheckActivity extends AppCompatActivity {
 
             btnSubmit.setEnabled(false);
 
-            api.register(new RegisterRequest(name, email, password))
-                    .enqueue(new Callback<RegisterResponse>() {
-                        @Override public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> resp) {
-                            btnSubmit.setEnabled(true);
+            // name 已移除：若後端允許，傳 null；若你已改 DTO，改成 new RegisterRequest(email, password)
+            RegisterRequest body = new RegisterRequest(null, email, password);
+            api.register(body).enqueue(new Callback<RegisterResponse>() {
+                @Override public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> resp) {
+                    btnSubmit.setEnabled(true);
 
-                            if (resp.isSuccessful() && resp.body()!=null && resp.body().error == null) {
-                                // ✅ 註冊成功：把帳密暫存，回到登入頁自動帶入（僅開發測試用）
-                                getSharedPreferences("tmp", MODE_PRIVATE).edit()
-                                        .putString("email", email.trim().toLowerCase())
-                                        .putString("password", password)
-                                        .apply();
-                                toast("註冊成功，請登入");
-                                finish(); // 返回 LoginActivity
-                            } else {
-                                String msg = "註冊失敗（HTTP " + resp.code() + "）";
-                                if (resp.body()!=null && resp.body().error != null) msg = resp.body().error;
-                                toast(msg);
-                            }
-                        }
+                    if (resp.isSuccessful() && resp.body()!=null && resp.body().error == null) {
+                        // 註冊成功：僅開發測試用的暫存
+                        getSharedPreferences("tmp", MODE_PRIVATE).edit()
+                                .putString("email", email.toLowerCase())
+                                .putString("password", password)
+                                .apply();
+                        toast("註冊成功，請登入");
+                        finish(); // 返回 LoginActivity
+                    } else {
+                        String msg = "註冊失敗（HTTP " + resp.code() + "）";
+                        if (resp.body()!=null && resp.body().error != null) msg = resp.body().error;
+                        toast(msg);
+                    }
+                }
 
-                        @Override public void onFailure(Call<RegisterResponse> call, Throwable t) {
-                            btnSubmit.setEnabled(true);
-                            toast("連線錯誤：" + t.getMessage());
-                        }
-                    });
+                @Override public void onFailure(Call<RegisterResponse> call, Throwable t) {
+                    btnSubmit.setEnabled(true);
+                    toast("連線錯誤：" + t.getMessage());
+                }
+            });
         });
     }
 
     private void toast(String s){ Toast.makeText(this, s, Toast.LENGTH_SHORT).show(); }
 }
+
