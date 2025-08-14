@@ -19,9 +19,12 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_1);
+        if (findViewById(R.id.btnNext) == null) {
+            throw new IllegalStateException("btnNext not found in activity_login_1 layout (check layout variants and ids).");
+        }
 
         etUsername = findViewById(R.id.etUsername);
-        etPassword = findViewById(R.id.etBirthday); // 請記得之後換成 etPassword
+        etPassword = findViewById(R.id.etPassword); // 請記得之後換成 etPassword
         btnNext = findViewById(R.id.btnNext);
         btnRegister = findViewById(R.id.btnRegister);
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
