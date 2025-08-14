@@ -1,101 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".LoginActivity">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:paddingTop="40dp"
-        android:paddingBottom="40dp">
-
-        <!-- LOGO -->
-        <ImageView
-            android:id="@+id/logoImage"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
-            android:layout_gravity="center"
-            android:background="@drawable/circle_mask"
-            android:clipToOutline="true"
-            android:outlineProvider="background"
-            android:scaleType="centerCrop"
-            android:src="@drawable/newlogo" />
-
-        <!-- Welcome -->
-        <TextView
-            android:id="@+id/tvWelcome"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="Welcome"
-            android:textColor="#6E74C6"
-            android:textSize="35sp"
-            android:textStyle="bold" />
-
-        <!-- 帳號 -->
-        <EditText
-            android:id="@+id/etUsername"
-            android:layout_width="280dp"
-            android:layout_height="50dp"
-            android:layout_marginBottom="12dp"
-            android:background="@android:drawable/editbox_background_normal"
-            android:hint="帳號"
-            android:padding="10dp" />
-
-        <!-- 密碼 -->
-        <EditText
-            android:id="@+id/etBirthday"
-            android:layout_width="280dp"
-            android:layout_height="50dp"
-            android:layout_marginBottom="8dp"
-            android:background="@android:drawable/editbox_background_normal"
-            android:hint="密碼"
-            android:padding="10dp"
-            android:inputType="textPassword" />
-
-        <!-- 忘記密碼 -->
-        <TextView
-            android:id="@+id/tvForgotPassword"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:paddingEnd="20dp"
-            android:gravity="end"
-            android:text="忘記密碼？"
-            android:textColor="#000000"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <!-- 登入與註冊按鈕 -->
-        <LinearLayout
-            android:layout_width="280dp"
-            android:layout_height="60dp"
-            android:orientation="horizontal"
-            android:layout_marginTop="8dp"
-            android:gravity="center">
-
-            <Button
-                android:id="@+id/btnNext"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginEnd="8dp"
-                android:backgroundTint="#56C8D8"
-                android:text="登入"
-                android:textSize="18sp" />
-
-            <Button
-                android:id="@+id/btnRegister"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:backgroundTint="#56C8D8"
-                android:text="註冊"
-                android:textSize="18sp" />
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" tools:context=".LoginActivity">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_horizontal" android:orientation="vertical" android:paddingTop="40dp" android:paddingBottom="40dp">
+        <ImageView android:id="@+id/logoImage" android:layout_width="150dp" android:layout_height="150dp" android:layout_gravity="center" android:background="@drawable/circle_mask" android:clipToOutline="true" android:outlineProvider="background" android:scaleType="centerCrop" android:src="@drawable/newlogo"/>
+        <TextView android:id="@+id/tvWelcome" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="20dp" android:text="Welcome" android:textColor="#6E74C6" android:textSize="35sp" android:textStyle="bold"/>
+        <EditText android:id="@+id/etUsername" android:layout_width="280dp" android:layout_height="50dp" android:layout_marginBottom="12dp" android:background="@android:drawable/editbox_background_normal" android:hint="帳號" android:padding="10dp"/>
+        <EditText android:id="@+id/etPassword" android:layout_width="280dp" android:layout_height="50dp" android:layout_marginBottom="8dp" android:background="@android:drawable/editbox_background_normal" android:hint="密碼" android:padding="10dp" android:inputType="textPassword"/>
+        <TextView android:id="@+id/tvForgotPassword" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="10dp" android:paddingEnd="20dp" android:gravity="end" android:text="忘記密碼？" android:textColor="#000000" android:textSize="14sp" android:textStyle="bold"/>
+        <LinearLayout android:layout_width="280dp" android:layout_height="60dp" android:orientation="horizontal" android:layout_marginTop="8dp" android:gravity="center">
+            <Button android:id="@+id/btnNext" android:layout_width="0dp" android:layout_height="match_parent" android:layout_marginEnd="8dp" android:layout_weight="1" android:backgroundTint="#56C8D8" android:text="登入" android:textSize="18sp"/>
+            <Button android:id="@+id/btnRegister" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:backgroundTint="#56C8D8" android:text="註冊" android:textSize="18sp"/>
         </LinearLayout>
     </LinearLayout>
 </ScrollView>
