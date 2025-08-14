@@ -42,7 +42,6 @@
         <activity android:name=".WelcomeActivity" />
         <activity android:name=".WarningActivity" />
 
-
     </application>
 
 </manifest>

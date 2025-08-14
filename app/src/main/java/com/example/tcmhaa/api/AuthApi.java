@@ -22,3 +22,4 @@ public interface AuthApi {
     @POST("/api/users/register")
     Call<RegisterResponse> register(@Body RegisterRequest body);
 }
+
