@@ -31,21 +31,17 @@ public class CheckActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_check_2_1);
 
-        etUsername = findViewById(R.id.etUsername);
         etGmail = findViewById(R.id.etGmail);
         etPassword = findViewById(R.id.etPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
         btnSubmit = findViewById(R.id.btnSubmit);
 
         btnSubmit.setOnClickListener(view -> {
-            String username = etUsername.getText().toString().trim();
             String gmail = etGmail.getText().toString().trim();
             String password = etPassword.getText().toString();
             String confirmPassword = etConfirmPassword.getText().toString();
 
-            if (username.isEmpty()) {
-                showToast("請輸入用戶名");
-            } else if (!Patterns.EMAIL_ADDRESS.matcher(gmail).matches() || !gmail.endsWith("@gmail.com")) {
+            if (!Patterns.EMAIL_ADDRESS.matcher(gmail).matches() || !gmail.endsWith("@gmail.com")) {
                 showToast("請輸入正確的 Gmail");
             } else if (!password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$")) {
                 showToast("密碼需包含英文字母與數字，長度至少6位");
