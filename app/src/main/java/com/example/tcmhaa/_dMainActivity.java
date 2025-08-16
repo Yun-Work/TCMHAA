@@ -1,4 +1,6 @@
 package com.example.tcmhaa;
-
-public class _dMainActivity {
+import android.os.Bundle;
+import androidx.appcompat.app.AppCompatActivity;
+public class _dMainActivity extends AppCompatActivity {
+    @Override protected void onCreate(Bundle savedInstanceState) { super.onCreate(savedInstanceState); }
 }

@@ -4,11 +4,12 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.WindowManager;
-import android.widget.ImageButton;   // ← 只保留 ImageButton
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -39,20 +40,20 @@ public class CameraActivity extends AppCompatActivity {
 
     private PreviewView previewView;
     private FaceOverlayView faceOverlayView;
-    private ImageButton captureButton;  // ← 改成 ImageButton
+    private ImageButton captureButton;
     private ImageButton backButton;
 
     private ImageCapture imageCapture;
     private Camera camera;
     private ProcessCameraProvider cameraProvider;
 
-    private ActivityResultLauncher<String> requestPermissionLauncher;
+    private ActivityResultLauncher<String[]> requestPermissionsLauncher;
     private Uri photoUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_camera_5_1); // ← 檔名要和 XML 一致
+        setContentView(R.layout.activity_camera_5_1);
 
         // 螢幕常亮與高亮度
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -62,19 +63,13 @@ public class CameraActivity extends AppCompatActivity {
 
         initViews();
         setupPermissionLauncher();
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED) {
-            startCamera();
-        } else {
-            requestPermissionLauncher.launch(Manifest.permission.CAMERA);
-        }
+        checkAndRequestPermissions();
     }
 
     private void initViews() {
         previewView = findViewById(R.id.previewView);
         faceOverlayView = findViewById(R.id.faceOverlayView);
-        captureButton = findViewById(R.id.captureButton); // ← 現在是 ImageButton
+        captureButton = findViewById(R.id.captureButton);
         backButton = findViewById(R.id.backButton);
 
         captureButton.setOnClickListener(v -> takePicture());
@@ -82,16 +77,62 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     private void setupPermissionLauncher() {
-        requestPermissionLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestPermission(),
-                isGranted -> {
-                    if (isGranted) startCamera();
-                    else {
+        requestPermissionsLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestMultiplePermissions(),
+                result -> {
+                    boolean camOk = Boolean.TRUE.equals(result.get(Manifest.permission.CAMERA));
+                    boolean readOk = true; // 預設 true，根據版本再檢查
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        readOk = Boolean.TRUE.equals(result.get(Manifest.permission.READ_MEDIA_IMAGES));
+                    } else {
+                        readOk = Boolean.TRUE.equals(result.get(Manifest.permission.READ_EXTERNAL_STORAGE))
+                                || ContextCompat.checkSelfPermission(
+                                this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+                    }
+
+                    if (camOk) {
+                        startCamera();
+                    } else {
                         Toast.makeText(this, "需要相機權限才能拍照", Toast.LENGTH_LONG).show();
                         finish();
                     }
+
+                    // 相簿權限主要給挑圖頁用（PhotoActivity），這裡先提示
+                    if (!readOk) {
+                        Toast.makeText(this, "未授權讀取相簿，稍後選圖功能可能受限", Toast.LENGTH_SHORT).show();
+                    }
                 }
         );
+    }
+
+    private void checkAndRequestPermissions() {
+        boolean camGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED;
+
+        String readPermission = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                ? Manifest.permission.READ_MEDIA_IMAGES
+                : Manifest.permission.READ_EXTERNAL_STORAGE;
+
+        boolean readGranted = ContextCompat.checkSelfPermission(this, readPermission)
+                == PackageManager.PERMISSION_GRANTED;
+
+        if (camGranted) {
+            startCamera();
+        } else {
+            // 一次請兩個（相簿可選擇性）
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requestPermissionsLauncher.launch(new String[]{
+                        Manifest.permission.CAMERA,
+                        Manifest.permission.READ_MEDIA_IMAGES
+                });
+            } else {
+                requestPermissionsLauncher.launch(new String[]{
+                        Manifest.permission.CAMERA,
+                        Manifest.permission.READ_EXTERNAL_STORAGE
+                });
+            }
+        }
     }
 
     private void startCamera() {
@@ -147,9 +188,11 @@ public class CameraActivity extends AppCompatActivity {
                     new ImageCapture.OnImageSavedCallback() {
                         @Override
                         public void onImageSaved(ImageCapture.OutputFileResults outputFileResults) {
-                            Intent resultIntent = new Intent();
-                            resultIntent.setData(photoUri);
-                            setResult(RESULT_OK, resultIntent);
+                            // ✅ 拍照成功 → 先跳 WarningActivity
+                            Intent intent = new Intent(CameraActivity.this, WarningActivity.class);
+                            intent.setData(photoUri); // 或者用 putExtra("photoUri", photoUri.toString())
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            startActivity(intent);
                             finish();
                         }
 

@@ -1,31 +1,62 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!--  ✅ 權限宣告  -->
-    <uses-feature android:name="android.hardware.camera" android:required="false"/>
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <!--  READ_EXTERNAL_STORAGE 僅在 API <= 32 生效；若 target 高且只存至 app 專屬目錄可不需要  -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
-    <application android:allowBackup="true" android:dataExtractionRules="@xml/data_extraction_rules" android:fullBackupContent="@xml/backup_rules" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true" android:theme="@style/Theme.TCMHAA">
-        <!--  首頁或主入口  -->
-        <activity android:name=".LoginActivity" android:exported="true">
+
+    <!-- ✅ 權限 -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Android 13+ 讀取相簿（選圖用） -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- Android 12 及以下讀取相簿 -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.TCMHAA"
+        android:usesCleartextTraffic="true">  <!-- 你有連 http://10.0.2.2 -->
+
+        <!-- 首頁 -->
+        <activity
+            android:name=".LoginActivity"
+            android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity"/>
-        <activity android:name=".ForgetActivity"/>
-        <activity android:name=".CheckActivity"/>
-        <activity android:name=".ProfileActivity"/>
-        <activity android:name=".WelcomeActivity"/>
+
+        <activity android:name=".MainActivity" />
+        <activity android:name=".ForgetActivity" />
+        <activity android:name=".CheckActivity" />
+        <activity android:name=".ProfileActivity" />
+        <activity android:name=".WelcomeActivity" />
         <activity android:name=".MainhealthyActivity" />
+        <activity android:name=".PhotoActivity" />
+        <activity android:name=".CameraActivity" />
+        <activity android:name="._aMainActivity" />
+        <activity android:name="._bMainActivity" />
+        <activity android:name="._cMainActivity" />
+        <activity android:name="._dMainActivity" />
         <activity android:name=".VerifyActivity" />
-<!--        <activity android:name=".WarningActivity"/>-->
-        <activity android:name=".CameraActivity"/>
-        <!--  注意：FaceOverlayView 是自訂 View，不是 Activity，不要在這裡宣告成 activity  -->
-        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.provider" android:exported="false" android:grantUriPermissions="true">
-            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/>
+        <activity android:name=".WarningActivity" />
+
+        <!-- FileProvider（供 CameraActivity 產生的檔案授權給外部/其他 app 使用） -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
         </provider>
     </application>
 </manifest>
