@@ -19,57 +19,34 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_1);
-        if (findViewById(R.id.btnNext) == null) {
-            throw new IllegalStateException("btnNext not found in activity_login_1 layout (check layout variants and ids).");
-        }
 
         etUsername = findViewById(R.id.etUsername);
-        etPassword = findViewById(R.id.etPassword); // 請記得之後換成 etPassword
-        btnNext = findViewById(R.id.btnNext);
+        etPassword = findViewById(R.id.etPassword);
+        btnNext = findViewById(R.id.btnNext);       // 左側按鈕：照你的需求 → CheckActivity
         btnRegister = findViewById(R.id.btnRegister);
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
 
         btnNext.setOnClickListener(v -> {
             String username = etUsername.getText().toString().trim();
-            String password = etPassword.getText().toString().trim();
+            String pwd = etPassword.getText().toString().trim();
 
-            if (username.isEmpty() || password.isEmpty()) {
+            if (username.isEmpty() || pwd.isEmpty()) {
                 Toast.makeText(this, "請完整填寫所有欄位", Toast.LENGTH_SHORT).show();
                 return;
             }
-
-            if (!password.matches(".*[A-Za-z].*") || !password.matches(".*\\d.*")) {
+            if (!pwd.matches(".*[A-Za-z].*") || !pwd.matches(".*\\d.*")) {
                 Toast.makeText(this, "密碼需包含英文字母與數字", Toast.LENGTH_SHORT).show();
                 return;
             }
-
-            Toast.makeText(this, "歡迎 " + username, Toast.LENGTH_SHORT).show();
-            showPermissionDialog();
+            // 進到 CheckActivity（註冊/設定 Gmail 與密碼）
+            startActivity(new Intent(LoginActivity.this, ProfileActivity.class));
         });
 
-        btnRegister.setOnClickListener(v -> {
-            Intent intent = new Intent(LoginActivity.this, CheckActivity.class);
-            startActivity(intent);
-        });
+        // 你也可以把註冊鍵保留成一樣是去 CheckActivity，或之後改別的註冊頁
+        btnRegister.setOnClickListener(v ->
+                startActivity(new Intent(LoginActivity.this, CheckActivity.class)));
 
-        // ➕ 忘記密碼導向
-        tvForgotPassword.setOnClickListener(v -> {
-            Intent intent = new Intent(LoginActivity.this, ForgetActivity.class);
-            startActivity(intent);
-        });
-    }
-
-    private void showPermissionDialog() {
-        android.app.Dialog dialog = new android.app.Dialog(this);
-        dialog.setContentView(R.layout.dialog_permissions_2_2);
-        dialog.setCancelable(true);
-
-        Button btnConfirm = dialog.findViewById(R.id.btnConfirm);
-        btnConfirm.setOnClickListener(v -> {
-            dialog.dismiss();
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-        });
-
-        dialog.show();
+        tvForgotPassword.setOnClickListener(v ->
+                startActivity(new Intent(LoginActivity.this, ForgetActivity.class)));
     }
 }

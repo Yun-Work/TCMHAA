@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
@@ -22,32 +21,33 @@ public class ProfileActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_profile_3); // 你如果是用別的 layout 檔名請改這裡
+        setContentView(R.layout.activity_profile_3);
 
-        // 初始化 UI 元件
         nameEditText = findViewById(R.id.nameEditText);
         birthdayEditText = findViewById(R.id.birthdayEditText);
         genderGroup = findViewById(R.id.genderGroup);
         confirmButton = findViewById(R.id.confirmButton);
 
-        // 點擊生日欄位 -> 開啟日期選擇器
         birthdayEditText.setOnClickListener(v -> showDatePicker());
 
-        // 點擊確認按鈕
         confirmButton.setOnClickListener(v -> {
             String name = nameEditText.getText().toString().trim();
             String birthday = birthdayEditText.getText().toString().trim();
             int genderId = genderGroup.getCheckedRadioButtonId();
 
-            // 驗證欄位
             if (name.isEmpty() || birthday.isEmpty() || genderId == -1) {
                 Toast.makeText(ProfileActivity.this, "請填寫完整資料", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            String gender = genderId == R.id.radioMale ? "男" : "女";
+            String gender = (genderId == R.id.radioMale) ? "男" : "女";
 
-            // ✅ 跳轉到歡迎頁面 WelcomeActivity
+            // 寫入：已完成首次登入資料
+            getSharedPreferences("app_prefs", MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("first_login", false)
+                    .apply();
+
             Intent intent = new Intent(ProfileActivity.this, WelcomeActivity.class);
             intent.putExtra("name", name);
             intent.putExtra("birthday", birthday);
@@ -64,10 +64,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         DatePickerDialog datePickerDialog = new DatePickerDialog(
                 this,
-                (view, y, m, d) -> {
-                    String formattedDate = y + "/" + (m + 1) + "/" + d;
-                    birthdayEditText.setText(formattedDate);
-                },
+                (view, y, m, d) -> birthdayEditText.setText(y + "/" + (m + 1) + "/" + d),
                 year, month, day
         );
         datePickerDialog.show();

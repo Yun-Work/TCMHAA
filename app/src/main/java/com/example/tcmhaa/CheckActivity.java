@@ -1,6 +1,6 @@
 package com.example.tcmhaa;
 
-
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Patterns;
 import android.widget.Button;
@@ -23,8 +23,10 @@ import okhttp3.Response;
 
 public class CheckActivity extends AppCompatActivity {
 
-    private EditText etUsername, etGmail, etPassword, etConfirmPassword;
+    private EditText etGmail, etPassword, etConfirmPassword;
     private Button btnSubmit;
+
+    private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,13 +62,8 @@ public class CheckActivity extends AppCompatActivity {
     private void loginToServer(String email, String password) {
         OkHttpClient client = new OkHttpClient();
 
-        String json = "{"
-                + "\"email\":\"" + email + "\","
-                + "\"password\":\"" + password + "\""
-                + "}";
-
-        RequestBody body = RequestBody.create(
-                json, MediaType.get("application/json; charset=utf-8"));
+        String json = "{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}";
+        RequestBody body = RequestBody.create(json, JSON);
 
         Request request = new Request.Builder()
                 .url("http://10.0.2.2:6060/api/users/login")
@@ -74,22 +71,33 @@ public class CheckActivity extends AppCompatActivity {
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
+            @Override public void onFailure(Call call, IOException e) {
                 runOnUiThread(() -> showToast("無法連線：" + e.getMessage()));
             }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String resStr = response.body().string();
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                String resStr = response.body() != null ? response.body().string() : "";
                 runOnUiThread(() -> {
                     try {
+                        if (!response.isSuccessful()) {
+                            showToast("伺服器錯誤：" + response.code());
+                            return;
+                        }
                         JSONObject obj = new JSONObject(resStr);
-                        if (obj.getBoolean("success")) {
+                        boolean success = obj.optBoolean("success", false);
+                        String message = obj.optString("message", "");
+
+                        if (success) {
                             showToast("登入成功！");
-                            // TODO: 跳轉主畫面（若有的話）
+                            boolean first = getSharedPreferences("app_prefs", MODE_PRIVATE)
+                                    .getBoolean("first_login", true);
+                            Intent intent = new Intent(
+                                    CheckActivity.this,
+                                    first ? ProfileActivity.class : WelcomeActivity.class
+                            );
+                            startActivity(intent);
                         } else {
-                            showToast(obj.getString("message"));
+                            showToast(message.isEmpty() ? "登入失敗" : message);
                         }
                     } catch (Exception e) {
                         showToast("解析回應錯誤：" + e.getMessage());
