@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@android:color/white">
+
+    <!-- 內容區：整塊都要在底欄上方 -->
+    <ScrollView
+        android:id="@+id/contentScroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/bottomBar"
+        android:fillViewport="true"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/ivLogo" android:layout_width="72dp" android:layout_height="72dp"
+                android:src="@drawable/newlogo" android:contentDescription="@string/app_name" />
+
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/title_analysis" android:textStyle="bold"
+                android:textSize="28sp" android:textColor="@color/titlePurple"
+                android:layout_marginTop="8dp"/>
+
+            <FrameLayout
+                android:id="@+id/blockUserPhoto"
+                android:layout_width="match_parent" android:layout_height="220dp"
+                android:layout_marginTop="24dp"
+                android:background="@color/placeholderGray">
+                <TextView
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/label_user_photo" android:textSize="20sp"
+                    android:textColor="@color/placeholderText" android:layout_gravity="center" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/blockTextResult"
+                android:layout_width="match_parent" android:layout_height="200dp"
+                android:layout_marginTop="24dp"
+                android:background="@color/placeholderGray">
+                <TextView
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/label_text_result" android:textSize="20sp"
+                    android:textColor="@color/placeholderText" android:layout_gravity="center" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:gravity="end" android:layout_marginTop="16dp">
+                <Button
+                    android:id="@+id/btnDone"
+                    android:layout_width="120dp" android:layout_height="48dp"
+                    android:text="@string/btn_done" android:textSize="18sp"
+                    android:backgroundTint="@color/navAccentCyan"
+                    android:textColor="@color/navTextDark" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- 固定在最底 -->
+    <include
+        android:id="@+id/bottomBar"
+        layout="@layout/layout_bottom_nav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"/>
+</RelativeLayout>
