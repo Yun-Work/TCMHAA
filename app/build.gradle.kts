@@ -19,8 +19,28 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+
+//    buildTypes {
+//        release {
+//            isMinifyEnabled = false
+//            proguardFiles(
+//                getDefaultProguardFile("proguard-android-optimize.txt"),
+//                "proguard-rules.pro"
+//            )
+//        }
+//    }
+    // ✅ 啟用 BuildConfig
+    buildFeatures {
+        buildConfig = true
+    }
     buildTypes {
+        debug {
+            // 模擬器 URL
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:6060\"")
+        }
         release {
+            // 真機 URL（改成你的電腦 IPv4）
+            buildConfigField("String", "BASE_URL", "\"http://172.20.10.2:6060\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -28,11 +48,13 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
 }
+
 
 dependencies {
 
@@ -45,5 +67,11 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
 
+    // OkHttp 4.9.3
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
 
+    // Retrofit + Gson 轉換器
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
 }
