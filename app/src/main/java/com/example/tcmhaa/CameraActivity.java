@@ -3,10 +3,13 @@ package com.example.tcmhaa;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Base64;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.ImageButton;
@@ -14,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
@@ -27,6 +31,7 @@ import androidx.core.content.FileProvider;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -46,6 +51,7 @@ public class CameraActivity extends AppCompatActivity {
     private ImageCapture imageCapture;
     private Camera camera;
     private ProcessCameraProvider cameraProvider;
+    private ApiService apiService;
 
     private ActivityResultLauncher<String[]> requestPermissionsLauncher;
     private Uri photoUri;
@@ -62,6 +68,7 @@ public class CameraActivity extends AppCompatActivity {
         getWindow().setAttributes(params);
 
         initViews();
+        initApiService();
         setupPermissionLauncher();
         checkAndRequestPermissions();
     }
@@ -74,6 +81,10 @@ public class CameraActivity extends AppCompatActivity {
 
         captureButton.setOnClickListener(v -> takePicture());
         backButton.setOnClickListener(v -> finish());
+    }
+
+    private void initApiService() {
+        apiService = new ApiService();
     }
 
     private void setupPermissionLauncher() {
@@ -174,6 +185,14 @@ public class CameraActivity extends AppCompatActivity {
             return;
         }
 
+        // 顯示進度對話框
+        AlertDialog progressDialog = new AlertDialog.Builder(this)
+                .setTitle("處理中")
+                .setMessage("正在拍攝並進行面部分析，請稍候...")
+                .setCancelable(false)
+                .create();
+        progressDialog.show();
+
         try {
             File photoFile = createImageFile();
             photoUri = FileProvider.getUriForFile(
@@ -188,16 +207,78 @@ public class CameraActivity extends AppCompatActivity {
                     new ImageCapture.OnImageSavedCallback() {
                         @Override
                         public void onImageSaved(ImageCapture.OutputFileResults outputFileResults) {
-                            // ✅ 拍照成功 → 先跳 WarningActivity
-                            Intent intent = new Intent(CameraActivity.this, WarningActivity.class);
-                            intent.setData(photoUri); // 或者用 putExtra("photoUri", photoUri.toString())
-                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            startActivity(intent);
-                            finish();
+                            Log.d(TAG, "照片已保存: " + photoFile.getAbsolutePath());
+
+                            // 讀取拍攝的照片並轉換為Bitmap
+                            try {
+                                Bitmap originalBitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
+
+                                if (originalBitmap == null) {
+                                    progressDialog.dismiss();
+                                    Toast.makeText(CameraActivity.this, "讀取拍攝照片失敗", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+
+                                // 如果圖片太大，進行縮放
+                                Bitmap processedBitmap = scaleBitmapIfNeeded(originalBitmap);
+
+                                // 🔧 關鍵：保存原始圖片的Base64數據（用於顯示）
+                                String originalImageBase64 = bitmapToBase64(originalBitmap);
+
+                                Log.d(TAG, "開始分析拍攝的照片，尺寸: " + processedBitmap.getWidth() + "x" + processedBitmap.getHeight());
+
+                                // 調用API分析（使用處理後的圖片以提高速度）
+                                apiService.analyzeFace(processedBitmap, new ApiService.AnalysisCallback() {
+                                    @Override
+                                    public void onSuccess(ApiService.AnalysisResult result) {
+                                        runOnUiThread(() -> {
+                                            progressDialog.dismiss();
+                                            Log.d(TAG, "拍攝照片分析成功");
+
+                                            // 跳轉到結果頁面
+                                            Intent intent = new Intent(CameraActivity.this, _bMainActivity.class);
+
+                                            // 將分析結果轉換為可序列化的格式
+                                            AnalysisResult parcelableResult = new AnalysisResult(result);
+                                            intent.putExtra("analysis_result", parcelableResult);
+                                            intent.putExtra("source_type", "camera");
+
+                                            // 🎯 重要：傳遞原始圖片的Base64數據
+                                            intent.putExtra("original_image_base64", originalImageBase64);
+
+                                            startActivity(intent);
+                                            finish();
+                                        });
+                                    }
+
+                                    @Override
+                                    public void onFailure(String error) {
+                                        runOnUiThread(() -> {
+                                            progressDialog.dismiss();
+                                            Log.e(TAG, "拍攝照片分析失敗: " + error);
+
+                                            new AlertDialog.Builder(CameraActivity.this)
+                                                    .setTitle("分析失敗")
+                                                    .setMessage("面部分析失敗：\n" + error + "\n\n請檢查：\n• 網絡連接是否正常\n• 光線是否充足\n• 面部是否完整對準框線")
+                                                    .setPositiveButton("重新拍攝", (dialog, which) -> {
+                                                        // 用戶可以重新拍攝
+                                                    })
+                                                    .setNegativeButton("返回", (dialog, which) -> finish())
+                                                    .show();
+                                        });
+                                    }
+                                });
+
+                            } catch (Exception e) {
+                                progressDialog.dismiss();
+                                Log.e(TAG, "處理拍攝照片時發生錯誤", e);
+                                Toast.makeText(CameraActivity.this, "處理照片失敗: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
                         }
 
                         @Override
                         public void onError(ImageCaptureException exception) {
+                            progressDialog.dismiss();
                             Log.e(TAG, "拍照失敗", exception);
                             Toast.makeText(CameraActivity.this,
                                     "拍照失敗: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
@@ -205,9 +286,48 @@ public class CameraActivity extends AppCompatActivity {
                         }
                     });
         } catch (Exception e) {
+            progressDialog.dismiss();
             Log.e(TAG, "拍照過程中出錯", e);
             Toast.makeText(this, "拍照過程中出錯: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             logDetailedInfo("拍照過程中出錯", e);
+        }
+    }
+
+    private Bitmap scaleBitmapIfNeeded(Bitmap bitmap) {
+        int maxSize = 1024;
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+        if (width > maxSize || height > maxSize) {
+            float scale = Math.min((float) maxSize / width, (float) maxSize / height);
+            int newWidth = Math.round(width * scale);
+            int newHeight = Math.round(height * scale);
+
+            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+            bitmap.recycle(); // 釋放原始圖片記憶體
+            return scaledBitmap;
+        }
+
+        return bitmap;
+    }
+
+    // 添加Bitmap轉Base64的方法
+    private String bitmapToBase64(Bitmap bitmap) {
+        try {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+            // 為顯示用途保持較好的質量
+            int quality = 80;
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, byteArrayOutputStream);
+
+            byte[] byteArray = byteArrayOutputStream.toByteArray();
+            String base64String = Base64.encodeToString(byteArray, Base64.NO_WRAP);
+
+            return "data:image/jpeg;base64," + base64String;
+
+        } catch (Exception e) {
+            Log.e(TAG, "Bitmap轉Base64失敗", e);
+            return null;
         }
     }
 
