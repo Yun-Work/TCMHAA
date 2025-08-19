@@ -32,18 +32,7 @@
             android:textSize="30sp"
             android:textStyle="bold" />
 
-        <!-- 使用者名稱 -->
-        <EditText
-            android:id="@+id/etUsername"
-            android:layout_width="289dp"
-            android:layout_height="50dp"
-            android:layout_marginBottom="12dp"
-            android:background="#E8E8E8"
-            android:hint="用戶名"
-            android:padding="12dp"
-            android:textColor="#000000"
-            android:textColorHint="#938FBC"
-            android:textStyle="bold" />
+
 
         <!-- Gmail -->
         <EditText

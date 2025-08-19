@@ -1,5 +1,6 @@
 package com.example.tcmhaa;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Patterns;
 import android.widget.Button;
@@ -11,6 +12,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.tcmhaa.api.ApiHelper;
 import com.example.tcmhaa.dto.RegisterRequestDto;
 import com.example.tcmhaa.dto.RegisterResponseDto;
+
+import org.json.JSONObject;
+
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class CheckActivity extends AppCompatActivity {
 
@@ -30,14 +43,35 @@ public class CheckActivity extends AppCompatActivity {
         btnSubmit.setOnClickListener(view -> {
             String email    = etGmail.getText().toString().trim();
             String password = etPassword.getText().toString();
-            String confirm  = etConfirmPassword.getText().toString();
+            String confirmPassword = etConfirmPassword.getText().toString();
 
-            // 前端驗證（與後端規則對齊）
-            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) { toast("請輸入正確的 Email"); return; }
-            if (!password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$")) {
-                toast("密碼需包含英文字母與數字，長度至少 6 位"); return;
+
+//            // 前端驗證（與後端規則對齊）
+//            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) { toast("請輸入正確的 Email"); return; }
+//            if (!password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$")) {
+//                toast("密碼需包含英文字母與數字，長度至少 6 位"); return;
+//            }
+//            if (!password.equals(confirmPassword)) { toast("密碼與確認密碼不一致"); return; }
+
+            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                showToast("請輸入正確的 Gmail");
+            } else if (!password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$")) {
+                showToast("密碼需包含英文字母與數字，長度至少6位");
+            } else if (!password.equals(confirmPassword)) {
+                showToast("密碼與確認密碼不一致");
+            } else {
+                loginToServer(email, password);
             }
-            if (!password.equals(confirm)) { toast("密碼與確認密碼不一致"); return; }
+        });
+    }
+
+
+    private void showToast(String message) {
+        Toast.makeText(CheckActivity.this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void loginToServer(String email, String password) {
+        OkHttpClient client = new OkHttpClient();
 
             btnSubmit.setEnabled(false);
 
@@ -78,7 +112,6 @@ public class CheckActivity extends AppCompatActivity {
                         }
                     }
             );
-        });
     }
 
     private void toast(String s){ Toast.makeText(this, s, Toast.LENGTH_SHORT).show(); }

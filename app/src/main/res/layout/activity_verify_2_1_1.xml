@@ -3,8 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF">
-    <!-- 確認可刪 -->
-    <!-- 左上角 LOGO -->
+
     <ImageView
         android:id="@+id/newlogoImage"
         android:layout_width="80dp"

@@ -17,7 +17,7 @@ public class WelcomeActivity extends AppCompatActivity {
 
         nextButton.setOnClickListener(view -> {
             // 👉 點擊「下一步」跳轉到 WarningActivity
-            Intent intent = new Intent(WelcomeActivity.this, WarningActivity.class);
+            Intent intent = new Intent(WelcomeActivity.this, MainhealthyActivity.class);
             startActivity(intent);
         });
     }

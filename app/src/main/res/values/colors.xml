@@ -2,4 +2,14 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="maincolor">#56C8D8</color>
+    <!-- 底欄樣式 -->
+    <color name="navBarBgBlack">#000000</color>
+    <color name="navAccentCyan">#56C8D8</color>
+    <color name="navTextDark">#003060</color>
+
+    <!-- 內文與占位 -->
+    <color name="placeholderGray">#D9D9D9</color>
+    <color name="placeholderText">#666666</color>
+    <color name="titlePurple">#9090D8</color>
 </resources>

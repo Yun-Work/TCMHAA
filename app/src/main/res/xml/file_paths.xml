@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 內部 files 目錄（getFilesDir） -->
+    <files-path name="files" path="." />
+    <!-- app 專屬的外部 Pictures 目錄（getExternalFilesDir(Environment.DIRECTORY_PICTURES)） -->
+    <external-files-path name="images" path="Pictures/" />
+    <!-- 可選：快取路徑 -->
+    <cache-path name="cache" path="." />
+    <external-cache-path name="external_cache" path="." />
+</paths>

@@ -26,10 +26,10 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_1);
 
-        etUsername       = findViewById(R.id.etUsername);
-        etPassword       = findViewById(R.id.etPassword);
-        btnNext          = findViewById(R.id.btnNext);
-        btnRegister      = findViewById(R.id.btnRegister);
+        etUsername = findViewById(R.id.etUsername);
+        etPassword = findViewById(R.id.etPassword);
+        btnNext = findViewById(R.id.btnNext);       // 左側按鈕：照你的需求 → CheckActivity
+        btnRegister = findViewById(R.id.btnRegister);
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
 
         // 登入
