@@ -23,7 +23,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TCMHAA"
-        android:usesCleartextTraffic="true">  <!-- 你有連 http://10.0.2.2 -->
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security_config"
+        >  <!-- 你有連 http://10.0.2.2 -->
+
 
         <!-- 首頁 -->
         <activity

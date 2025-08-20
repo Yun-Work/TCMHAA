@@ -46,7 +46,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+
+
 
     // ===== CameraX（必要）=====
     val cameraxVersion = "1.3.4"
@@ -55,7 +56,8 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
     implementation("androidx.camera:camera-view:$cameraxVersion") // PreviewView
     // 如需拍影片再加：implementation("androidx.camera:camera-video:$cameraxVersion")
-
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("org.json:json:20230227")
     //（可選）如要處理圖片旋轉/EXIF
     implementation("androidx.exifinterface:exifinterface:1.3.7")
 
@@ -68,3 +70,5 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
 
 }
+
+
