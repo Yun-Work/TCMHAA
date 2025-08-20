@@ -43,7 +43,7 @@
             android:layout_height="50dp"
             android:layout_marginBottom="12dp"
             android:background="@android:drawable/editbox_background_normal"
-            android:hint="帳號"
+            android:hint="電子郵件"
             android:padding="10dp" />
 
         <!-- 密碼 -->
