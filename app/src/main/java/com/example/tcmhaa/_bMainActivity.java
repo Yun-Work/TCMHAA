@@ -86,7 +86,7 @@ public class _bMainActivity extends AppCompatActivity {
 
         btnDone.setOnClickListener(v -> {
             // 🎯 點擊完成時清空緩存
-            clearCache();
+
             finish();
         });
     }
@@ -94,54 +94,45 @@ public class _bMainActivity extends AppCompatActivity {
     private void handleAnalysisResult() {
         Intent intent = getIntent();
 
-        // 🎯 檢查是否已經顯示過結果，如果是則跳過Intent處理
-        if (hasDisplayedResult && cachedAnalysisResult != null) {
-            analysisResult = cachedAnalysisResult;
-            sourceType = cachedSourceType;
-            displayAnalysisResult();
-            Log.d(TAG, "使用緩存的分析結果");
-            return;
-        }
-
-        // 從Intent獲取分析結果和原始圖片
-        analysisResult = intent.getParcelableExtra("analysis_result");
-        sourceType = intent.getStringExtra("source_type");
-
-        // 🎯 獲取原始圖片的Base64數據
+        // 🎯 檢查是否有新的分析結果
+        AnalysisResult newAnalysisResult = intent.getParcelableExtra("analysis_result");
+        String newSourceType = intent.getStringExtra("source_type");
         String originalImageBase64 = intent.getStringExtra("original_image_base64");
 
-        if (analysisResult != null) {
+        // 如果有新的分析結果，直接使用新資料並更新快取
+        if (newAnalysisResult != null) {
+            Log.d(TAG, "收到新的分析結果，更新快取");
+
+            analysisResult = newAnalysisResult;
+            sourceType = newSourceType;
+
             // 將原始圖片數據添加到結果中以便顯示
             if (originalImageBase64 != null) {
                 analysisResult.originalImage = originalImageBase64;
             }
-            displayAnalysisResult();
 
-            // 🎯 保存到緩存
+            // 🎯 更新靜態快取
             cachedAnalysisResult = analysisResult;
             cachedSourceType = sourceType;
             hasDisplayedResult = true;
 
-        } else {
-            Log.e(TAG, "未收到分析結果");
-            Toast.makeText(this, "未收到分析結果", Toast.LENGTH_SHORT).show();
-            showErrorState();
+            displayAnalysisResult();
+            return;
         }
-    }
 
-    // 🎯 新增清空緩存的方法
-    private void clearCache() {
-        cachedAnalysisResult = null;
-        cachedSourceType = null;
-        hasDisplayedResult = false;
-        Log.d(TAG, "分析結果緩存已清空");
-    }
+        // 🎯 只有在沒有新資料時才使用快取
+        if (hasDisplayedResult && cachedAnalysisResult != null) {
+            analysisResult = cachedAnalysisResult;
+            sourceType = cachedSourceType;
+            displayAnalysisResult();
+            Log.d(TAG, "使用快取的分析結果");
+            return;
+        }
 
-    // 🎯 新增公共方法供外部調用清空緩存
-    public static void clearStaticCache() {
-        cachedAnalysisResult = null;
-        cachedSourceType = null;
-        hasDisplayedResult = false;
+        // 如果既沒有新資料也沒有快取，顯示錯誤
+        Log.e(TAG, "未收到分析結果");
+        Toast.makeText(this, "未收到分析結果", Toast.LENGTH_SHORT).show();
+        showErrorState();
     }
 
     private void displayAnalysisResult() {
