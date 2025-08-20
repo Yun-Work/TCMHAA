@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_profile_3);
+        setContentView(R.layout.activity_welcome_4);
 
         checkAndRequestPermissions();
     }

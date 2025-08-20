@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF">
@@ -9,8 +8,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
         android:orientation="vertical"
+        android:gravity="center_horizontal"
         android:padding="24dp">
         <!-- 確認可刪 -->
         <!-- Logo -->
@@ -32,16 +31,21 @@
             android:textSize="30sp"
             android:textStyle="bold" />
 
+        <!-- 電子郵件 -->
+        <TextView
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:text="電子郵件"
+            android:textColor="#3B489F"
+            android:textStyle="bold" />
 
-
-        <!-- Gmail -->
         <EditText
-            android:id="@+id/etGmail"
-            android:layout_width="289dp"
+            android:id="@+id/etEmail"
+            android:layout_width="280dp"
             android:layout_height="50dp"
             android:layout_marginBottom="12dp"
             android:background="#E8E8E8"
-            android:hint="Gmail"
+            android:hint="請輸入電子郵件"
             android:inputType="textEmailAddress"
             android:padding="12dp"
             android:textColor="#000000"
@@ -49,55 +53,141 @@
             android:textStyle="bold" />
 
         <!-- 密碼 -->
+        <TextView
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:text="密碼"
+            android:textColor="#3B489F"
+            android:textStyle="bold" />
+
         <EditText
             android:id="@+id/etPassword"
-            android:layout_width="289dp"
+            android:layout_width="280dp"
             android:layout_height="50dp"
             android:layout_marginBottom="12dp"
             android:background="#E8E8E8"
-            android:hint="密碼"
+            android:hint="包含英文及數字"
             android:inputType="textPassword"
             android:padding="12dp"
             android:textColor="#000000"
             android:textColorHint="#938FBC"
             android:textStyle="bold" />
 
-        <!-- 再次確認密碼 -->
+        <!-- 再次輸入密碼 -->
+        <TextView
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:text="再次輸入密碼"
+            android:textColor="#3B489F"
+            android:textStyle="bold" />
+
         <EditText
             android:id="@+id/etConfirmPassword"
-            android:layout_width="289dp"
+            android:layout_width="280dp"
             android:layout_height="50dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="12dp"
             android:background="#E8E8E8"
-            android:hint="再次確認密碼"
             android:inputType="textPassword"
             android:padding="12dp"
             android:textColor="#000000"
             android:textColorHint="#938FBC"
             android:textStyle="bold" />
 
-        <!-- 提示文字（對齊左側） -->
+        <!-- 用戶名 -->
         <TextView
-            android:id="@+id/tvPasswordHint"
-            android:layout_width="289dp"
+            android:layout_width="280dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="要包含英文字元+數字"
-            android:textColor="#6A63B5"
+            android:text="用戶名"
+            android:textColor="#3B489F"
             android:textStyle="bold" />
 
-        <!-- 確認按鈕（變成 289dp 寬方框） -->
+        <EditText
+            android:id="@+id/etUsername"
+            android:layout_width="280dp"
+            android:layout_height="50dp"
+            android:layout_marginBottom="12dp"
+            android:background="#E8E8E8"
+            android:inputType="textPersonName"
+            android:padding="12dp"
+            android:textColor="#000000"
+            android:textColorHint="#938FBC"
+            android:textStyle="bold" />
+
+        <!-- 性別：同一列： 性別  ○男   ○女 -->
         <LinearLayout
-            android:layout_width="289dp"
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tvGender"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:text="性別"
+                android:textColor="#3B489F"
+                android:textStyle="bold" />
+
+            <RadioGroup
+                android:id="@+id/rgGender"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/rbMale"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="24dp"
+                    android:text="男"
+                    android:textColor="#3B489F" />
+
+                <RadioButton
+                    android:id="@+id/rbFemale"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="女"
+                    android:textColor="#3B489F" />
+            </RadioGroup>
+        </LinearLayout>
+
+        <!-- 出生年月日（點擊彈出日期選擇器） -->
+        <TextView
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:text="出生年月日 (YYYY/MM/DD)"
+            android:textColor="#3B489F"
+            android:textStyle="bold" />
+
+        <!-- 確認按鈕 -->
+        <EditText
+            android:id="@+id/etBirthday"
+            android:layout_width="280dp"
+            android:layout_height="50dp"
+            android:layout_marginBottom="20dp"
+            android:background="#E8E8E8"
+            android:clickable="true"
+            android:focusable="false"
+            android:hint="YYYY/MM/DD"
+            android:inputType="text"
+            android:padding="12dp"
+            android:textColor="#000000"
+            android:textColorHint="#938FBC"
+            android:textStyle="bold" />
+
+
+        <LinearLayout
+            android:layout_width="280dp"
             android:layout_height="wrap_content"
             android:gravity="end">
-            <!-- gravity="end"可以讓他對齊右側-->
+
             <Button
                 android:id="@+id/btnSubmit"
                 android:layout_width="120dp"
                 android:layout_height="50dp"
                 android:backgroundTint="#56C8D8"
-                android:shape="rectangle"
                 android:text="確認"
                 android:textColor="#000000"
                 android:textSize="18sp" />
