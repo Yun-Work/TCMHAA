@@ -1,21 +1,16 @@
 package com.example.tcmhaa.dto;
 
+import com.example.tcmhaa.api.dto.LoginResponse;
 import com.example.tcmhaa.model.User;
 
 public class LoginResponseDto {
-    private boolean success;
-    private String message;
-    private User user;
+    public boolean success;
+    public String message;
+    public User user; // 成功時才有
 
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public User getUser() {
-        return user;
+    public static class User {
+        public int user_id;
+        public String name;
+        public String email;
     }
 }

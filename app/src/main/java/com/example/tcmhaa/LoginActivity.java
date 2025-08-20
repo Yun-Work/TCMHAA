@@ -22,6 +22,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private EditText etUsername, etPassword;
     private Button btnNext, btnRegister;
+    private TextView tvForgotPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +63,7 @@ public class LoginActivity extends AppCompatActivity {
 //                            } catch (Exception ignored) {}
 //                            Log.d(TAG, "login resp code=" + resp.code() + " raw=" + raw);
 
-                            if (!resp.isSuccess() || resp == null) {
+                            if ( resp == null) {
                                 // HTTP 4xx/5xx 或 body 為空 → 統一提示
                                 Toast.makeText(LoginActivity.this, "帳號或密碼錯誤", Toast.LENGTH_LONG).show();
                                 return;

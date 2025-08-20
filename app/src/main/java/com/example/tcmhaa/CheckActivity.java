@@ -72,50 +72,9 @@ public class CheckActivity extends AppCompatActivity {
             } else if (gender == null) { toast("請選擇性別");
             } else if (!isValidDate(birthStr)) { toast("生日格式需為 YYYY/MM/DD");
             }else{
-                loginToServer(email, password);
+                loginToServer(email, password, name, gender, birthStr);
             }
 
-            btnSubmit.setEnabled(false);
-
-            // name 已移除：若後端允許，傳 null；若你已改 DTO，改成 new RegisterRequest(email, password)
-            RegisterRequest body = new RegisterRequest(email, password, name, gender, birthStr);
-            api.register(body).enqueue(new Callback<RegisterResponse>() {
-                @Override public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> resp) {
-                    btnSubmit.setEnabled(true);
-
-                    RegisterResponse r = resp.body();
-
-                    if (resp.isSuccessful() && r != null) {
-                        if (r.success) {
-                            showSuccessDialog();
-                        } else {
-                            // 後端邏輯失敗（例如 Email 已被註冊）
-                            String msg = (r.message != null && !r.message.isEmpty()) ? r.message : "註冊失敗";
-                            toast(msg);
-                            if ("Email 已被註冊".equals(r.message) || "EMAIL_TAKEN".equals(r.code)) {
-                                etEmail.setError("該 Email 已註冊過");
-                                etEmail.requestFocus();
-                            }
-                        }
-                    } else {
-                        // 非 2xx：例如 409, 400...
-                        String msg = "註冊失敗（HTTP " + resp.code() + "）";
-                        // 如果你想更精準，可以嘗試讀 errorBody 再判斷是否包含關鍵字
-                        try {
-                            if (resp.code() == 409) {
-                                msg = "Email 已被註冊";
-                                etEmail.setError("該 Email 已註冊過");
-                                etEmail.requestFocus();
-                            }
-                        } catch (Exception ignored) {}
-                        toast(msg);
-                    }
-                }
-                @Override public void onFailure(Call<RegisterResponse> call, Throwable t) {
-                    btnSubmit.setEnabled(true);
-                    toast("連線錯誤：" + t.getMessage());
-                }
-            });
         });
     }
 
@@ -134,33 +93,23 @@ public class CheckActivity extends AppCompatActivity {
                         btnSubmit.setEnabled(true);
 
                         // 成功條件：success=true，或沒有 error 且有 userId（相容不同後端實作）
-                        boolean ok = resp != null &&
-                                (resp.isSuccess() || (resp.getUserId() != null && resp.getError() == null));
 
-                        if (resp.isSuccessful() && r != null) {
-                            if (r.success) {
+
+                        if (resp != null) {
+                            if (resp.success) {
                                 showSuccessDialog();
                             } else {
                                 // 後端邏輯失敗（例如 Email 已被註冊）
-                                String msg = (r.message != null && !r.message.isEmpty()) ? r.message : "註冊失敗";
+                                String msg = (resp.message != null && !resp.message.isEmpty()) ? resp.message : "註冊失敗";
                                 toast(msg);
-                                if ("Email 已被註冊".equals(r.message) || "EMAIL_TAKEN".equals(r.code)) {
+                                if ("Email 已被註冊".equals(resp.message) || "EMAIL_TAKEN".equals(resp.code)) {
                                     etEmail.setError("該 Email 已註冊過");
                                     etEmail.requestFocus();
                                 }
                             }
                         } else {
-                            // 非 2xx：例如 409, 400...
-                            String msg = "註冊失敗（HTTP " + resp.code() + "）";
-                            // 如果你想更精準，可以嘗試讀 errorBody 再判斷是否包含關鍵字
-                            try {
-                                if (resp.code() == 409) {
-                                    msg = "Email 已被註冊";
-                                    etEmail.setError("該 Email 已註冊過");
-                                    etEmail.requestFocus();
-                                }
-                            } catch (Exception ignored) {}
-                            toast(msg);
+
+                            toast(resp.message);
                         }
                     }
 
@@ -168,6 +117,7 @@ public class CheckActivity extends AppCompatActivity {
                         public void onFailure(Throwable t) {
                             btnSubmit.setEnabled(true);
                             toast("連線錯誤：" + t.getMessage());
+
                         }
                     }
             );

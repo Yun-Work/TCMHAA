@@ -1,15 +1,16 @@
 package com.example.tcmhaa.dto;
 
 public class RegisterRequestDto {
-    private String email;
-    private String password;
-
-    // 後端若還要 name，再加一個欄位與建構子即可
-    public RegisterRequestDto(String email, String password) {
+    public String email;
+    public String password;
+    public String name;        // 新增
+    public String gender;      // 新增：請用「男生 / 女生」
+    public String birth_date;  // 新增：格式 YYYY/MM/DD
+    public RegisterRequestDto( String email, String password, String name, String gender, String birth_date) {
         this.email = email;
         this.password = password;
+        this.name = name;
+        this.gender = gender;
+        this.birth_date = birth_date;
     }
-
-    public String getEmail() { return email; }
-    public String getPassword() { return password; }
 }
