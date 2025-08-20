@@ -12,8 +12,6 @@ import com.example.tcmhaa.api.ApiClient;
 import com.example.tcmhaa.api.AuthApi;
 import com.example.tcmhaa.api.dto.LoginRequest;
 import com.example.tcmhaa.api.dto.LoginResponse;
-import com.example.tcmhaa.api.dto.RegisterRequest;
-import com.example.tcmhaa.api.dto.RegisterResponse;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -33,7 +31,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login_1); // ⚠️ 確保這 layout 名稱是對的
 
         etUsername = findViewById(R.id.etUsername);
-        etPassword = findViewById(R.id.etBirthday); // ⚠️ 你 layout 中雖然是密碼，但 id 還是叫 etBirthday，未來請改成 etPassword
+        etPassword = findViewById(R.id.etPassword); // ⚠️ 你 layout 中雖然是密碼，但 id 還是叫 etBirthday，未來請改成 etPassword
         btnNext = findViewById(R.id.btnNext);
         btnRegister = findViewById(R.id.btnRegister);
 
@@ -103,47 +101,6 @@ public class LoginActivity extends AppCompatActivity {
             showPermissionDialog();
         });
 
-        //註冊：/api/users/register
-        /*
-        btnRegister.setOnClickListener(v -> {
-        String email = etUsername.getText().toString().trim();
-        String password = etPassword.getText().toString().trim();
-        String name = email; // 如果日後有姓名輸入框，改用該欄位
-
-        if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "請輸入 email 與密碼", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        boolean okLen = password.length() >= 6;
-        boolean hasLetter = password.matches(".*[A-Za-z].*");
-        boolean hasDigit  = password.matches(".*\\d.*");
-        if (!okLen || !hasLetter || !hasDigit) {
-            Toast.makeText(this, "密碼格式錯誤：至少6碼，含英文與數字", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        api.register(new RegisterRequest( email, password))
-                .enqueue(new Callback<RegisterResponse>() {
-                    @Override public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> resp) {
-                        if (resp.isSuccessful() && resp.body()!=null && resp.body().error == null) {
-                            Integer uid = resp.body().user_id;
-                            Toast.makeText(LoginActivity.this, "註冊成功，ID=" + uid, Toast.LENGTH_SHORT).show();
-                            // 註冊成功後可導回登入或直接登入；此處保留原流程
-                        } else {
-                            String err = "註冊失敗";
-                            if (resp.body()!=null && resp.body().error != null) {
-                                err += "：" + resp.body().error;
-                            } else {
-                                err += "（HTTP " + resp.code() + "）";
-                            }
-                            Toast.makeText(LoginActivity.this, err, Toast.LENGTH_LONG).show();
-                        }
-                    }
-                    @Override public void onFailure(Call<RegisterResponse> call, Throwable t) {
-                        Toast.makeText(LoginActivity.this, "連線錯誤：" + t.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
-    });*/
         btnRegister.setOnClickListener(v -> {
             Intent i = new Intent(LoginActivity.this, CheckActivity.class);
             // 可選：把已輸入的 email 傳給註冊頁預填
