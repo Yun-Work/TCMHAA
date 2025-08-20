@@ -2,18 +2,26 @@ package com.example.tcmhaa;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.View;
+import android.os.CountDownTimer;
+import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.tcmhaa.utils.api.ApiHelper;
+import com.example.tcmhaa.dto.SendCodeRequestDto;
+import com.example.tcmhaa.dto.SendCodeResponseDto;
+import com.example.tcmhaa.utils.toast.ToastHelper;
+
+import java.util.Objects;
+
 public class ForgetActivity extends AppCompatActivity {
 
     private EditText editTextGmail;
     private Button buttonSendCode;
+    private CountDownTimer timer;     // 防止連發的 60 秒倒數
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,25 +31,70 @@ public class ForgetActivity extends AppCompatActivity {
         editTextGmail = findViewById(R.id.editTextGmail);
         buttonSendCode = findViewById(R.id.buttonSendCode);
 
-        buttonSendCode.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String gmail = editTextGmail.getText().toString().trim();
+        buttonSendCode.setOnClickListener(v -> {
+            String email = editTextGmail.getText().toString().trim();
 
-                if (TextUtils.isEmpty(gmail)) {
-                    Toast.makeText(ForgetActivity.this, "請輸入 Gmail", Toast.LENGTH_SHORT).show();
-                } else if (!gmail.contains("@") || !gmail.contains(".com")) {
-                    Toast.makeText(ForgetActivity.this, "請輸入正確的 Gmail 格式", Toast.LENGTH_SHORT).show();
-                } else {
-                    // 模擬寄送驗證碼的流程
-                    Toast.makeText(ForgetActivity.this, "驗證碼已寄送到 " + gmail, Toast.LENGTH_LONG).show();
-
-                    // 寄送成功後跳轉至驗證碼輸入畫面（例如 VerifyActivity）
-                    Intent intent = new Intent(ForgetActivity.this, VerifyActivity.class);
-                    intent.putExtra("gmail", gmail);
-                    startActivity(intent);
-                }
+            // 用內建 email regex 驗證
+            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                ToastHelper.show(getApplicationContext(), "請輸入正確的 Email", Toast.LENGTH_SHORT);
+//                toast("請輸入正確的 Email");
+                return;
             }
+
+            buttonSendCode.setEnabled(false);
+
+            // 忘記密碼流程：status = "2"；若是註冊頁，改成 "1"
+            ApiHelper.httpPost(
+                    "users/send_code",
+                    new SendCodeRequestDto(email, "2"),
+                    SendCodeResponseDto.class,
+                    new ApiHelper.ApiCallback<SendCodeResponseDto>() {
+                        @Override
+                        public void onSuccess(SendCodeResponseDto resp) {
+                            // 成功：提示 + 倒數 + 導頁
+                            startCountdown();
+
+                            String msg = (resp != null && resp.getMessage() != null)
+                                    ? resp.getMessage() : "驗證碼已寄出";
+                            ToastHelper.show(getApplicationContext(), msg, Toast.LENGTH_SHORT);
+//                            toast(msg);
+
+                            Intent intent = new Intent(ForgetActivity.this, VerifyActivity.class);
+                            intent.putExtra("email", email);   // 建議統一用 "email" 當 key
+                            intent.putExtra("status", "2");
+                            startActivity(intent);
+                        }
+
+                        @Override
+                        public void onFailure(Throwable t) {
+                            buttonSendCode.setEnabled(true);
+                            ToastHelper.show(getApplicationContext(), Objects.requireNonNull(t.getMessage()), Toast.LENGTH_SHORT);
+//                            toast("連線錯誤：" + (t != null ? t.getMessage() : "未知錯誤"));
+                        }
+                    }
+            );
         });
+    }
+
+    // 60 秒倒數，避免重複寄送
+    private void startCountdown() {
+        if (timer != null) timer.cancel();
+        timer = new CountDownTimer(60_000, 1_000) {
+            @Override public void onTick(long ms) {
+                buttonSendCode.setText("已送出（" + (ms / 1000) + "s）");
+            }
+            @Override public void onFinish() {
+                buttonSendCode.setText("寄送驗證碼");
+                buttonSendCode.setEnabled(true);
+            }
+        }.start();
+    }
+
+//    private void toast(String s) { Toast.makeText(this, s, Toast.LENGTH_SHORT).show(); }
+
+    @Override
+    protected void onDestroy() {
+        if (timer != null) timer.cancel();
+        super.onDestroy();
     }
 }

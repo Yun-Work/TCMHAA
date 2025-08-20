@@ -58,4 +58,13 @@ dependencies {
 
     //（可選）如要處理圖片旋轉/EXIF
     implementation("androidx.exifinterface:exifinterface:1.3.7")
+
+    // OkHttp 4.9.3
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
+
+    // Retrofit + Gson 轉換器
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
 }

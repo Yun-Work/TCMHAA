@@ -1,4 +1,4 @@
-package com.example.tcmhaa.api;
+package com.example.tcmhaa.utils.api;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -13,7 +13,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
 
-    private static final String BASE_URL = "https://tcmha-python.duckdns.org/api/";
+    private static final String BASE_URL = "http://10.0.2.2:6060/api/";
     private static Retrofit retrofit;
 
     public static Retrofit getInstance() {

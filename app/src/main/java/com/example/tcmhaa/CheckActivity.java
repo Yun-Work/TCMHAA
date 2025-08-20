@@ -1,6 +1,5 @@
 package com.example.tcmhaa;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Patterns;
 import android.widget.Button;
@@ -9,21 +8,11 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.tcmhaa.api.ApiHelper;
+import com.example.tcmhaa.utils.api.ApiHelper;
 import com.example.tcmhaa.dto.RegisterRequestDto;
 import com.example.tcmhaa.dto.RegisterResponseDto;
 
-import org.json.JSONObject;
-
-import java.io.IOException;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class CheckActivity extends AppCompatActivity {
 
@@ -73,34 +62,34 @@ public class CheckActivity extends AppCompatActivity {
     private void loginToServer(String email, String password) {
         OkHttpClient client = new OkHttpClient();
 
-            btnSubmit.setEnabled(false);
+        btnSubmit.setEnabled(false);
 
-            ApiHelper.httpPost(
-                    "users/register",                                // 依你的後端路徑調整
-                    new RegisterRequestDto(email.toLowerCase(), password),
-                    RegisterResponseDto.class,
-                    new ApiHelper.ApiCallback<>() {
-                        @Override
-                        public void onSuccess(RegisterResponseDto resp) {
-                            btnSubmit.setEnabled(true);
+        ApiHelper.httpPost(
+                "users/register",                                // 依你的後端路徑調整
+                new RegisterRequestDto(email.toLowerCase(), password),
+                RegisterResponseDto.class,
+                new ApiHelper.ApiCallback<>() {
+                    @Override
+                    public void onSuccess(RegisterResponseDto resp) {
+                        btnSubmit.setEnabled(true);
 
-                            // 成功條件：success=true，或沒有 error 且有 userId（相容不同後端實作）
-                            boolean ok = resp != null &&
-                                    (resp.isSuccess() || (resp.getUserId() != null && resp.getError() == null));
+                        // 成功條件：success=true，或沒有 error 且有 userId（相容不同後端實作）
+                        boolean ok = resp != null &&
+                                (resp.isSuccess() || (resp.getUserId() != null && resp.getError() == null));
 
-                            if (ok) {
-                                // 便於回登入頁自動帶入
-                                getSharedPreferences("tmp", MODE_PRIVATE).edit()
-                                        .putString("email", email.toLowerCase())
-                                        .putString("password", password)
-                                        .apply();
+                        if (ok) {
+                            // 便於回登入頁自動帶入
+                            getSharedPreferences("tmp", MODE_PRIVATE).edit()
+                                    .putString("email", email.toLowerCase())
+                                    .putString("password", password)
+                                    .apply();
 
-                                toast("註冊成功，請登入");
-                                finish(); // 回到 LoginActivity
-                            } else {
-                                String msg = (resp != null && resp.getError() != null)
-                                        ? resp.getError()
-                                        : "註冊失敗";
+                            toast("註冊成功，請登入");
+                            finish(); // 回到 LoginActivity
+                        } else {
+                            String msg = (resp != null && resp.getError() != null)
+                                    ? resp.getError()
+                                    : "註冊失敗";
                                 toast(msg);
                             }
                         }
