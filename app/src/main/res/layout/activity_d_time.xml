@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white">
+
+    <ImageView
+        android:id="@+id/ivLogo"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_margin="16dp"
+        android:src="@drawable/newlogo"
+        android:contentDescription="@string/app_name" />
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ivLogo"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:text="每日通知時間"
+        android:textSize="22sp"
+        android:textColor="#7A78B4"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/ivCalendar"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_below="@id/tvTitle"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="32dp"
+        android:src="@android:drawable/ic_menu_month"
+        android:contentDescription="calendar" />
+
+    <Button
+        android:id="@+id/btnSaveTime"
+        android:layout_width="120dp"
+        android:layout_height="48dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/ivCalendar"
+        android:layout_marginTop="32dp"
+        android:text="儲存"
+        android:backgroundTint="#56C8D8"
+        android:textColor="@android:color/black"/>
+</RelativeLayout>

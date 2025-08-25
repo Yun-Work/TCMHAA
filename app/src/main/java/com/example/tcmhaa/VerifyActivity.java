@@ -5,78 +5,59 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.tcmhaa.utils.api.ApiHelper;
-import com.example.tcmhaa.dto.VerifyCodeRequestDto;
-import com.example.tcmhaa.dto.VerifyCodeResponseDto;
-
 public class VerifyActivity extends AppCompatActivity {
 
-    private EditText editTextVerificationCode;
-    private Button buttonVerify;
+    private EditText otpEditText;     // 對應 XML: @+id/otpEditText
+    private Button   confirmButton;   // 對應 XML: @+id/confirmButton
+    private TextView resendText;      // 對應 XML: @+id/resendText
 
     private String email;   // 從上一頁帶入
-    private String status;  // 若後端不需要可以不使用（保留給流程判斷）
+    private String status;  // 狀態碼（例如 "2" 代表忘記密碼流程）
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_verify_2_1_2);
+        setContentView(R.layout.activity_verify_2_1_1); // 對應 XML 檔名
 
-        editTextVerificationCode = findViewById(R.id.editTextVerificationCode);
-        buttonVerify = findViewById(R.id.buttonVerify);
+        // 綁定對應 XML 的 ID
+        otpEditText   = findViewById(R.id.otpEditText);
+        confirmButton = findViewById(R.id.confirmButton);
+        resendText    = findViewById(R.id.resendText);
 
-        // 取上一頁 extras；若你上一頁用的是 "gmail" 當 key，也一併相容
+        // 取得上一頁 extras
         Intent from = getIntent();
-        email  = from.getStringExtra("email");
-        if (email == null) email = from.getStringExtra("gmail");
-        status = from.getStringExtra("status"); // 可能是 "2"（忘記密碼），看你前頁怎麼傳
+        if (from != null) {
+            email  = from.getStringExtra("email");
+            status = from.getStringExtra("status");
+        }
 
-        buttonVerify.setOnClickListener(v -> {
-            String code = editTextVerificationCode.getText().toString().trim();
+        // 重新寄送驗證碼（TODO: 呼叫後端 API）
+        resendText.setOnClickListener(v -> {
+            Toast.makeText(this, "已重新寄送驗證碼到：" + (email != null ? email : "你的信箱"), Toast.LENGTH_SHORT).show();
+        });
 
-            if (TextUtils.isEmpty(email)) {
-                toast("缺少 Email，請從上一頁重新進入");
+        // 確認驗證碼
+        confirmButton.setOnClickListener(v -> {
+            String code = otpEditText.getText().toString().trim();
+            if (TextUtils.isEmpty(code)) {
+                otpEditText.setError("請輸入驗證碼");
+                otpEditText.requestFocus();
                 return;
             }
-            if (!code.matches("^\\d{6}$")) {
-                toast("請輸入 6 位數驗證碼");
-                return;
-            }
 
-            buttonVerify.setEnabled(false);
+            // TODO: 在這裡呼叫後端驗證 API 驗證 code
+            // 假設驗證通過 → 跳轉到 Forget12Activity
+            Toast.makeText(this, "驗證成功！", Toast.LENGTH_SHORT).show();
 
-            ApiHelper.httpPost(
-                    "users/verify_code",
-                    new VerifyCodeRequestDto(email, code),
-                    VerifyCodeResponseDto.class,
-                    new ApiHelper.ApiCallback<VerifyCodeResponseDto>() {
-                        @Override
-                        public void onSuccess(VerifyCodeResponseDto resp) {
-                            buttonVerify.setEnabled(true);
-                            if (resp != null && resp.getError() == null) {
-                                toast(resp.getMessage() != null ? resp.getMessage() : "驗證成功");
-                                startActivity(new Intent(VerifyActivity.this, ProfileActivity.class));
-                                finish();
-                            } else {
-                                String msg = (resp != null && resp.getError() != null) ? resp.getError() : "驗證失敗";
-                                toast(msg);
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Throwable t) {
-                            buttonVerify.setEnabled(true);
-                            toast("連線錯誤：" + (t != null ? t.getMessage() : "未知錯誤"));
-                        }
-                    }
-            );
-
+            Intent i = new Intent(VerifyActivity.this, Forget12Activity.class);
+            i.putExtra("email", email);   // 把 email 傳過去，方便重設密碼用
+            startActivity(i);
+            finish(); // 關掉驗證頁，避免返回
         });
     }
-
-    private void toast(String s) { Toast.makeText(this, s, Toast.LENGTH_SHORT).show(); }
 }

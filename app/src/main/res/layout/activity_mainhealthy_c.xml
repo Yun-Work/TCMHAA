@@ -22,6 +22,7 @@
                 android:id="@+id/btnPickRange"
                 android:layout_width="220dp" android:layout_height="48dp"
                 android:text="@string/btn_pick_range" android:textSize="18sp"
+                android:backgroundTint="@color/maincolor"
                 android:layout_marginTop="12dp" />
 
             <FrameLayout

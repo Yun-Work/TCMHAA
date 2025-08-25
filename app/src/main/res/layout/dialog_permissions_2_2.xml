@@ -1,14 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="20dp">
-    <!-- 確認可刪 -->
+
+    <!-- 必讀提示 -->
+    <TextView
+        android:id="@+id/tvTip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="為確保功能正常，本 App 需取得以下所有權限。請勾選「同意所有必要權限」。"
+        android:textColor="#D32F2F"
+        android:textSize="14sp"
+        android:layout_marginBottom="12dp" />
+
+    <!-- 總開關 -->
+    <CheckBox
+        android:id="@+id/checkbox_all"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="我同意所有必要權限（一次全選）"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <!-- 既有勾選項（保留你的 ID） -->
     <CheckBox
         android:id="@+id/checkbox_privacy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="個人隱私權限" />
+        android:text="個人隱私權限（同意條款）" />
 
     <CheckBox
         android:id="@+id/checkbox_camera"
@@ -26,12 +47,14 @@
         android:id="@+id/checkbox_storage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="是否允許存取手機相簿" />
+        android:text="是否允許存取手機相簿（讀取圖片）" />
+
     <Button
         android:id="@+id/btnConfirm"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="#56C8D8"
         android:text="確認"
-        android:layout_marginTop="20dp"/>
+        android:textColor="@android:color/black"
+        android:backgroundTint="#56C8D8"
+        android:layout_marginTop="16dp" />
 </LinearLayout>

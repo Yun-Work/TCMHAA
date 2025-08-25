@@ -41,20 +41,25 @@
             </intent-filter>
         </activity>
         <!-- 🔐 登入畫面 -->
-        <activity android:name=".MainActivity" />
         <activity android:name=".ForgetActivity" />
+        <activity android:name=".VerifyActivity" />
+        <activity android:name=".Forget12Activity" />
         <activity android:name=".CheckActivity" />
-        <activity android:name=".ProfileActivity" />
         <activity android:name=".WelcomeActivity" />
         <activity android:name=".MainhealthyActivity" />
+        <activity android:name=".WarningActivity" />
         <activity android:name=".PhotoActivity" />
         <activity android:name=".CameraActivity" />
         <activity android:name="._aMainActivity" />
         <activity android:name="._bMainActivity" />
         <activity android:name="._cMainActivity" />
         <activity android:name="._dMainActivity" />
-        <activity android:name=".VerifyActivity" />
-        <activity android:name=".WarningActivity" />
+        <activity android:name="._dProfileActivity"/>
+        <activity android:name="._dTimeActivity"/>
+        <activity android:name="._dNotifySettingsActivity"/>
+        <activity android:name="._dPrivacyActivity"/>
+        <activity android:name="._dAboutActivity"/>
+
 
         <!-- FileProvider（供 CameraActivity 產生的檔案授權給外部/其他 app 使用） -->
         <provider

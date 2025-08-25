@@ -235,15 +235,13 @@ public class CameraActivity extends AppCompatActivity {
                                             progressDialog.dismiss();
                                             Log.d(TAG, "拍攝照片分析成功");
 
-                                            // 跳轉到結果頁面
-                                            Intent intent = new Intent(CameraActivity.this, _bMainActivity.class);
+                                            // 👉 先跳 WarningActivity，而不是直接去 _bMainActivity
+                                            Intent intent = new Intent(CameraActivity.this, WarningActivity.class);
 
-                                            // 將分析結果轉換為可序列化的格式
+                                            // 將分析結果資料也帶過去，交給 WarningActivity 再傳到 _bMainActivity
                                             AnalysisResult parcelableResult = new AnalysisResult(result);
                                             intent.putExtra("analysis_result", parcelableResult);
                                             intent.putExtra("source_type", "camera");
-
-                                            // 🎯 重要：傳遞原始圖片的Base64數據
                                             intent.putExtra("original_image_base64", originalImageBase64);
 
                                             startActivity(intent);

@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:background="@android:color/white"
     android:padding="24dp">
-    <!-- 確認可刪 -->
+
     <!-- LOGO 左上角 -->
     <ImageView
         android:id="@+id/logo"
@@ -14,8 +14,10 @@
         android:layout_alignParentTop="true"
         android:src="@drawable/newlogo"
         android:contentDescription="logo" />
+
     <!-- 標題文字 -->
     <TextView
+        android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
@@ -24,6 +26,7 @@
         android:text="障礙物排除提醒"
         android:textSize="30sp"
         android:textColor="#5F67B2"/>
+
     <!-- 中間文字 -->
     <TextView
         android:id="@+id/text_message"
@@ -37,16 +40,35 @@
         android:gravity="center"
         android:lineSpacingExtra="6dp" />
 
-    <!-- 下一步按鈕 -->
-    <Button
-        android:id="@+id/btn_next"
+    <!-- 是 / 否 按鈕排成一列 -->
+    <LinearLayout
+        android:id="@+id/buttonRow"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/text_message"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="40dp"
-        android:text="下一步"
-        android:textSize="18sp"
-        android:textColor="@android:color/black"
-        android:backgroundTint="#56C8D8" />
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/btn_yes"
+            android:layout_width="120dp"
+            android:layout_height="48dp"
+            android:text="是"
+            android:textSize="18sp"
+            android:textColor="@android:color/black"
+            android:backgroundTint="#56C8D8"
+            android:layout_marginEnd="20dp"/>
+
+        <Button
+            android:id="@+id/btn_no"
+            android:layout_width="120dp"
+            android:layout_height="48dp"
+            android:text="否"
+            android:textSize="18sp"
+            android:textColor="@android:color/black"
+            android:backgroundTint="#56C8D8"/>
+    </LinearLayout>
+
 </RelativeLayout>

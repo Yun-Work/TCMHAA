@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:background="@android:color/white"
+    tools:context="com.example.tcmhaa._dMainActivity">
 
     <ScrollView
         android:id="@+id/contentScroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/bottomBar"
+        android:layout_marginBottom="-593dp"
         android:fillViewport="true"
         android:padding="16dp">
 
@@ -21,47 +24,156 @@
                 android:id="@+id/ivLogo"
                 android:layout_width="72dp"
                 android:layout_height="72dp"
-                android:src="@drawable/newlogo"
-                android:contentDescription="@string/app_name" />
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/newlogo" />
 
-            <TextView android:text="@string/item_profile"
-                android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:textSize="18sp" android:padding="12dp"/>
+            <!-- 每一行都是可點的容器（有 ripple） -->
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="12dp"
-                android:text="@string/item_daily_notify"
-                android:textSize="18sp" />
+            <LinearLayout
+                android:id="@+id/row_profile"
+                style="@style/SettingsRowStyle">
 
-            <TextView android:text="@string/item_popup_notify"
-                android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:textSize="18sp" android:padding="12dp"/>
-            <TextView android:text="@string/item_change_password"
-                android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:textSize="18sp" android:padding="12dp"/>
-            <TextView android:text="@string/item_privacy"
-                android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:textSize="18sp" android:padding="12dp"/>
-            <TextView android:text="@string/item_about"
-                android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:textSize="18sp" android:padding="12dp"/>
+                <ImageView
+                    android:layout_width="33dp"
+                    android:layout_height="33dp"
+                    android:layout_marginStart="7dp"
+                    android:contentDescription="@string/item_profile"
+                    android:src="@drawable/usern" />
 
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:text="@string/item_profile"
+                    android:textColor="#56C8D8"
+                    android:textSize="18sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/row_daily_notify"
+                style="@style/SettingsRowStyle">
+
+                <ImageView
+                    android:layout_width="33dp"
+                    android:layout_height="33dp"
+
+                    android:layout_marginStart="7dp"
+                    android:contentDescription="@string/item_daily_notify"
+                    android:src="@drawable/usern" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:text="@string/item_daily_notify"
+                    android:textColor="#56C8D8"
+                    android:textSize="18sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/row_popup_notify"
+                style="@style/SettingsRowStyle">
+
+                <ImageView
+                    android:layout_width="33dp"
+                    android:layout_height="33dp"
+
+                    android:layout_marginStart="7dp"
+                    android:contentDescription="@string/item_popup_notify"
+                    android:src="@drawable/usern" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:text="@string/item_popup_notify"
+                    android:textColor="#56C8D8"
+                    android:textSize="18sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/row_change_password"
+                style="@style/SettingsRowStyle">
+
+                <ImageView
+                    android:layout_width="33dp"
+                    android:layout_height="33dp"
+
+                    android:layout_marginStart="7dp"
+                    android:contentDescription="@string/item_change_password"
+                    android:src="@drawable/usern" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:text="@string/item_change_password"
+                    android:textColor="#56C8D8"
+                    android:textSize="18sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/row_privacy"
+                style="@style/SettingsRowStyle">
+
+                <ImageView
+                    android:layout_width="33dp"
+                    android:layout_height="33dp"
+
+                    android:layout_marginStart="7dp"
+                    android:contentDescription="@string/item_privacy"
+                    android:src="@drawable/usern" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:text="@string/item_privacy"
+                    android:textColor="#56C8D8"
+                    android:textSize="18sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/row_about"
+                style="@style/SettingsRowStyle">
+
+                <ImageView
+                    android:layout_width="33dp"
+                    android:layout_height="33dp"
+
+                    android:layout_marginStart="7dp"
+                    android:src="@drawable/usern" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:text="@string/item_about"
+                    android:textColor="#56C8D8"
+                    android:textSize="18sp" />
+            </LinearLayout>
+
+            <!-- 登出 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="end"
-                android:layout_marginTop="24dp">
+                android:layout_marginTop="24dp"
+                android:gravity="end">
 
                 <Button
                     android:id="@+id/btnLogout"
                     android:layout_width="120dp"
                     android:layout_height="48dp"
+                    android:backgroundTint="@color/maincolor"
                     android:text="@string/btn_logout"
-                    android:textSize="18sp"
-                    android:backgroundTint="@color/navAccentCyan"
-                    android:textColor="@color/navTextDark"/>
+                    android:textColor="@color/white"
+                    android:textSize="18sp" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
