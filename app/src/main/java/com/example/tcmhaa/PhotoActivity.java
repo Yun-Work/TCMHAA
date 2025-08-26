@@ -34,6 +34,7 @@ public class PhotoActivity extends AppCompatActivity {
     private Uri selectedImageUri;
     private ApiService apiService;
 
+    // 選取圖片（相簿）
     private final ActivityResultLauncher<String> pickImageLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri != null) {
@@ -44,6 +45,7 @@ public class PhotoActivity extends AppCompatActivity {
                 }
             });
 
+    // Android 13+ 要求 READ_MEDIA_IMAGES 權限
     private final ActivityResultLauncher<String> requestReadImagesPermission =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
                 if (granted) {
@@ -64,14 +66,14 @@ public class PhotoActivity extends AppCompatActivity {
 
     private void initViews() {
         imagePreview = findViewById(R.id.imagePreview);
-        btnPickPhoto = findViewById(R.id.btnPickPhoto);
-        btnBack = findViewById(R.id.btnBack);
+        btnPickPhoto  = findViewById(R.id.btnPickPhoto);
+        btnBack       = findViewById(R.id.btnBack);
 
+        // 第一次按：選照片；已選照片後按：開始分析
         btnPickPhoto.setOnClickListener(v -> {
             if (selectedImageUri == null) {
                 pickImage();
             } else {
-                // 已選擇圖片，開始分析
                 analyzeSelectedImage();
             }
         });
@@ -85,7 +87,6 @@ public class PhotoActivity extends AppCompatActivity {
 
     private void pickImage() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Android 13+ 需要 READ_MEDIA_IMAGES
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
                     == PackageManager.PERMISSION_GRANTED) {
                 pickImageLauncher.launch("image/*");
@@ -93,7 +94,7 @@ public class PhotoActivity extends AppCompatActivity {
                 requestReadImagesPermission.launch(Manifest.permission.READ_MEDIA_IMAGES);
             }
         } else {
-            // Android 12-：GetContent 不需要額外權限
+            // Android 12- 使用 GetContent 不需要額外權限
             pickImageLauncher.launch("image/*");
         }
     }
@@ -101,7 +102,6 @@ public class PhotoActivity extends AppCompatActivity {
     private void showPreview(@NonNull Uri uri) {
         try {
             imagePreview.setImageURI(uri);
-            // 更改按鈕文字提示用戶可以開始分析
             btnPickPhoto.setText("開始分析");
             Toast.makeText(this, "圖片已選擇，點擊「開始分析」進行面部分析", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
@@ -116,7 +116,7 @@ public class PhotoActivity extends AppCompatActivity {
             return;
         }
 
-        // 顯示進度對話框
+        // 進度對話框
         AlertDialog progressDialog = new AlertDialog.Builder(this)
                 .setTitle("分析中")
                 .setMessage("正在進行面部膚色分析，請稍候...")
@@ -125,41 +125,39 @@ public class PhotoActivity extends AppCompatActivity {
         progressDialog.show();
 
         try {
-            // 將URI轉換為Bitmap
+            // URI → Bitmap（含大小控制）
             Bitmap originalBitmap = uriToBitmap(selectedImageUri);
-
             if (originalBitmap == null) {
                 progressDialog.dismiss();
                 Toast.makeText(this, "無法加載圖片，請重新選擇", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // 🔧 關鍵：保存原始圖片的Base64數據
+            // 保留原圖 Base64，之後顯示用
             String originalImageBase64 = bitmapToBase64(originalBitmap);
 
             Log.d(TAG, "開始分析圖片，尺寸: " + originalBitmap.getWidth() + "x" + originalBitmap.getHeight());
 
-            // 調用API分析
+            // 呼叫後端分析
             apiService.analyzeFace(originalBitmap, new ApiService.AnalysisCallback() {
                 @Override
                 public void onSuccess(ApiService.AnalysisResult result) {
                     runOnUiThread(() -> {
                         progressDialog.dismiss();
-                        Log.d(TAG, "分析成功");
+                        Log.d(TAG, "分析成功，前往 WarningActivity");
 
-                        // 跳轉到結果頁面
-                        Intent intent = new Intent(PhotoActivity.this, _bMainActivity.class);
+                        // ✅ 依你的新規劃：先進 WarningActivity（它不管是/否都會把資料帶去 _bMainActivity）
+                        Intent intent = new Intent(PhotoActivity.this, WarningActivity.class);
 
-                        // 將分析結果轉換為可序列化的格式
+                        // 你的專案裡已有可序列化的包裝類
                         AnalysisResult parcelableResult = new AnalysisResult(result);
                         intent.putExtra("analysis_result", parcelableResult);
                         intent.putExtra("source_type", "photo");
-
-                        // 🎯 重要：傳遞原始圖片的Base64數據
                         intent.putExtra("original_image_base64", originalImageBase64);
+                        intent.putExtra("from_photo", true); // 給 WarningActivity 參考（可選）
 
                         startActivity(intent);
-                        finish();
+                        // 這裡不呼叫 finish()，維持返回堆疊：_bMainActivity → WarningActivity → PhotoActivity
                     });
                 }
 
@@ -171,7 +169,7 @@ public class PhotoActivity extends AppCompatActivity {
 
                         new AlertDialog.Builder(PhotoActivity.this)
                                 .setTitle("分析失敗")
-                                .setMessage("面部分析失敗：\n" + error + "\n\n請檢查：\n• 網絡連接是否正常\n• 圖片是否清晰\n• 面部是否完整可見")
+                                .setMessage("面部分析失敗：\n" + error + "\n\n請檢查：\n• 網路是否正常\n• 圖片是否清晰\n• 面部是否完整可見")
                                 .setPositiveButton("重試", (dialog, which) -> analyzeSelectedImage())
                                 .setNegativeButton("取消", (dialog, which) -> {
                                     selectedImageUri = null;
@@ -194,50 +192,38 @@ public class PhotoActivity extends AppCompatActivity {
         try {
             InputStream inputStream = getContentResolver().openInputStream(uri);
             Bitmap originalBitmap = BitmapFactory.decodeStream(inputStream);
+            if (originalBitmap == null) return null;
 
-            if (originalBitmap == null) {
-                return null;
-            }
-
-            // 如果圖片太大，進行縮放以提高處理速度
+            // 避免超大圖造成 OOM：縮到不超過 1024
             int maxSize = 1024;
-            int width = originalBitmap.getWidth();
-            int height = originalBitmap.getHeight();
+            int w = originalBitmap.getWidth();
+            int h = originalBitmap.getHeight();
 
-            if (width > maxSize || height > maxSize) {
-                float scale = Math.min((float) maxSize / width, (float) maxSize / height);
-                int newWidth = Math.round(width * scale);
-                int newHeight = Math.round(height * scale);
-
-                Bitmap scaledBitmap = Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true);
-                originalBitmap.recycle(); // 釋放原始圖片記憶體
-                return scaledBitmap;
+            if (w > maxSize || h > maxSize) {
+                float scale = Math.min((float) maxSize / w, (float) maxSize / h);
+                int newW = Math.round(w * scale);
+                int newH = Math.round(h * scale);
+                Bitmap scaled = Bitmap.createScaledBitmap(originalBitmap, newW, newH, true);
+                originalBitmap.recycle();
+                return scaled;
             }
-
             return originalBitmap;
 
         } catch (IOException e) {
-            Log.e(TAG, "轉換URI到Bitmap失敗", e);
+            Log.e(TAG, "URI→Bitmap 失敗", e);
             return null;
         }
     }
 
-    // 添加Bitmap轉Base64的方法
     private String bitmapToBase64(Bitmap bitmap) {
         try {
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-            // 壓縮圖片以減少大小，但保持可顯示的質量
-            int quality = 80;
-            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, byteArrayOutputStream);
-
-            byte[] byteArray = byteArrayOutputStream.toByteArray();
-            String base64String = Base64.encodeToString(byteArray, Base64.NO_WRAP);
-
-            return "data:image/jpeg;base64," + base64String;
-
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, bos);
+            byte[] bytes = bos.toByteArray();
+            String b64 = Base64.encodeToString(bytes, Base64.NO_WRAP);
+            return "data:image/jpeg;base64," + b64;
         } catch (Exception e) {
-            Log.e(TAG, "Bitmap轉Base64失敗", e);
+            Log.e(TAG, "Bitmap→Base64 失敗", e);
             return null;
         }
     }
@@ -245,8 +231,7 @@ public class PhotoActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // 清理資源
-        if (imagePreview.getDrawable() != null) {
+        if (imagePreview != null && imagePreview.getDrawable() != null) {
             imagePreview.setImageDrawable(null);
         }
     }
