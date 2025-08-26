@@ -26,7 +26,9 @@ public class MainhealthyActivity extends AppCompatActivity {
         buttonTakePhoto   = findViewById(R.id.buttonTakePhoto);
 
         buttonChoosePhoto.setOnClickListener(v ->
-                startActivity(new Intent(MainhealthyActivity.this, WarningActivity.class)));   // activity_photo_5_1
+                startActivity(new Intent(MainhealthyActivity.this, PhotoActivity.class)));   // activity_photo_5_1
+//        buttonChoosePhoto.setOnClickListener(v ->
+//                startActivity(new Intent(MainhealthyActivity.this, WarningActivity.class)));   // activity_photo_5_1
 
         buttonTakePhoto.setOnClickListener(v ->
                 startActivity(new Intent(MainhealthyActivity.this, CameraActivity.class)));  // activity_camera_5_1
