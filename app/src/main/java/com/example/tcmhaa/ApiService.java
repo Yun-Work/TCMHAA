@@ -35,6 +35,7 @@ public class ApiService {
 
     public ApiService() {
         client = new OkHttpClient.Builder()
+                .retryOnConnectionFailure(false)   // NEW: 關閉連線自動重試
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .writeTimeout(60, TimeUnit.SECONDS)
                 .readTimeout(60, TimeUnit.SECONDS)
@@ -157,14 +158,14 @@ public class ApiService {
     /**
      * 分析面部圖片
      */
-    public void analyzeFace(Bitmap bitmap, AnalysisCallback callback) {
-        analyzeFace(bitmap, true, callback);
+    public void analyzeFace(Bitmap bitmap,int userId, AnalysisCallback callback) {
+        analyzeFace(bitmap, userId,true, callback);
     }
 
     /**
      * 分析面部圖片（可選擇是否包含圖片）
      */
-    public void analyzeFace(Bitmap bitmap, boolean includeImages, AnalysisCallback callback) {
+    public void analyzeFace(Bitmap bitmap,int userId, boolean includeImages, AnalysisCallback callback) {
         Log.d(TAG, "🚀 開始面部分析，圖片尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
 
         try {
@@ -186,6 +187,7 @@ public class ApiService {
                     .url(BASE_URL + ANALYZE_ENDPOINT)
                     .post(requestBody)
                     .addHeader("Content-Type", "application/json")
+                    .addHeader("X-User-Id", String.valueOf(userId))   //把 user_id 放在 header
                     .build();
 
             Log.d(TAG, "📡 發送分析請求到: " + BASE_URL + ANALYZE_ENDPOINT);
