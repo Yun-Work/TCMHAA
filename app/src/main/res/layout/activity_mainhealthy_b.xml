@@ -1,80 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:background="@android:color/white">
 
-    <!-- 內容區：整塊都要在底欄上方 -->
-    <ScrollView
-        android:id="@+id/contentScroll"
+    <!-- 主要內容區域：鋪滿螢幕，但在完成按鈕和底部導航上方 -->
+    <LinearLayout
+        android:id="@+id/mainContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/bottomBar"
-        android:fillViewport="true"
-        android:padding="16dp">
+        android:layout_above="@+id/btnDone"
+        android:layout_marginBottom="8dp"
+        android:orientation="vertical">
 
+        <!-- Logo區域：保留原有logo，但縮小高度 -->
         <LinearLayout
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp"
+            android:paddingTop="56dp"
+            android:gravity="start">
 
-            <ImageView
-                android:id="@+id/ivLogo" android:layout_width="72dp" android:layout_height="72dp"
-                android:src="@drawable/newlogo" android:contentDescription="@string/app_name" />
-
-            <FrameLayout
-                android:id="@+id/blockUserPhoto"
-                android:layout_width="match_parent"
-                android:layout_height="180dp"
-                android:layout_marginTop="10dp"
-                android:background="@color/placeholderGray">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="@string/label_user_photo"
-                    android:textColor="@color/placeholderText"
-                    android:textSize="25sp" />
-            </FrameLayout>
-
-            <FrameLayout
-                android:id="@+id/blockTextResult"
-                android:layout_width="match_parent"
-                android:layout_height="220dp"
-                android:layout_marginTop="15dp"
-                android:background="@color/placeholderGray">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="@string/label_text_result"
-                    android:textColor="@color/placeholderText"
-                    android:textSize="25sp" />
-            </FrameLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:gravity="end" android:layout_marginTop="20dp">
-
-                <Button
-                    android:id="@+id/btnDone"
-                    android:layout_width="120dp"
-                    android:layout_height="42dp"
-                    android:backgroundTint="@color/navAccentCyan"
-                    android:text="@string/btn_done"
-                    android:textColor="@color/navTextDark"
-                    android:textSize="17sp"
-                    tools:ignore="TouchTargetSizeCheck" />
-            </LinearLayout>
         </LinearLayout>
-    </ScrollView>
 
-    <!-- 固定在最底 -->
+        <!-- 照片區域：占用大部分上半螢幕 -->
+
+        <ImageView
+            android:id="@+id/ivLogo"
+            android:layout_width="79dp"
+            android:layout_height="77dp"
+            android:contentDescription="@string/app_name"
+            android:src="@drawable/newlogo" />
+
+        <FrameLayout
+            android:id="@+id/blockUserPhoto"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1.2"
+            android:layout_margin="4dp"
+            android:background="@color/placeholderGray">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/label_user_photo"
+                android:textColor="@color/placeholderText"
+                android:textSize="25sp" />
+        </FrameLayout>
+
+        <!-- 文字分析結果區域：占用下半螢幕 -->
+        <FrameLayout
+            android:id="@+id/blockTextResult"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_margin="4dp"
+            android:layout_weight="1"
+            android:background="@color/placeholderGray">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/label_text_result"
+                android:textColor="@color/placeholderText"
+                android:textSize="25sp" />
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <!-- 完成按鈕：固定在底部導航上方，水平居中 -->
+    <Button
+        android:id="@+id/btnDone"
+        android:layout_width="120dp"
+        android:layout_height="48dp"
+        android:layout_above="@+id/bottomBar"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="@color/navAccentCyan"
+        android:text="@string/btn_done"
+        android:textColor="@color/navTextDark"
+        android:textSize="17sp" />
+
+    <!-- 底部導航：固定在最底部 -->
     <include
         android:id="@+id/bottomBar"
         layout="@layout/layout_bottom_nav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"/>
+
 </RelativeLayout>
