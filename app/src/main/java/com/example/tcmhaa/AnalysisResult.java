@@ -3,42 +3,79 @@ package com.example.tcmhaa;
 import android.os.Parcel;
 import android.os.Parcelable;
 import org.json.JSONObject;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
- * 分析結果數據類，實現Parcelable接口以便在Activity間傳遞
+ * 分析結果數據類（簡化版，只檢測明顯痣）
  */
 public class AnalysisResult implements Parcelable {
     public boolean success;
     public String error;
-    public String originalImage;
-    public String annotatedImage;
-    public String abnormalOnlyImage;
     public int abnormalCount;
-    public String overallColorJson;  // 存儲為JSON字符串
-    public String allRegionResultsJson;  // 存儲為JSON字符串
-    public String regionResultsJson;  // 存儲為JSON字符串
-    public String diagnosesJson;  // 存儲為JSON字符串
+    public String overallColorJson;
+    public String allRegionResultsJson;
+    public String regionResultsJson;
     public String diagnosisText;
-    public String gridAnalysisJson;  // 存儲為JSON字符串
+
+    // 痣檢測相關欄位（簡化版）
+    public boolean hasMoles;
+    public boolean molesRemoved;
+    public int moleCount;
 
     public AnalysisResult() {}
 
     // 從ApiService.AnalysisResult轉換的構造函數
     public AnalysisResult(ApiService.AnalysisResult apiResult) {
-        this.success = apiResult.success;
-        this.error = apiResult.error;
-        this.originalImage = apiResult.originalImage;
-        this.annotatedImage = apiResult.annotatedImage;
-        this.abnormalOnlyImage = apiResult.abnormalOnlyImage;
-        this.abnormalCount = apiResult.abnormalCount;
-        this.diagnosisText = apiResult.diagnosisText;
+        this.success = apiResult.isSuccess();
+        this.error = apiResult.getError();
+        this.abnormalCount = apiResult.getAbnormalCount();
+        this.diagnosisText = apiResult.getDiagnosisText();
 
-        // 將JSONObject轉換為字符串
-        this.overallColorJson = apiResult.overallColor != null ? apiResult.overallColor.toString() : null;
-        this.allRegionResultsJson = apiResult.allRegionResults != null ? apiResult.allRegionResults.toString() : null;
-        this.regionResultsJson = apiResult.regionResults != null ? apiResult.regionResults.toString() : null;
-        this.diagnosesJson = apiResult.diagnoses != null ? apiResult.diagnoses.toString() : null;
-        this.gridAnalysisJson = apiResult.gridAnalysis != null ? apiResult.gridAnalysis.toString() : null;
+        // 處理整體膚色
+        if (apiResult.getOverallColor() != null) {
+            try {
+                JSONObject colorJson = new JSONObject();
+                colorJson.put("r", apiResult.getOverallColor().getR());
+                colorJson.put("g", apiResult.getOverallColor().getG());
+                colorJson.put("b", apiResult.getOverallColor().getB());
+                colorJson.put("hex", apiResult.getOverallColor().getHex());
+                this.overallColorJson = colorJson.toString();
+            } catch (Exception e) {
+                this.overallColorJson = null;
+            }
+        }
+
+        // 處理區域結果
+        if (apiResult.getAllRegionResults() != null) {
+            try {
+                JSONObject allRegionsJson = new JSONObject();
+                for (Map.Entry<String, String> entry : apiResult.getAllRegionResults().entrySet()) {
+                    allRegionsJson.put(entry.getKey(), entry.getValue());
+                }
+                this.allRegionResultsJson = allRegionsJson.toString();
+            } catch (Exception e) {
+                this.allRegionResultsJson = null;
+            }
+        }
+
+        if (apiResult.getRegionResults() != null) {
+            try {
+                JSONObject regionJson = new JSONObject();
+                for (Map.Entry<String, String> entry : apiResult.getRegionResults().entrySet()) {
+                    regionJson.put(entry.getKey(), entry.getValue());
+                }
+                this.regionResultsJson = regionJson.toString();
+            } catch (Exception e) {
+                this.regionResultsJson = null;
+            }
+        }
+
+        // 處理痣檢測數據
+        this.hasMoles = apiResult.hasMoles();
+        this.molesRemoved = apiResult.isMolesRemoved();
+        this.moleCount = apiResult.getMoleCount();
     }
 
     // 獲取JSONObject的便利方法
@@ -66,36 +103,113 @@ public class AnalysisResult implements Parcelable {
         }
     }
 
-    public JSONObject getDiagnoses() {
-        try {
-            return diagnosesJson != null ? new JSONObject(diagnosesJson) : null;
-        } catch (Exception e) {
-            return null;
-        }
+    // 痣相關便利方法
+    public boolean hasAnyMoles() {
+        return hasMoles;
     }
 
-    public JSONObject getGridAnalysis() {
-        try {
-            return gridAnalysisJson != null ? new JSONObject(gridAnalysisJson) : null;
-        } catch (Exception e) {
-            return null;
-        }
+    public int getMoleCount() {
+        return moleCount;
     }
 
-    // Parcelable 實現
+    public String getMoleDescription() {
+        if (!hasMoles) {
+            return "未檢測到明顯的痣";
+        }
+        return "檢測到 " + moleCount + " 個痣";
+    }
+
+    // 獲取整體膚色的便利方法
+    public String getOverallColorHex() {
+        JSONObject color = getOverallColor();
+        return color != null ? color.optString("hex", "#000000") : "#000000";
+    }
+
+    public int getOverallColorR() {
+        JSONObject color = getOverallColor();
+        return color != null ? color.optInt("r", 0) : 0;
+    }
+
+    public int getOverallColorG() {
+        JSONObject color = getOverallColor();
+        return color != null ? color.optInt("g", 0) : 0;
+    }
+
+    public int getOverallColorB() {
+        JSONObject color = getOverallColor();
+        return color != null ? color.optInt("b", 0) : 0;
+    }
+
+    // 獲取區域結果的便利方法
+    public Map<String, String> getAllRegionResultsAsMap() {
+        Map<String, String> results = new HashMap<>();
+        JSONObject json = getAllRegionResults();
+        if (json != null) {
+            Iterator<String> keys = json.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                results.put(key, json.optString(key));
+            }
+        }
+        return results;
+    }
+
+    public Map<String, String> getRegionResultsAsMap() {
+        Map<String, String> results = new HashMap<>();
+        JSONObject json = getRegionResults();
+        if (json != null) {
+            Iterator<String> keys = json.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                results.put(key, json.optString(key));
+            }
+        }
+        return results;
+    }
+
+    // 檢查是否有異常區域
+    public boolean hasAbnormalRegions() {
+        return abnormalCount > 0;
+    }
+
+    // 獲取狀態摘要
+    public String getStatusSummary() {
+        if (!success) {
+            return "分析失敗";
+        }
+
+        StringBuilder summary = new StringBuilder();
+
+        if (abnormalCount == 0) {
+            summary.append("所有區域膚色狀態正常");
+        } else {
+            summary.append("發現 ").append(abnormalCount).append(" 個異常區域");
+        }
+
+        if (hasMoles) {
+            summary.append("；檢測到痣");
+            if (molesRemoved) {
+                summary.append("（已處理）");
+            }
+        }
+
+        return summary.toString();
+    }
+
+    // Parcelable實現
     protected AnalysisResult(Parcel in) {
         success = in.readByte() != 0;
         error = in.readString();
-        originalImage = in.readString();
-        annotatedImage = in.readString();
-        abnormalOnlyImage = in.readString();
         abnormalCount = in.readInt();
         overallColorJson = in.readString();
         allRegionResultsJson = in.readString();
         regionResultsJson = in.readString();
-        diagnosesJson = in.readString();
         diagnosisText = in.readString();
-        gridAnalysisJson = in.readString();
+
+        // 痣檢測相關欄位
+        hasMoles = in.readByte() != 0;
+        molesRemoved = in.readByte() != 0;
+        moleCount = in.readInt();
     }
 
     public static final Creator<AnalysisResult> CREATOR = new Creator<AnalysisResult>() {
@@ -119,15 +233,15 @@ public class AnalysisResult implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte((byte) (success ? 1 : 0));
         dest.writeString(error);
-        dest.writeString(originalImage);
-        dest.writeString(annotatedImage);
-        dest.writeString(abnormalOnlyImage);
         dest.writeInt(abnormalCount);
         dest.writeString(overallColorJson);
         dest.writeString(allRegionResultsJson);
         dest.writeString(regionResultsJson);
-        dest.writeString(diagnosesJson);
         dest.writeString(diagnosisText);
-        dest.writeString(gridAnalysisJson);
+
+        // 痣檢測相關欄位
+        dest.writeByte((byte) (hasMoles ? 1 : 0));
+        dest.writeByte((byte) (molesRemoved ? 1 : 0));
+        dest.writeInt(moleCount);
     }
 }

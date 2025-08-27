@@ -66,8 +66,8 @@ public class PhotoActivity extends AppCompatActivity {
 
     private void initViews() {
         imagePreview = findViewById(R.id.imagePreview);
-        btnPickPhoto  = findViewById(R.id.btnPickPhoto);
-        btnBack       = findViewById(R.id.btnBack);
+        btnPickPhoto = findViewById(R.id.btnPickPhoto);
+        btnBack = findViewById(R.id.btnBack);
 
         // 第一次按：選照片；已選照片後按：開始分析
         btnPickPhoto.setOnClickListener(v -> {
@@ -116,6 +116,8 @@ public class PhotoActivity extends AppCompatActivity {
             return;
         }
 
+        _bMainActivity.clearGlobalCache();
+
         // 進度對話框
         AlertDialog progressDialog = new AlertDialog.Builder(this)
                 .setTitle("分析中")
@@ -129,7 +131,7 @@ public class PhotoActivity extends AppCompatActivity {
             Bitmap originalBitmap = uriToBitmap(selectedImageUri);
             if (originalBitmap == null) {
                 progressDialog.dismiss();
-                Toast.makeText(this, "無法加載圖片，請重新選擇", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "無法載入圖片，請重新選擇", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -138,26 +140,44 @@ public class PhotoActivity extends AppCompatActivity {
 
             Log.d(TAG, "開始分析圖片，尺寸: " + originalBitmap.getWidth() + "x" + originalBitmap.getHeight());
 
-            // 呼叫後端分析
-            apiService.analyzeFace(originalBitmap, new ApiService.AnalysisCallback() {
+            // 呼叫後端分析（第一次分析：僅檢測痣，不移除）
+            apiService.analyzeFaceWithMoleDetection(originalBitmap, false, new ApiService.AnalysisCallback() {
                 @Override
                 public void onSuccess(ApiService.AnalysisResult result) {
                     runOnUiThread(() -> {
                         progressDialog.dismiss();
-                        Log.d(TAG, "分析成功，前往 WarningActivity");
+                        Log.d(TAG, "分析成功");
 
-                        // ✅ 依你的新規劃：先進 WarningActivity（它不管是/否都會把資料帶去 _bMainActivity）
-                        Intent intent = new Intent(PhotoActivity.this, WarningActivity.class);
+                        // 檢查是否有痣
+                        boolean hasMoles = result.hasMoles();  // 修正：改為 hasMoles()
 
-                        // 你的專案裡已有可序列化的包裝類
-                        AnalysisResult parcelableResult = new AnalysisResult(result);
-                        intent.putExtra("analysis_result", parcelableResult);
-                        intent.putExtra("source_type", "photo");
-                        intent.putExtra("original_image_base64", originalImageBase64);
-                        intent.putExtra("from_photo", true); // 給 WarningActivity 參考（可選）
+                        if (hasMoles) {
+                            Log.d(TAG, "檢測到痣，前往 WarningActivity");
+                            // 有痣，前往警告頁面
+                            Intent intent = new Intent(PhotoActivity.this, WarningActivity.class);
 
-                        startActivity(intent);
-                        // 這裡不呼叫 finish()，維持返回堆疊：_bMainActivity → WarningActivity → PhotoActivity
+                            AnalysisResult parcelableResult = new AnalysisResult(result);
+                            intent.putExtra("analysis_result", parcelableResult);
+                            intent.putExtra("source_type", "photo");
+                            intent.putExtra("original_image_base64", originalImageBase64);
+                            intent.putExtra("from_photo", true);
+                            intent.putExtra("has_moles", true);  // 修正：改為 has_moles
+
+                            startActivity(intent);
+                        } else {
+                            Log.d(TAG, "未檢測到痣，直接前往 _bMainActivity");
+                            // 沒有痣，直接前往主結果頁面
+                            Intent intent = new Intent(PhotoActivity.this, _bMainActivity.class);
+
+                            AnalysisResult parcelableResult = new AnalysisResult(result);
+                            intent.putExtra("analysis_result", parcelableResult);
+                            intent.putExtra("source_type", "photo");
+                            intent.putExtra("original_image_base64", originalImageBase64);
+                            intent.putExtra("from_photo", true);
+                            intent.putExtra("has_moles", false);  // 修正：改為 has_moles
+
+                            startActivity(intent);
+                        }
                     });
                 }
 

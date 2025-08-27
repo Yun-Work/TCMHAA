@@ -3,7 +3,6 @@ package com.example.tcmhaa;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Base64;
@@ -27,12 +26,12 @@ import java.util.Iterator;
 public class _bMainActivity extends AppCompatActivity {
     private static final String TAG = "_bMainActivity";
 
-    // 🎯 新增靜態變量來保存分析結果
-    private static AnalysisResult cachedAnalysisResult = null;
-    private static String cachedSourceType = null;
-    private static boolean hasDisplayedResult = false;
+    // 全局靜態變量來保存分析結果和照片，直到下一次分析
+    private static AnalysisResult globalAnalysisResult = null;
+    private static String globalSourceType = null;
+    private static String globalOriginalImageBase64 = null;
+    private static boolean hasGlobalResult = false;
 
-    private ImageView ivLogo;
     private TextView tvTitle;
     private FrameLayout blockUserPhoto;
     private FrameLayout blockTextResult;
@@ -40,6 +39,7 @@ public class _bMainActivity extends AppCompatActivity {
 
     private AnalysisResult analysisResult;
     private String sourceType;
+    private String originalImageBase64;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,38 +55,28 @@ public class _bMainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        // 🎯 從其他頁面返回時，恢復之前的分析結果
-        if (hasDisplayedResult && cachedAnalysisResult != null) {
-            analysisResult = cachedAnalysisResult;
-            sourceType = cachedSourceType;
+        // 每次 onResume 都嘗試恢復全局數據
+        if (hasGlobalResult && globalAnalysisResult != null) {
+            analysisResult = globalAnalysisResult;
+            sourceType = globalSourceType;
+            originalImageBase64 = globalOriginalImageBase64;
             displayAnalysisResult();
-            Log.d(TAG, "從緩存恢復分析結果");
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        // 🎯 保存當前的分析結果到緩存
-        if (analysisResult != null) {
-            cachedAnalysisResult = analysisResult;
-            cachedSourceType = sourceType;
-            hasDisplayedResult = true;
-            Log.d(TAG, "分析結果已保存到緩存");
+            Log.d(TAG, "從全局緩存恢復分析結果和照片");
         }
     }
 
     private void initViews() {
-        ivLogo = findViewById(R.id.ivLogo);
         tvTitle = findViewById(R.id.tvTitle);
         blockUserPhoto = findViewById(R.id.blockUserPhoto);
         blockTextResult = findViewById(R.id.blockTextResult);
         btnDone = findViewById(R.id.btnDone);
 
+        // 修改：完成按鈕跳轉到 MainhealthyActivity
         btnDone.setOnClickListener(v -> {
-            // 🎯 點擊完成時清空緩存
-
+            Intent intent = new Intent(_bMainActivity.this, MainhealthyActivity.class);
+            // 清除任務堆疊，確保返回到主頁面
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
             finish();
         });
     }
@@ -94,45 +84,61 @@ public class _bMainActivity extends AppCompatActivity {
     private void handleAnalysisResult() {
         Intent intent = getIntent();
 
-        // 🎯 檢查是否有新的分析結果
+        // 檢查是否有新的分析結果
         AnalysisResult newAnalysisResult = intent.getParcelableExtra("analysis_result");
         String newSourceType = intent.getStringExtra("source_type");
-        String originalImageBase64 = intent.getStringExtra("original_image_base64");
+        String newOriginalImageBase64 = intent.getStringExtra("original_image_base64");
 
-        // 如果有新的分析結果，直接使用新資料並更新快取
+        // 如果有新的分析結果，更新全局緩存
         if (newAnalysisResult != null) {
-            Log.d(TAG, "收到新的分析結果，更新快取");
+            Log.d(TAG, "收到新的分析結果，更新全局緩存");
 
             analysisResult = newAnalysisResult;
             sourceType = newSourceType;
+            originalImageBase64 = newOriginalImageBase64;
 
-            // 將原始圖片數據添加到結果中以便顯示
-            if (originalImageBase64 != null) {
-                analysisResult.originalImage = originalImageBase64;
-            }
-
-            // 🎯 更新靜態快取
-            cachedAnalysisResult = analysisResult;
-            cachedSourceType = sourceType;
-            hasDisplayedResult = true;
+            // 更新全局緩存
+            globalAnalysisResult = analysisResult;
+            globalSourceType = sourceType;
+            globalOriginalImageBase64 = originalImageBase64;
+            hasGlobalResult = true;
 
             displayAnalysisResult();
             return;
         }
 
-        // 🎯 只有在沒有新資料時才使用快取
-        if (hasDisplayedResult && cachedAnalysisResult != null) {
-            analysisResult = cachedAnalysisResult;
-            sourceType = cachedSourceType;
+        // 如果沒有新資料但有全局緩存，使用全局緩存
+        if (hasGlobalResult && globalAnalysisResult != null) {
+            analysisResult = globalAnalysisResult;
+            sourceType = globalSourceType;
+            originalImageBase64 = globalOriginalImageBase64;
             displayAnalysisResult();
-            Log.d(TAG, "使用快取的分析結果");
+            Log.d(TAG, "使用全局緩存的分析結果");
             return;
         }
 
-        // 如果既沒有新資料也沒有快取，顯示錯誤
+        // 如果既沒有新資料也沒有緩存，顯示錯誤
         Log.e(TAG, "未收到分析結果");
         Toast.makeText(this, "未收到分析結果", Toast.LENGTH_SHORT).show();
         showErrorState();
+    }
+
+    /**
+     * 清除全局緩存 - 當開始新的分析時調用
+     */
+    public static void clearGlobalCache() {
+        globalAnalysisResult = null;
+        globalSourceType = null;
+        globalOriginalImageBase64 = null;
+        hasGlobalResult = false;
+        Log.d("_bMainActivity", "全局緩存已清除");
+    }
+
+    /**
+     * 檢查是否有緩存的結果
+     */
+    public static boolean hasAnalysisResult() {
+        return hasGlobalResult && globalAnalysisResult != null;
     }
 
     private void displayAnalysisResult() {
@@ -147,8 +153,8 @@ public class _bMainActivity extends AppCompatActivity {
         }
 
         try {
-            // 顯示用戶照片
-            displayUserPhoto();
+            // 顯示原始照片在照片區域
+            displayOriginalPhoto();
 
             // 顯示分析結果文字
             displayAnalysisText();
@@ -161,58 +167,72 @@ public class _bMainActivity extends AppCompatActivity {
         }
     }
 
-    private void displayUserPhoto() {
+    private void displayOriginalPhoto() {
         try {
             // 清除現有內容
             blockUserPhoto.removeAllViews();
 
-            String imageBase64 = analysisResult.originalImage;
+            if (originalImageBase64 != null && !originalImageBase64.isEmpty()) {
+                // 創建ImageView來顯示照片
+                ImageView imageView = new ImageView(this);
 
-            if (imageBase64 != null && !imageBase64.isEmpty()) {
-                // 顯示原始圖片
-                Bitmap bitmap = base64ToBitmap(imageBase64);
+                // 設置佈局參數
+                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                );
+                imageView.setLayoutParams(params);
 
-                if (bitmap != null) {
-                    ImageView imageView = new ImageView(this);
-                    imageView.setLayoutParams(new FrameLayout.LayoutParams(
-                            FrameLayout.LayoutParams.MATCH_PARENT,
-                            FrameLayout.LayoutParams.MATCH_PARENT
-                    ));
-                    imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                    imageView.setImageBitmap(bitmap);
+                // 設置縮放類型，保持長寬比並居中
+                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
-                    blockUserPhoto.addView(imageView);
-                    Log.d(TAG, "原始照片顯示完成");
+                try {
+                    // 解析base64並設置為圖片
+                    String base64Image = originalImageBase64;
+                    if (base64Image.contains(",")) {
+                        base64Image = base64Image.split(",")[1];
+                    }
 
-                } else {
-                    showPhotoPlaceholder();
+                    byte[] imageBytes = Base64.decode(base64Image, Base64.DEFAULT);
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+
+                    if (bitmap != null) {
+                        imageView.setImageBitmap(bitmap);
+                        blockUserPhoto.addView(imageView);
+                        Log.d(TAG, "成功顯示原始照片");
+                    } else {
+                        showPhotoError();
+                    }
+
+                } catch (Exception e) {
+                    Log.e(TAG, "解析照片時發生錯誤", e);
+                    showPhotoError();
                 }
+
             } else {
+                // 如果沒有照片，顯示佔位符
                 showPhotoPlaceholder();
             }
 
         } catch (Exception e) {
-            Log.e(TAG, "顯示用戶照片時發生錯誤", e);
+            Log.e(TAG, "顯示原始照片時發生錯誤", e);
             showPhotoError();
         }
     }
 
     private void showPhotoPlaceholder() {
         TextView placeholderView = new TextView(this);
-        placeholderView.setText("📷 分析完成\n\n" +
-                "來源：" + (sourceType.equals("camera") ? "相機拍攝" : "相簿選擇") + "\n" +
-                "狀態：處理成功");
-        placeholderView.setTextSize(16);
+        placeholderView.setText("📷\n照片已分析");
+        placeholderView.setTextSize(24);
         placeholderView.setGravity(Gravity.CENTER);
-        placeholderView.setTextColor(getColor(android.R.color.black));
+        placeholderView.setTextColor(getColor(android.R.color.darker_gray));
 
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
         );
         params.gravity = Gravity.CENTER;
         placeholderView.setLayoutParams(params);
-
         blockUserPhoto.addView(placeholderView);
     }
 
@@ -233,7 +253,7 @@ public class _bMainActivity extends AppCompatActivity {
 
             // 分析標題
             TextView titleView = new TextView(this);
-            titleView.setText("🎉 面部膚色分析結果");
+            titleView.setText("詳細分析結果");
             titleView.setTextSize(18);
             titleView.setTextColor(getColor(R.color.titlePurple));
             titleView.setTypeface(null, Typeface.BOLD);
@@ -246,17 +266,16 @@ public class _bMainActivity extends AppCompatActivity {
             summaryLayout.setPadding(0, 0, 0, 16);
 
             TextView summaryLabel = new TextView(this);
-            summaryLabel.setText("📊 檢測結果：");
+            summaryLabel.setText("檢測狀態：");
             summaryLabel.setTextSize(14);
             summaryLabel.setTextColor(getColor(android.R.color.black));
             summaryLayout.addView(summaryLabel);
 
             TextView summaryValue = new TextView(this);
+            summaryValue.setText(analysisResult.getStatusSummary());
             if (analysisResult.abnormalCount > 0) {
-                summaryValue.setText(analysisResult.abnormalCount + " 個異常區域");
                 summaryValue.setTextColor(getColor(android.R.color.holo_red_dark));
             } else {
-                summaryValue.setText("所有區域正常");
                 summaryValue.setTextColor(getColor(android.R.color.holo_green_dark));
             }
             summaryValue.setTextSize(14);
@@ -273,10 +292,10 @@ public class _bMainActivity extends AppCompatActivity {
                     divider.setLayoutParams(new LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT, 2));
                     divider.setBackgroundColor(getColor(android.R.color.darker_gray));
-
+                    resultLayout.addView(divider);
 
                     TextView abnormalTitle = new TextView(this);
-                    abnormalTitle.setText("⚠️ 異常區域詳情");
+                    abnormalTitle.setText("異常區域詳情");
                     abnormalTitle.setTextSize(16);
                     abnormalTitle.setTypeface(null, Typeface.BOLD);
                     abnormalTitle.setTextColor(getColor(android.R.color.holo_red_dark));
@@ -307,10 +326,10 @@ public class _bMainActivity extends AppCompatActivity {
                 divider.setLayoutParams(new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT, 2));
                 divider.setBackgroundColor(getColor(android.R.color.darker_gray));
-
+                resultLayout.addView(divider);
 
                 TextView diagnosisTitle = new TextView(this);
-                diagnosisTitle.setText("📋 診斷建議");
+                diagnosisTitle.setText("診斷建議");
                 diagnosisTitle.setTextSize(16);
                 diagnosisTitle.setTypeface(null, Typeface.BOLD);
                 diagnosisTitle.setTextColor(getColor(R.color.titlePurple));
@@ -337,25 +356,10 @@ public class _bMainActivity extends AppCompatActivity {
         }
     }
 
-    private Bitmap base64ToBitmap(String base64String) {
-        try {
-            // 移除data URL前綴（如果存在）
-            if (base64String.startsWith("data:image")) {
-                base64String = base64String.substring(base64String.indexOf(",") + 1);
-            }
-
-            byte[] decodedBytes = Base64.decode(base64String, Base64.DEFAULT);
-            return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
-        } catch (Exception e) {
-            Log.e(TAG, "Base64轉Bitmap失敗", e);
-            return null;
-        }
-    }
-
     private void showPhotoError() {
         blockUserPhoto.removeAllViews();
         TextView errorView = new TextView(this);
-        errorView.setText("圖片顯示失敗");
+        errorView.setText("照片顯示失敗");
         errorView.setTextColor(getColor(android.R.color.holo_red_dark));
         errorView.setTextSize(16);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
