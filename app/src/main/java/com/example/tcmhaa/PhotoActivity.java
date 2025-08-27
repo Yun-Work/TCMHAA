@@ -34,6 +34,7 @@ public class PhotoActivity extends AppCompatActivity {
     private Uri selectedImageUri;
     private ApiService apiService;
 
+    // 選取圖片（相簿）
     private final ActivityResultLauncher<String> pickImageLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri != null) {
@@ -119,6 +120,9 @@ public class PhotoActivity extends AppCompatActivity {
             return;
         }
 
+        _bMainActivity.clearGlobalCache();
+
+        // 進度對話框
         // 顯示進度對話框
         AlertDialog progressDialog = new AlertDialog.Builder(this)
                 .setTitle("分析中")
@@ -133,7 +137,7 @@ public class PhotoActivity extends AppCompatActivity {
 
             if (originalBitmap == null) {
                 progressDialog.dismiss();
-                Toast.makeText(this, "無法加載圖片，請重新選擇", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "無法載入圖片，請重新選擇", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -142,27 +146,45 @@ public class PhotoActivity extends AppCompatActivity {
 
             Log.d(TAG, "開始分析圖片，尺寸: " + originalBitmap.getWidth() + "x" + originalBitmap.getHeight());
 
-            // 調用API分析
-            apiService.analyzeFace(originalBitmap, new ApiService.AnalysisCallback() {
+            // 呼叫後端分析（第一次分析：僅檢測痣，不移除）
+            apiService.analyzeFaceWithMoleDetection(originalBitmap, false, new ApiService.AnalysisCallback() {
                 @Override
                 public void onSuccess(ApiService.AnalysisResult result) {
                     runOnUiThread(() -> {
                         progressDialog.dismiss();
                         Log.d(TAG, "分析成功");
 
-                        // 跳轉到結果頁面
-                        Intent intent = new Intent(PhotoActivity.this, _bMainActivity.class);
+                        // 檢查是否有痣
+                        boolean hasMoles = result.hasMoles();  // 修正：改為 hasMoles()
 
-                        // 將分析結果轉換為可序列化的格式
-                        AnalysisResult parcelableResult = new AnalysisResult(result);
-                        intent.putExtra("analysis_result", parcelableResult);
-                        intent.putExtra("source_type", "photo");
+                        if (hasMoles) {
+                            Log.d(TAG, "檢測到痣，前往 WarningActivity");
+                            // 有痣，前往警告頁面
+                            Intent intent = new Intent(PhotoActivity.this, WarningActivity.class);
 
-                        // 🎯 重要：傳遞原始圖片的Base64數據
-                        intent.putExtra("original_image_base64", originalImageBase64);
+                            AnalysisResult parcelableResult = new AnalysisResult(result);
+                            intent.putExtra("analysis_result", parcelableResult);
+                            intent.putExtra("source_type", "photo");
+                            intent.putExtra("original_image_base64", originalImageBase64);
+                            intent.putExtra("from_photo", true);
+                            intent.putExtra("has_moles", true);  // 修正：改為 has_moles
 
-                        startActivity(intent);
-                        finish();
+                            startActivity(intent);
+                        } else {
+                            Log.d(TAG, "未檢測到痣，直接前往 _bMainActivity");
+                            // 沒有痣，直接前往主結果頁面
+                            Intent intent = new Intent(PhotoActivity.this, _bMainActivity.class);
+
+                            AnalysisResult parcelableResult = new AnalysisResult(result);
+                            intent.putExtra("analysis_result", parcelableResult);
+                            intent.putExtra("source_type", "photo");
+                            intent.putExtra("original_image_base64", originalImageBase64);
+                            intent.putExtra("from_photo", true);
+                            intent.putExtra("has_moles", false);  // 修正：改為 has_moles
+
+                            startActivity(intent);
+                            finish();
+                        }
                     });
                 }
 
@@ -197,6 +219,7 @@ public class PhotoActivity extends AppCompatActivity {
         try {
             InputStream inputStream = getContentResolver().openInputStream(uri);
             Bitmap originalBitmap = BitmapFactory.decodeStream(inputStream);
+
 
             if (originalBitmap == null) {
                 return null;
