@@ -2,9 +2,17 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- 內部 files 目錄（getFilesDir） -->
     <files-path name="files" path="." />
-    <!-- app 專屬的外部 Pictures 目錄（getExternalFilesDir(Environment.DIRECTORY_PICTURES)） -->
-    <external-files-path name="images" path="Pictures/" />
-    <!-- 可選：快取路徑 -->
-    <cache-path name="cache" path="." />
-    <external-cache-path name="external_cache" path="." />
+<!--    &lt;!&ndash; app 專屬的外部 Pictures 目錄（getExternalFilesDir(Environment.DIRECTORY_PICTURES)） &ndash;&gt;-->
+<!--    <external-files-path name="images" path="Pictures/" />-->
+<!--    &lt;!&ndash; 可選：快取路徑 &ndash;&gt;-->
+<!--    <cache-path name="cache" path="." />-->
+<!--    <external-cache-path name="external_cache" path="." />-->
+    <!-- 允許寫入 app 專屬的外部圖片資料夾 -->
+    <external-files-path
+        name="pictures"
+        path="Pictures/" />
+    <!-- 也備用內部儲存 -->
+    <files-path
+        name="internal"
+        path="." />
 </paths>
