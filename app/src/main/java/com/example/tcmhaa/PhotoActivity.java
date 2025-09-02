@@ -71,11 +71,14 @@ public class PhotoActivity extends AppCompatActivity {
             if (selectedImageUri == null) {
                 pickImage();
             } else {
-                // 已選擇圖片，開始分析
-                analyzeSelectedImage();
+                // 已選擇圖片 → 跳提醒再分析
+                Intent i = new Intent(PhotoActivity.this, WarningActivity.class);
+                i.putExtra("source_type", "photo");
+                // 也可以把圖片 Uri 一起帶去
+                i.putExtra("selected_uri", selectedImageUri.toString());
+                startActivity(i);
             }
         });
-
         btnBack.setOnClickListener(v -> finish());
     }
 

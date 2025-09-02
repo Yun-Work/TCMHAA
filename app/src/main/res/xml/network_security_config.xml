@@ -4,7 +4,7 @@
         <!-- 允許本地開發環境的HTTP連接 -->
         <domain includeSubdomains="true">10.0.2.2</domain> <!-- Android模擬器 -->
         <domain includeSubdomains="true">localhost</domain>
-        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true"> 192.168.52.1</domain>
         <!-- 如果使用實體設備，請添加你的電腦IP地址 -->
     </domain-config>
 </network-security-config>

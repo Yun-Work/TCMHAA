@@ -27,4 +27,19 @@
     <string name="item_about">關於我們</string>
     <string name="btn_logout">登出</string>
 
+    <string-array name="organs_options">
+        <item>心</item>
+        <item>肺</item>
+        <item>肝</item>
+        <item>膽</item>
+        <item>脾</item>
+        <item>胃</item>
+        <item>小腸</item>
+        <item>大腸</item>
+        <item>腎區</item>
+        <item>膀胱</item>
+        <item>生殖系統</item>
+        <item>肝膽代謝</item>
+    </string-array>
+
 </resources>
