@@ -1,66 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:background="@android:color/white">
 
+    <!-- 內容 -->
     <ScrollView
         android:id="@+id/contentScroll"
-        android:layout_width="match_parent" android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_above="@+id/bottomBar"
         android:fillViewport="true"
         android:padding="16dp">
 
         <LinearLayout
-            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!-- LOGO -->
             <ImageView
-                android:id="@+id/ivLogo" android:layout_width="72dp" android:layout_height="72dp"
-                android:src="@drawable/newlogo" android:contentDescription="@string/app_name" />
+                android:id="@+id/ivLogo"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:src="@drawable/newlogo"
+                android:contentDescription="@string/app_name" />
 
-            <Button
-                android:id="@+id/btnPickRange"
-                android:layout_width="220dp" android:layout_height="48dp"
-                android:text="@string/btn_pick_range" android:textSize="18sp"
-                android:backgroundTint="@color/maincolor"
-                android:layout_marginTop="12dp" />
+            <!-- 下拉 + 時間軸 + 確認 -->
+            <LinearLayout
+                android:id="@+id/rowFilters"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="16dp">
 
+                <Spinner
+                    android:id="@+id/spOrgan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="56dp"
+                    android:spinnerMode="dropdown"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:entries="@array/organs_options" />
+
+                <!-- 時間軸按鈕：加寬 + 自動縮字 -->
+                <Button
+                    android:id="@+id/btnPickRange"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="2.4"
+                    android:text="@string/btn_pick_range"
+                    android:backgroundTint="@color/maincolor"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    app:autoSizeTextType="uniform"
+                    app:autoSizeMinTextSize="12sp"
+                    app:autoSizeMaxTextSize="18sp"
+                    app:autoSizeStepGranularity="1sp" />
+
+                <Button
+                    android:id="@+id/btnConfirm"
+                    android:layout_width="84dp"
+                    android:layout_height="56dp"
+                    android:text="確認"
+                    android:textAllCaps="false"
+                    android:backgroundTint="@color/maincolor"
+                    android:textColor="@android:color/white"/>
+            </LinearLayout>
+
+            <!-- 歷史分析圖表 -->
             <FrameLayout
                 android:id="@+id/blockChart"
-                android:layout_width="match_parent" android:layout_height="340dp"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
                 android:layout_marginTop="16dp"
                 android:background="@color/placeholderGray">
+
                 <TextView
-                    android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="@string/label_history_chart" android:textSize="22sp"
-                    android:textColor="@color/placeholderText" android:layout_gravity="center" />
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_history_chart"
+                    android:textSize="22sp"
+                    android:textColor="@color/placeholderText"
+                    android:layout_gravity="center" />
             </FrameLayout>
 
+            <!-- 文字分析結果 -->
             <TextView
                 android:id="@+id/tvTextResult"
-                android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:text="@string/label_text_result" android:textSize="18sp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/label_text_result"
+                android:textSize="18sp"
                 android:textColor="@color/placeholderText"
                 android:layout_marginTop="16dp"
-                android:gravity="center"/>
-
-            <LinearLayout
-                android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:gravity="end" android:layout_marginTop="16dp">
-                <ImageButton
-                    android:id="@+id/btnDownload"
-                    android:layout_width="44dp" android:layout_height="44dp"
-                    android:background="@android:color/transparent"
-                    android:src="@android:drawable/stat_sys_download_done"
-                    android:contentDescription="@string/btn_download" />
-            </LinearLayout>
+                android:gravity="center" />
         </LinearLayout>
     </ScrollView>
 
+    <!-- 下方導覽列（先畫出來，FAB 放後面才會在最上層） -->
     <include
         android:id="@+id/bottomBar"
         layout="@layout/layout_bottom_nav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"/>
+
+    <!-- 固定右下角的下載 FAB（畫在最後，位於最上層） -->
+    <ImageButton
+        android:id="@+id/btnDownload"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:layout_above="@id/bottomBar"
+        android:background="@drawable/circle_maincolor_bg"
+        android:elevation="8dp"
+        android:src="@drawable/download"
+        android:scaleType="fitCenter"
+        android:contentDescription="@string/btn_download"
+        app:tint="@android:color/white"
+        tools:ignore="TouchTargetSizeCheck" />
 </RelativeLayout>

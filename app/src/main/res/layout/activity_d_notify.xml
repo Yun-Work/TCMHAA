@@ -1,12 +1,25 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:id="@+id/tvDialogTitle"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="通知提醒設定（彈跳視窗 開/關）"
-        android:textSize="20sp"
-        android:layout_centerInParent="true"/>
-</RelativeLayout>
+        android:text="通知提醒設定"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:textColor="#219EBC"
+        android:paddingBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/tvDialogDesc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="是否開啟每日APP提醒？\n（會依照你在「每日通知時間」設定的時刻發送）"
+        android:textSize="14sp"/>
+
+</LinearLayout>

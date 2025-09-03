@@ -22,9 +22,106 @@
     <string name="item_profile">個人資料</string>
     <string name="item_daily_notify">每日通知時間</string>
     <string name="item_popup_notify">通知提醒（彈跳視窗開/關）</string>
-    <string name="item_change_password">修改帳號密碼</string>
+    <string name="item_change_password">修改密碼</string>
     <string name="item_privacy">隱私政策</string>
     <string name="item_about">關於我們</string>
     <string name="btn_logout">登出</string>
+
+    <string-array name="organs_options">
+        <item>心</item>
+        <item>肺</item>
+        <item>肝</item>
+        <item>膽</item>
+        <item>脾</item>
+        <item>胃</item>
+        <item>小腸</item>
+        <item>大腸</item>
+        <item>腎區</item>
+        <item>膀胱</item>
+        <item>生殖系統</item>
+        <item>肝膽代謝</item>
+    </string-array>
+    <string name="privacy_policy_body">
+    <![CDATA[
+    <h3>前言</h3>
+    本應用程式（康識美，以下稱「本服務」）重視您的個人資料與隱私保護。本政策說明我們如何蒐集、使用、保存及保護您的資訊。
+
+    <h3>我們搜集的資料</h3>
+    <ul>
+      <li><b>帳號資料：</b>姓名、電子郵件。密碼以不可逆加密方式保存。</li>
+      <li><b>使用紀錄：</b>分析時間、點擊功能、錯誤紀錄（僅用於除錯與改善服務）。</li>
+      <li><b>影像資料：</b>您主動上傳或拍攝的照片，僅用於健康/膚色分析與歷史紀錄功能。</li>
+      <li><b>裝置資訊：</b>作業系統版本、App 版本、網路狀態（僅用於系統安全與穩定性）。</li>
+    </ul>
+
+    <h3>資料用途</h3>
+    <ul>
+      <li>提供並改善健康分析、歷史紀錄、提醒通知與更好的體驗。</li>
+      <li>回覆您的問題、提供技術支援與服務公告。</li>
+      <li>進行統計與研究（不會辨識到個人）。</li>
+    </ul>
+
+    <h3>資料分享</h3>
+    <ul>
+      <li>我們<b>不會販售</b>您的個人資料。</li>
+      <li>絕不進行商業用途</li>
+      <li>法律要求或為保護使用者/本服務權益時，可能依法提供必要資訊。</li>
+    </ul>
+
+    <h3>保存期間</h3>
+    <ul>
+      <li>帳號存在期間。</li>
+      <li>您可隨時要求刪除帳號及相關個人資料；刪除後資料將從系統中移除或匿名化。</li>
+    </ul>
+
+    <h3>資料安全</h3>
+    <ul>
+      <li>傳輸有採用加密機制（例如 HTTPS）。</li>
+      <li>密碼以不可逆雜湊保存，敏感資料採有確實加密與防護。</li>
+      <li>我們將持續更新與強化安全內容，但無法保證絕對零風險。</li>
+    </ul>
+
+    <h3>第三方服務</h3>
+    <p>如使用第三方雲端/分析/相機等服務，僅在提供功能所必要之範圍內處理資料，且遵守第三方隱私政策。</p>
+
+    <h3>您的權利</h3>
+    <ul>
+      <li>查詢、閱覽、取得副本、補充或更正您的個人資料。</li>
+      <li>撤回同意、請求停止處理/利用或刪除個人資料（依法令或契約之必要者除外）。</li>
+      <li>可於 App「設定 &gt; 帳號」提出刪除帳號或來信與我們聯繫。</li>
+    </ul>
+
+    <h3>未成年使用者</h3>
+    <p>如您為未成年人，請在法定代理人同意與指導下使用本服務。</p>
+
+    <h3>政策更新</h3>
+    <p>我們可能因為功能或法規更新本政策；重大變更將於 App 內公告。</p>
+
+    <h3>聯絡我們</h3>
+    <p>如有其他問題，請來信：<a href="mailto:tkuim2025@gmail.com">tkuim2025@gmail.com</a></p>
+    ]]>
+</string>
+
+    <string name="about_title">關於我們</string>
+    <string name="about_version">版本：%1$s</string>
+    <string name="about_version_placeholder">版本：-</string>
+
+    <string name="about_intro">
+本應用程式以中醫觀點輔助健康自我觀察，提供檢測、分析與歷史圖表等功能，協助您更了解自身的健康狀態。本服務<b>不取代</b>專業醫療判斷，若有不適請尋求醫師協助。
+</string>
+
+    <string name="about_team_title">開發團隊</string>
+    <string name="about_team_body">
+康識美 專案團隊
+• 領域：應用、影像分析、後端 API
+• 使命：讓健康更好掌控，手機一拿一拍就知道自己的健康狀態!
+</string>
+
+    <string name="about_contact_title">聯絡我們</string>
+    <string name="about_contact_body">
+電子郵件：tkuim2025@gmail.com
+</string>
+
+
 
 </resources>
