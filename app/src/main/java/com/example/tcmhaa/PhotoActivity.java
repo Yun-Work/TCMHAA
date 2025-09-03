@@ -140,20 +140,23 @@ public class PhotoActivity extends AppCompatActivity {
 
             Log.d(TAG, "開始分析圖片，尺寸: " + originalBitmap.getWidth() + "x" + originalBitmap.getHeight());
 
-            // 呼叫後端分析（第一次分析：僅檢測痣，不移除）
-            apiService.analyzeFaceWithMoleDetection(originalBitmap, false, new ApiService.AnalysisCallback() {
+            // 修正：使用完整的特徵檢測，包含痣和鬍鬚檢測
+            apiService.analyzeFaceWithFeatureRemoval(originalBitmap, false, false, new ApiService.AnalysisCallback() {
                 @Override
                 public void onSuccess(ApiService.AnalysisResult result) {
                     runOnUiThread(() -> {
                         progressDialog.dismiss();
                         Log.d(TAG, "分析成功");
 
-                        // 檢查是否有痣
-                        boolean hasMoles = result.hasMoles();  // 修正：改為 hasMoles()
+                        // 修正：檢查是否有痣或鬍鬚
+                        boolean hasMoles = result.hasMoles();
+                        boolean hasBeard = result.hasBeard();
 
-                        if (hasMoles) {
-                            Log.d(TAG, "檢測到痣，前往 WarningActivity");
-                            // 有痣，前往警告頁面
+                        Log.d(TAG, "檢測結果 - 痣: " + hasMoles + ", 鬍鬚: " + hasBeard);
+
+                        if (hasMoles || hasBeard) {
+                            Log.d(TAG, "檢測到特徵，前往 WarningActivity");
+                            // 有痣或鬍鬚，前往警告頁面
                             Intent intent = new Intent(PhotoActivity.this, WarningActivity.class);
 
                             AnalysisResult parcelableResult = new AnalysisResult(result);
@@ -161,12 +164,13 @@ public class PhotoActivity extends AppCompatActivity {
                             intent.putExtra("source_type", "photo");
                             intent.putExtra("original_image_base64", originalImageBase64);
                             intent.putExtra("from_photo", true);
-                            intent.putExtra("has_moles", true);  // 修正：改為 has_moles
+                            intent.putExtra("has_moles", hasMoles);
+                            intent.putExtra("has_beard", hasBeard);
 
                             startActivity(intent);
                         } else {
-                            Log.d(TAG, "未檢測到痣，直接前往 _bMainActivity");
-                            // 沒有痣，直接前往主結果頁面
+                            Log.d(TAG, "未檢測到特徵，直接前往 _bMainActivity");
+                            // 沒有痣也沒有鬍鬚，直接前往主結果頁面
                             Intent intent = new Intent(PhotoActivity.this, _bMainActivity.class);
 
                             AnalysisResult parcelableResult = new AnalysisResult(result);
@@ -174,7 +178,8 @@ public class PhotoActivity extends AppCompatActivity {
                             intent.putExtra("source_type", "photo");
                             intent.putExtra("original_image_base64", originalImageBase64);
                             intent.putExtra("from_photo", true);
-                            intent.putExtra("has_moles", false);  // 修正：改為 has_moles
+                            intent.putExtra("has_moles", false);
+                            intent.putExtra("has_beard", false);
 
                             startActivity(intent);
                         }
