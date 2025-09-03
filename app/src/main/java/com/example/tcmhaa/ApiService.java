@@ -247,14 +247,14 @@ public class ApiService {
 
                 // 檢查 beard_analysis 對象
                 JSONObject beardAnalysisJson = json.optJSONObject("beard_analysis");
-                if (beardAnalysisJson != null) {
+                if (beardAnalysisJson != null && !beardAnalysisJson.toString().equals("null")) {
                     result.beardCount = beardAnalysisJson.optInt("beard_count", 0);
-                    // 如果 beard_analysis 中也有 has_beard，優先使用
                     if (beardAnalysisJson.has("has_beard")) {
                         result.hasBeard = beardAnalysisJson.optBoolean("has_beard", false);
                     }
                 } else {
                     result.beardCount = 0;
+                    Log.d("ApiService", "beard_analysis 為 null，使用預設值");
                 }
 
                 // 添加調試日志
@@ -360,8 +360,12 @@ public class ApiService {
                             Log.d(TAG, "  beard_analysis存在: " + jsonResponse.has("beard_analysis"));
 
                             if (jsonResponse.has("beard_analysis")) {
-                                JSONObject beardAnalysis = jsonResponse.getJSONObject("beard_analysis");
-                                Log.d(TAG, "  beard_analysis內容: " + beardAnalysis.toString());
+                                JSONObject beardAnalysis = jsonResponse.optJSONObject("beard_analysis");
+                                if (beardAnalysis != null) {
+                                    Log.d(TAG, "  beard_analysis內容: " + beardAnalysis.toString());
+                                } else {
+                                    Log.d(TAG, "  beard_analysis為null");
+                                }
                             }
 
 

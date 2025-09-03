@@ -23,7 +23,6 @@ public class WarningActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_warning_n);
-        setContentView(R.layout.activity_warning_n);
 
         initViews();
         initApiService();
@@ -215,35 +214,11 @@ public class WarningActivity extends AppCompatActivity {
             intent.putExtra("moles_removed", false);
             intent.putExtra("beard_removed", false);
         }
-}
-        private void goNext() {
-            String next = getIntent().getStringExtra(nav.EXTRA_NEXT);
-            Intent intent;
 
-            if (nav.NEXT_TO_PHOTO.equals(next)) {
-                // ➜ 去選相簿頁
-                intent = new Intent(this, PhotoActivity.class);
-
-            } else if (nav.NEXT_TO_CAMERA.equals(next)) {
-                // ➜ 去拍照頁
-                intent = new Intent(this, CameraActivity.class);
-
-            } else {
-                // fallback：若沒帶參數，回入口
-                intent = new Intent(this, MainhealthyActivity.class);
-            }
-
-            startActivity(intent);
-            finish(); // 不回到提醒頁
-        }
+        startActivity(intent);
+        finish();
     }
 
-<<<<<<< HEAD
-
-
-
-
-=======
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -252,4 +227,3 @@ public class WarningActivity extends AppCompatActivity {
         processWithoutRemoval();
     }
 }
->>>>>>> c841e41 (新增鬍鬚檢測功能)
