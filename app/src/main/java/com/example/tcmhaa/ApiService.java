@@ -107,17 +107,22 @@ public class ApiService {
         private Map<String, String> regionResults;
         private String diagnosisText;
 
-        // 痣檢測相關欄位（簡化版）
+        // 痣檢測相關欄位
         private boolean hasMoles;
         private boolean molesRemoved;
         private int moleCount;
+
+        // 新增：鬍鬚檢測相關欄位
+        private boolean hasBeard;
+        private boolean beardRemoved;
+        private int beardCount;
 
         public AnalysisResult() {
             allRegionResults = new HashMap<>();
             regionResults = new HashMap<>();
         }
 
-        // Getters
+        // 原有的 Getters
         public boolean isSuccess() { return success; }
         public String getError() { return error; }
         public int getAbnormalCount() { return abnormalCount; }
@@ -129,7 +134,12 @@ public class ApiService {
         public boolean isMolesRemoved() { return molesRemoved; }
         public int getMoleCount() { return moleCount; }
 
-        // Setters
+        // 新增：鬍鬚相關 Getters
+        public boolean hasBeard() { return hasBeard; }
+        public boolean isBeardRemoved() { return beardRemoved; }
+        public int getBeardCount() { return beardCount; }
+
+        // 原有的 Setters
         public void setSuccess(boolean success) { this.success = success; }
         public void setError(String error) { this.error = error; }
         public void setAbnormalCount(int abnormalCount) { this.abnormalCount = abnormalCount; }
@@ -141,12 +151,45 @@ public class ApiService {
         public void setMolesRemoved(boolean molesRemoved) { this.molesRemoved = molesRemoved; }
         public void setMoleCount(int moleCount) { this.moleCount = moleCount; }
 
+        // 新增：鬍鬚相關 Setters
+        public void setHasBeard(boolean hasBeard) { this.hasBeard = hasBeard; }
+        public void setBeardRemoved(boolean beardRemoved) { this.beardRemoved = beardRemoved; }
+        public void setBeardCount(int beardCount) { this.beardCount = beardCount; }
+
         // 便利方法
         public String getMoleDescription() {
             if (!hasMoles) {
                 return "未檢測到明顯的痣";
             }
             return "檢測到 " + moleCount + " 個痣";
+        }
+
+        // 新增：鬍鬚描述方法
+        public String getBeardDescription() {
+            if (!hasBeard) {
+                return "未檢測到明顯的鬍鬚";
+            }
+            return "檢測到 " + beardCount + " 處鬍鬚";
+        }
+
+        // 新增：綜合特徵描述
+        public String getFeatureDescription() {
+            StringBuilder desc = new StringBuilder();
+
+            if (hasMoles || hasBeard) {
+                desc.append("檢測到面部特徵：");
+                if (hasMoles) {
+                    desc.append(getMoleDescription());
+                }
+                if (hasBeard) {
+                    if (hasMoles) desc.append("；");
+                    desc.append(getBeardDescription());
+                }
+            } else {
+                desc.append("未檢測到明顯的面部特徵");
+            }
+
+            return desc.toString();
         }
 
         public static AnalysisResult fromJson(JSONObject json) {
@@ -187,7 +230,7 @@ public class ApiService {
                     }
                 }
 
-                // 痣檢測分析
+                // *** 痣檢測分析 ***
                 result.hasMoles = json.optBoolean("has_moles", false);
                 result.molesRemoved = json.optBoolean("moles_removed", false);
 
@@ -198,8 +241,31 @@ public class ApiService {
                     result.moleCount = 0;
                 }
 
+                // *** 鬍鬚檢測分析 - 關鍵修正 ***
+                result.hasBeard = json.optBoolean("has_beard", false);
+                result.beardRemoved = json.optBoolean("beard_removed", false);
+
+                // 檢查 beard_analysis 對象
+                JSONObject beardAnalysisJson = json.optJSONObject("beard_analysis");
+                if (beardAnalysisJson != null) {
+                    result.beardCount = beardAnalysisJson.optInt("beard_count", 0);
+                    // 如果 beard_analysis 中也有 has_beard，優先使用
+                    if (beardAnalysisJson.has("has_beard")) {
+                        result.hasBeard = beardAnalysisJson.optBoolean("has_beard", false);
+                    }
+                } else {
+                    result.beardCount = 0;
+                }
+
+                // 添加調試日志
+                Log.d("ApiService", "JSON解析結果:");
+                Log.d("ApiService", "  has_moles: " + result.hasMoles);
+                Log.d("ApiService", "  has_beard: " + result.hasBeard);
+                Log.d("ApiService", "  mole_count: " + result.moleCount);
+                Log.d("ApiService", "  beard_count: " + result.beardCount);
+
             } catch (Exception e) {
-                Log.e(TAG, "解析JSON結果時發生錯誤", e);
+                Log.e("ApiService", "解析JSON結果時發生錯誤", e);
                 result.success = false;
                 result.error = "解析結果失敗: " + e.getMessage();
             }
@@ -239,23 +305,16 @@ public class ApiService {
     }
 
     /**
-     * 分析面部圖片（包含痣檢測功能）
+     * 新增：分析面部圖片（包含痣和鬍鬚檢測功能）
      */
-    public void analyzeFaceWithMoleDetection(Bitmap bitmap, boolean removeMoles, AnalysisCallback callback) {
-        String base64 = bitmapToBase64(bitmap);
-        analyzeFaceWithBase64(base64, removeMoles, callback);
-    }
-
-    /**
-     * 使用base64分析面部（包含痣檢測功能）
-     */
-    public void analyzeFaceWithBase64(String base64Image, boolean removeMoles, AnalysisCallback callback) {
-        Log.d(TAG, "開始面部分析，移除痣: " + removeMoles);
+    public void analyzeFaceWithFeatureRemoval(String base64Image, boolean removeMoles, boolean removeBeard, AnalysisCallback callback) {
+        Log.d(TAG, "開始面部分析，移除痣: " + removeMoles + ", 移除鬍鬚: " + removeBeard);
 
         try {
             JSONObject requestJson = new JSONObject();
             requestJson.put("image", base64Image);
             requestJson.put("remove_moles", removeMoles);
+            requestJson.put("remove_beard", removeBeard);  // 新增鬍鬚移除參數
 
             RequestBody requestBody = RequestBody.create(
                     requestJson.toString(),
@@ -290,14 +349,28 @@ public class ApiService {
                     try {
                         String responseBody = response.body().string();
                         Log.d(TAG, "API響應狀態碼: " + response.code());
+                        Log.d(TAG, "API完整響應內容: " + responseBody);
 
                         if (response.isSuccessful()) {
                             JSONObject jsonResponse = new JSONObject(responseBody);
+                            // 添加特定字段檢查
+                            Log.d(TAG, "JSON中的關鍵字段檢查:");
+                            Log.d(TAG, "  has_beard: " + jsonResponse.optBoolean("has_beard", false));
+                            Log.d(TAG, "  has_moles: " + jsonResponse.optBoolean("has_moles", false));
+                            Log.d(TAG, "  beard_analysis存在: " + jsonResponse.has("beard_analysis"));
+
+                            if (jsonResponse.has("beard_analysis")) {
+                                JSONObject beardAnalysis = jsonResponse.getJSONObject("beard_analysis");
+                                Log.d(TAG, "  beard_analysis內容: " + beardAnalysis.toString());
+                            }
+
+
                             AnalysisResult result = AnalysisResult.fromJson(jsonResponse);
 
                             if (result.success) {
                                 Log.d(TAG, "分析成功！異常區域數量: " + result.abnormalCount +
-                                        ", 檢測到痣: " + result.hasMoles);
+                                        ", 檢測到痣: " + result.hasMoles +
+                                        ", 檢測到鬍鬚: " + result.hasBeard);
                                 callback.onSuccess(result);
                             } else {
                                 Log.w(TAG, "分析失敗: " + result.error);
@@ -331,14 +404,36 @@ public class ApiService {
     }
 
     /**
-     * 分析面部圖片（向後兼容的方法）
+     * 分析面部圖片（包含痣和鬍鬚檢測功能）- Bitmap版本
+     */
+    public void analyzeFaceWithFeatureRemoval(Bitmap bitmap, boolean removeMoles, boolean removeBeard, AnalysisCallback callback) {
+        String base64 = bitmapToBase64(bitmap);
+        analyzeFaceWithFeatureRemoval(base64, removeMoles, removeBeard, callback);
+    }
+
+    /**
+     * 向後兼容：分析面部圖片（包含痣檢測功能）
+     */
+    public void analyzeFaceWithMoleDetection(Bitmap bitmap, boolean removeMoles, AnalysisCallback callback) {
+        analyzeFaceWithFeatureRemoval(bitmap, removeMoles, false, callback);
+    }
+
+    /**
+     * 向後兼容：使用base64分析面部（包含痣檢測功能）
+     */
+    public void analyzeFaceWithBase64(String base64Image, boolean removeMoles, AnalysisCallback callback) {
+        analyzeFaceWithFeatureRemoval(base64Image, removeMoles, false, callback);
+    }
+
+    /**
+     * 向後兼容：分析面部圖片（原始方法）
      */
     public void analyzeFace(Bitmap bitmap, AnalysisCallback callback) {
-        analyzeFaceWithMoleDetection(bitmap, false, callback);
+        analyzeFaceWithFeatureRemoval(bitmap, false, false, callback);
     }
 
     public void analyzeFace(Bitmap bitmap, boolean includeImages, AnalysisCallback callback) {
-        analyzeFaceWithMoleDetection(bitmap, false, callback);
+        analyzeFaceWithFeatureRemoval(bitmap, false, false, callback);
     }
 
     public void testConnection(TestCallback callback) {

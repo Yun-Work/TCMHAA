@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * 分析結果數據類（簡化版，只檢測明顯痣）
+ * 分析結果數據類（增強版，支持痣和鬍鬚檢測）
  */
 public class AnalysisResult implements Parcelable {
     public boolean success;
@@ -19,10 +19,15 @@ public class AnalysisResult implements Parcelable {
     public String regionResultsJson;
     public String diagnosisText;
 
-    // 痣檢測相關欄位（簡化版）
+    // 痣檢測相關欄位
     public boolean hasMoles;
     public boolean molesRemoved;
     public int moleCount;
+
+    // 新增：鬍鬚檢測相關欄位
+    public boolean hasBeard;
+    public boolean beardRemoved;
+    public int beardCount;
 
     public AnalysisResult() {}
 
@@ -76,6 +81,11 @@ public class AnalysisResult implements Parcelable {
         this.hasMoles = apiResult.hasMoles();
         this.molesRemoved = apiResult.isMolesRemoved();
         this.moleCount = apiResult.getMoleCount();
+
+        // 新增：處理鬍鬚檢測數據
+        this.hasBeard = apiResult.hasBeard();
+        this.beardRemoved = apiResult.isBeardRemoved();
+        this.beardCount = apiResult.getBeardCount();
     }
 
     // 獲取JSONObject的便利方法
@@ -116,7 +126,68 @@ public class AnalysisResult implements Parcelable {
         if (!hasMoles) {
             return "未檢測到明顯的痣";
         }
-        return "檢測到 " + moleCount + " 個痣";
+        return "";
+    }
+
+    // 新增：鬍鬚相關便利方法
+    public boolean hasAnyBeard() {
+        return hasBeard;
+    }
+
+    public int getBeardCount() {
+        return beardCount;
+    }
+
+    public String getBeardDescription() {
+        if (!hasBeard) {
+            return "未檢測到明顯的鬍鬚";
+        }
+        return "";
+    }
+
+    // 新增：綜合特徵檢查方法
+    public boolean hasAnyFeatures() {
+        return hasMoles || hasBeard;
+    }
+
+    public String getFeaturesSummary() {
+        if (!hasAnyFeatures()) {
+            return "未檢測到明顯的面部特徵";
+        }
+
+        StringBuilder summary = new StringBuilder();
+        if (hasMoles) {
+            summary.append("");
+        }
+        if (hasBeard) {
+            if (hasMoles) {
+                summary.append("");
+            }
+            summary.append(getBeardDescription());
+        }
+        return summary.toString();
+    }
+
+    // 獲取處理狀態描述
+    public String getProcessingStatus() {
+        StringBuilder status = new StringBuilder();
+
+        if (molesRemoved || beardRemoved) {
+            status.append("已處理特徵：");
+            if (molesRemoved) {
+                status.append("痣");
+            }
+            if (beardRemoved) {
+                if (molesRemoved) status.append("、");
+                status.append("鬍鬚");
+            }
+        } else if (hasAnyFeatures()) {
+            status.append("保留原始特徵");
+        } else {
+            status.append("無需特殊處理");
+        }
+
+        return status.toString();
     }
 
     // 獲取整體膚色的便利方法
@@ -186,10 +257,11 @@ public class AnalysisResult implements Parcelable {
             summary.append("發現 ").append(abnormalCount).append(" 個異常區域");
         }
 
-        if (hasMoles) {
-            summary.append("；檢測到痣");
-            if (molesRemoved) {
-                summary.append("（已處理）");
+        // 添加特徵處理狀態
+        if (hasAnyFeatures()) {
+            summary.append("").append(getFeaturesSummary());
+            if (molesRemoved || beardRemoved) {
+                summary.append("");
             }
         }
 
@@ -210,6 +282,11 @@ public class AnalysisResult implements Parcelable {
         hasMoles = in.readByte() != 0;
         molesRemoved = in.readByte() != 0;
         moleCount = in.readInt();
+
+        // 新增：鬍鬚檢測相關欄位
+        hasBeard = in.readByte() != 0;
+        beardRemoved = in.readByte() != 0;
+        beardCount = in.readInt();
     }
 
     public static final Creator<AnalysisResult> CREATOR = new Creator<AnalysisResult>() {
@@ -243,5 +320,10 @@ public class AnalysisResult implements Parcelable {
         dest.writeByte((byte) (hasMoles ? 1 : 0));
         dest.writeByte((byte) (molesRemoved ? 1 : 0));
         dest.writeInt(moleCount);
+
+        // 新增：鬍鬚檢測相關欄位
+        dest.writeByte((byte) (hasBeard ? 1 : 0));
+        dest.writeByte((byte) (beardRemoved ? 1 : 0));
+        dest.writeInt(beardCount);
     }
 }
