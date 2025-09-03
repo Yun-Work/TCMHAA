@@ -24,25 +24,20 @@ import java.util.Map;
 
 /**
  * 權限彈窗（必須全同意才可繼續）
- * 1) 勾選「我同意所有必要權限」→ 自動全選
- * 2) 單項若被取消，會立即恢復勾選並提示
- * 3) 全部授權成功後，透過 OnAllGrantedListener 通知外部（例如導頁）
+ * - 只會在第一次登入時顯示，之後不再彈出
+ * - 勾選「我同意所有必要權限」→ 自動全選
+ * - 單項若被取消，會立即恢復勾選並提示
+ * - 全部授權成功後，透過 OnAllGrantedListener 通知外部
  *
- * 需要的 layout：res/layout/dialog_permissions_2_2.xml
- *   - 包含以下 id：
- *     checkbox_all, checkbox_privacy, checkbox_camera, checkbox_notify, checkbox_storage, btnConfirm
- *
- * Manifest 請宣告（依版本實際生效）：
- *   CAMERA
- *   POST_NOTIFICATIONS (tools:targetApi="33")
- *   READ_MEDIA_IMAGES (tools:targetApi="33")
- *   READ_EXTERNAL_STORAGE (android:maxSdkVersion="32")
+ * layout: res/layout/dialog_permissions_2_2.xml
+ *   - checkbox_all, checkbox_privacy, checkbox_camera, checkbox_notify, checkbox_storage, btnConfirm
  */
 public class PermissionsDialogFragment extends DialogFragment {
 
     public interface OnAllGrantedListener {
         void onAllGranted();
     }
+
     private OnAllGrantedListener onAllGrantedListener;
     public void setOnAllGrantedListener(OnAllGrantedListener l) {
         this.onAllGrantedListener = l;
@@ -51,7 +46,7 @@ public class PermissionsDialogFragment extends DialogFragment {
     private CheckBox cbAll, cbPrivacy, cbCamera, cbNotify, cbStorage;
     private Button btnConfirm;
 
-    // 現代化 API：一次請多個權限，結果回傳在 onPermissionsResult
+    // 現代化 API：一次請多個權限
     private final ActivityResultLauncher<String[]> requestPermsLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
                     this::onPermissionsResult);
@@ -69,23 +64,22 @@ public class PermissionsDialogFragment extends DialogFragment {
         cbStorage = view.findViewById(R.id.checkbox_storage);
         btnConfirm = view.findViewById(R.id.btnConfirm);
 
-        // Android 13 以下不需額外申請通知權限，保持勾選並鎖定
+        // Android 13 以下不需通知權限
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             cbNotify.setEnabled(false);
             cbNotify.setChecked(true);
             cbNotify.setText("是否接收通知（此裝置不需額外授權）");
         }
 
-        // 初始狀態：按鈕不可按
         btnConfirm.setEnabled(false);
 
-        // 總開關：勾 = 全選；取消 = 全取消（此需求下我們不允許取消，會在單項監聽回補）
+        // 總開關：勾選 = 全選
         cbAll.setOnCheckedChangeListener((button, checked) -> {
             setAllChecked(checked);
             btnConfirm.setEnabled(checked);
         });
 
-        // 單項不可取消：若使用者取消，立即恢復並提示；同時維持 cbAll 為勾選
+        // 單項不可取消：若取消立即恢復
         Consumer<CheckBox> lockChecked = cb -> cb.setOnCheckedChangeListener((b, isChecked) -> {
             if (!isChecked) {
                 toast("本服務需同意所有權限才能繼續。");
@@ -115,7 +109,7 @@ public class PermissionsDialogFragment extends DialogFragment {
                 .create();
     }
 
-    /** 將所有項目設為一致勾選狀態 */
+    /** 勾選全選/全取消 */
     private void setAllChecked(boolean checked) {
         cbPrivacy.setChecked(checked);
         cbCamera.setChecked(checked);
@@ -124,12 +118,12 @@ public class PermissionsDialogFragment extends DialogFragment {
             cbNotify.setChecked(checked);
             cbNotify.setEnabled(true);
         } else {
-            cbNotify.setChecked(true); // 13 以下不需請求，但視為同意
+            cbNotify.setChecked(true);
             cbNotify.setEnabled(false);
         }
     }
 
-    /** 發起權限請求（條款不屬於 Android 權限，僅作 UI 確認） */
+    /** 發起權限請求 */
     private void requestAllNeededPermissions() {
         List<String> list = new ArrayList<>();
         list.add(Manifest.permission.CAMERA);
@@ -144,7 +138,7 @@ public class PermissionsDialogFragment extends DialogFragment {
         requestPermsLauncher.launch(list.toArray(new String[0]));
     }
 
-    /** 權限結果：全部同意才觸發 onAllGrantedListener */
+    /** 權限結果回傳 */
     private void onPermissionsResult(Map<String, Boolean> result) {
         boolean allGranted = true;
 
@@ -166,11 +160,14 @@ public class PermissionsDialogFragment extends DialogFragment {
 
         if (allGranted) {
             toast("所有必要權限已授予");
+
+            // ✅ 記錄：完成首次權限導覽，以後不再顯示
+            PrefsHelper.setPermissionsOnboardDone(requireContext(), true);
+
             if (onAllGrantedListener != null) onAllGrantedListener.onAllGranted();
             dismiss();
         } else {
             toast("需同意全部權限才能使用本服務");
-            // 不關閉 Dialog，讓使用者可再次確認
         }
     }
 

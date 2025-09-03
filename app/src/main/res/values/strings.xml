@@ -22,7 +22,7 @@
     <string name="item_profile">個人資料</string>
     <string name="item_daily_notify">每日通知時間</string>
     <string name="item_popup_notify">通知提醒（彈跳視窗開/關）</string>
-    <string name="item_change_password">修改帳號密碼</string>
+    <string name="item_change_password">修改密碼</string>
     <string name="item_privacy">隱私政策</string>
     <string name="item_about">關於我們</string>
     <string name="btn_logout">登出</string>
@@ -87,7 +87,7 @@
     <h3>您的權利</h3>
     <ul>
       <li>查詢、閱覽、取得副本、補充或更正您的個人資料。</li>
-      <li>撤回同意、請求停止蒐集/處理/利用或刪除個人資料（依法令或契約之必要者除外）。</li>
+      <li>撤回同意、請求停止處理/利用或刪除個人資料（依法令或契約之必要者除外）。</li>
       <li>可於 App「設定 &gt; 帳號」提出刪除帳號或來信與我們聯繫。</li>
     </ul>
 
@@ -95,10 +95,10 @@
     <p>如您為未成年人，請在法定代理人同意與指導下使用本服務。</p>
 
     <h3>政策更新</h3>
-    <p>我們可能因功能或法規更新本政策；重大變更將於 App 內或網站公告。</p>
+    <p>我們可能因為功能或法規更新本政策；重大變更將於 App 內公告。</p>
 
     <h3>聯絡我們</h3>
-    <p>如有隱私相關問題，請來信：<a href="mailto:tcmhaa.team@gmail.com">tcmhaa.team@gmail.com</a></p>
+    <p>如有其他問題，請來信：<a href="mailto:tkuim2025@gmail.com">tkuim2025@gmail.com</a></p>
     ]]>
 </string>
 
@@ -119,7 +119,7 @@
 
     <string name="about_contact_title">聯絡我們</string>
     <string name="about_contact_body">
-電子郵件：tcmhaa.team@gmail.com(要放甚麼?????)
+電子郵件：tkuim2025@gmail.com
 </string>
 
 

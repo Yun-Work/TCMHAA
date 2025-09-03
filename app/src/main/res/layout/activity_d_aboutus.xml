@@ -35,9 +35,9 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        android:layout_marginTop="?attr/actionBarSize">
+        android:layout_height="633dp"
+        android:layout_marginTop="?attr/actionBarSize"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <!-- 這裡就是原本文字區塊，維持不變 -->
         <LinearLayout
@@ -50,17 +50,17 @@
                 android:id="@+id/tvVersion"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
                 android:text="@string/about_version_placeholder"
-                android:textColor="#666666"
-                android:layout_marginBottom="16dp"/>
+                android:textColor="#666666" />
 
             <TextView
                 android:id="@+id/tvIntro"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/about_intro"
                 android:lineSpacingExtra="4dp"
-                android:textSize="16sp"/>
+                android:text="@string/about_intro"
+                android:textSize="16sp" />
 
             <!-- 分隔線 -->
             <View
@@ -68,45 +68,45 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"
-                android:background="#E0E0E0"/>
+                android:background="#E0E0E0" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
                 android:text="@string/about_team_title"
-                android:textStyle="bold"
                 android:textSize="16sp"
-                android:layout_marginBottom="6dp"/>
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvTeam"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/about_team_body"
-                android:lineSpacingExtra="3dp"/>
+                android:lineSpacingExtra="3dp"
+                android:text="@string/about_team_body" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"
-                android:background="#E0E0E0"/>
+                android:background="#E0E0E0" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
                 android:text="@string/about_contact_title"
-                android:textStyle="bold"
                 android:textSize="16sp"
-                android:layout_marginBottom="6dp"/>
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvContact"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:autoLink="email|web"
-                android:text="@string/about_contact_body"
-                android:lineSpacingExtra="3dp"/>
+                android:lineSpacingExtra="3dp"
+                android:text="@string/about_contact_body" />
 
         </LinearLayout>
     </ScrollView>

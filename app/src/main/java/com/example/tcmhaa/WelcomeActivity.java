@@ -4,21 +4,40 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
 
 public class WelcomeActivity extends AppCompatActivity {
 
+    private Button nextButton;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_welcome_4); // 這是你給的 XML layout
+        setContentView(R.layout.activity_welcome_4);
 
-        Button nextButton = findViewById(R.id.btn_next);
+        nextButton = findViewById(R.id.btn_next);
+        nextButton.setOnClickListener(v ->
+                startActivity(new Intent(WelcomeActivity.this, MainhealthyActivity.class)));
 
-        nextButton.setOnClickListener(view -> {
-            // 👉 點擊「下一步」跳轉到 WarningActivity
-            Intent intent = new Intent(WelcomeActivity.this, MainhealthyActivity.class);
-            startActivity(intent);
-        });
+        maybeShowPermissionsDialog();
+    }
+
+    private void maybeShowPermissionsDialog() {
+        // ★ 只要顯示過一次，就不再顯示
+        if (!PrefsHelper.isPermissionsDialogShownOnce(this)) {
+            nextButton.setEnabled(false);
+
+            PermissionsDialogFragment dialog = new PermissionsDialogFragment();
+            dialog.setOnAllGrantedListener(() -> nextButton.setEnabled(true));
+            dialog.setCancelable(false);
+            dialog.show(getSupportFragmentManager(), "perms");
+
+            // ★ 記錄：已顯示過一次（無論是否授權成功）
+            PrefsHelper.setPermissionsDialogShownOnce(this, true);
+        } else {
+            nextButton.setEnabled(true);
+        }
     }
 }
