@@ -78,5 +78,7 @@ dependencies {
     implementation ("com.google.android.material:material:1.12.0")
     //notify(time.java)
     implementation ("androidx.core:core:1.12.0")
+    //做圖表用的
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
 }

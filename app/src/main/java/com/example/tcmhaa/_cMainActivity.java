@@ -7,89 +7,168 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.util.Pair;
 
+import com.example.tcmhaa.dto.HistoryStatusBarRequestDto;
+import com.example.tcmhaa.dto.HistoryStatusBarResponseDto;
+import com.example.tcmhaa.utils.api.ApiHelper;
+import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.MaterialDatePicker;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class _cMainActivity extends AppCompatActivity {
 
     private Spinner spOrgan;
     private Button btnPickRange, btnConfirm;
     private ImageButton btnDownload;
+    private BarChart barChart;
+    private TextView tvChartPlaceholder, tvTextResult;
 
-    // 選擇的日期區間
+    // 日期區間（毫秒）
     private Long selectedStartMillis;
     private Long selectedEndMillis;
 
-    // 後端 API（依你的實際路徑調整）
-    private static final String HISTORY_API = "http://10.0.2.2:6060/api/history"; // TODO: 改成你的實際端點
-    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    private final OkHttpClient http = new OkHttpClient();
+    // ApiHelper 只需要 path；BASE_URL 在 ApiHelper 內是 http://10.0.2.2:6060/api/
+    private static final String HISTORY_API_PATH = "history/status-bar";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mainhealthy_c);
 
-        spOrgan      = findViewById(R.id.spOrgan);
-        btnPickRange = findViewById(R.id.btnPickRange);
-        btnConfirm   = findViewById(R.id.btnConfirm);
-        btnDownload  = findViewById(R.id.btnDownload);
+        spOrgan            = findViewById(R.id.spOrgan);
+        btnPickRange       = findViewById(R.id.btnPickRange);
+        btnConfirm         = findViewById(R.id.btnConfirm);
+        btnDownload        = findViewById(R.id.btnDownload);
+        barChart           = findViewById(R.id.barChart);
+        tvChartPlaceholder = findViewById(R.id.tvChartPlaceholder);
+        tvTextResult       = findViewById(R.id.tvTextResult);
 
-        // 下拉選單資料
+        // 下拉選單
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 this, R.array.organs_options, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spOrgan.setAdapter(adapter);
 
-        // 預設日期：最近7天
+        // 預設日期：最近 7 天
         Pair<Long, Long> last7Days = getLast7Days();
         selectedStartMillis = last7Days.first;
         selectedEndMillis   = last7Days.second;
         btnPickRange.setText(formatDate(selectedStartMillis) + " ~ " + formatDate(selectedEndMillis));
 
         btnPickRange.setOnClickListener(v -> showDateRangePicker());
-
-        // 下載（你原本的邏輯）
         btnDownload.setOnClickListener(v ->
                 Toast.makeText(this, "這裡執行匯出/下載", Toast.LENGTH_SHORT).show());
 
-        // ✅ 按下確認才查歷史資料並顯示圖表
+        // ✅ 使用 ApiHelper + DTO 呼叫後端
         btnConfirm.setOnClickListener(v -> {
             if (selectedStartMillis == null || selectedEndMillis == null) {
                 Toast.makeText(this, "請先選擇時間範圍", Toast.LENGTH_SHORT).show();
                 return;
             }
-            String organ = spOrgan.getSelectedItem() == null
-                    ? "" : spOrgan.getSelectedItem().toString();
-            String startDate = formatDate(selectedStartMillis);
-            String endDate   = formatDate(selectedEndMillis);
-
-            fetchHistory(organ, startDate, endDate);
+            String organ = spOrgan.getSelectedItem() == null ? "" : spOrgan.getSelectedItem().toString();
+            String start = formatDate(selectedStartMillis); // YYYY-MM-DD
+            String end   = formatDate(selectedEndMillis);
+            fetchHistoryWithApiHelper(organ, start, end);
         });
 
         setupBottomNav();
+        setupChartStyle();
+    }
+
+    /** 用 ApiHelper + DTO 呼叫 /api/history/status-bar */
+    private void fetchHistoryWithApiHelper(String organ, String start, String end) {
+        HistoryStatusBarRequestDto req = new HistoryStatusBarRequestDto(organ, start, end);
+
+        ApiHelper.httpPost(
+                HISTORY_API_PATH,
+                req,
+                HistoryStatusBarResponseDto.class,
+                new ApiHelper.ApiCallback<HistoryStatusBarResponseDto>() {
+                    @Override
+                    public void onSuccess(HistoryStatusBarResponseDto resp) {
+                        if (resp == null || resp.hasError()) {
+                            String msg = (resp != null && resp.error != null) ? resp.error : "查詢失敗";
+                            Toast.makeText(_cMainActivity.this, msg, Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        renderChart(resp, organ, start, end);
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        Toast.makeText(_cMainActivity.this, "連線錯誤：" + t.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }
+        );
+    }
+
+    /** 把 categories/data 畫成長條圖（X=狀態，Y=次數） */
+    private void renderChart(HistoryStatusBarResponseDto r, String organ, String start, String end) {
+        List<String> labels = (r.categories != null) ? r.categories : new ArrayList<>();
+        List<Integer> vals  = (r.data != null) ? r.data : new ArrayList<>();
+
+        List<BarEntry> entries = new ArrayList<>();
+        for (int i = 0; i < vals.size(); i++) {
+            entries.add(new BarEntry(i, vals.get(i)));
+        }
+
+        BarDataSet set = new BarDataSet(entries, organ + "（" + start + " ~ " + end + "）");
+        BarData data = new BarData(set);
+        data.setBarWidth(0.9f);
+
+        barChart.setData(data);
+
+        XAxis x = barChart.getXAxis();
+        x.setPosition(XAxis.XAxisPosition.BOTTOM);
+        x.setGranularity(1f);
+        x.setLabelCount(labels.size());
+        x.setValueFormatter(new IndexAxisValueFormatter(labels));
+
+        tvChartPlaceholder.setVisibility(android.view.View.GONE);
+        barChart.setVisibility(android.view.View.VISIBLE);
+        barChart.invalidate();
+
+        // 可選：顯示簡單摘要
+        tvTextResult.setText("各狀態件數：" + labels + " -> " + vals);
+    }
+
+    /** 圖表外觀 */
+    private void setupChartStyle() {
+        barChart.getAxisRight().setEnabled(false);
+        barChart.getDescription().setEnabled(false);
+        barChart.setFitBars(true);
+        barChart.setNoDataText("尚未載入資料");
+
+        // ⬇️ Y 軸：整數刻度、間隔=1
+        YAxis y = barChart.getAxisLeft();
+        y.setAxisMinimum(0f);            // 可選：從 0 開始
+        y.setGranularity(1f);            // 刻度間隔（要 2、5、10 就改這裡）
+        y.setGranularityEnabled(true);
+        y.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return String.valueOf((int) value); // 刻度顯示整數
+            }
+        });
     }
 
     /** 打開日期區間選擇器 */
@@ -126,46 +205,7 @@ public class _cMainActivity extends AppCompatActivity {
         picker.show(getSupportFragmentManager(), "date_range_picker");
     }
 
-    /** 呼叫後端取歷史資料（器官 + 起訖日期） */
-    private void fetchHistory(String organ, String startDate, String endDate) {
-        try {
-            JSONObject body = new JSONObject();
-            body.put("organ", organ);
-            body.put("start_date", startDate);
-            body.put("end_date", endDate);
-
-            Request request = new Request.Builder()
-                    .url(HISTORY_API)
-                    .post(RequestBody.create(body.toString(), JSON))
-                    .build();
-
-            http.newCall(request).enqueue(new Callback() {
-                @Override public void onFailure(Call call, IOException e) {
-                    runOnUiThread(() ->
-                            Toast.makeText(_cMainActivity.this, "連線失敗：" + e.getMessage(), Toast.LENGTH_LONG).show());
-                }
-
-                @Override public void onResponse(Call call, Response response) throws IOException {
-                    if (!response.isSuccessful()) {
-                        runOnUiThread(() ->
-                                Toast.makeText(_cMainActivity.this, "查詢失敗：" + response.code(), Toast.LENGTH_LONG).show());
-                        return;
-                    }
-                    final String resp = response.body() != null ? response.body().string() : "";
-                    runOnUiThread(() -> {
-                        // TODO: 將 resp 解析後，更新 blockChart 與 tvTextResult
-                        // 這裡先給使用者感知
-                        Toast.makeText(_cMainActivity.this, "已載入歷史資料", Toast.LENGTH_SHORT).show();
-                        // 例如：findViewById<TextView>(R.id.tvTextResult).setText(resp);
-                    });
-                }
-            });
-        } catch (JSONException e) {
-            Toast.makeText(this, "參數錯誤：" + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    /** 最近 7 天 */
+    /** 最近 7 天（含今天） */
     private Pair<Long, Long> getLast7Days() {
         Calendar end = Calendar.getInstance();
         setToStartOfDay(end);
