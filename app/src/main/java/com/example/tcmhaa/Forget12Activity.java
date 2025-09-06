@@ -1,5 +1,6 @@
 package com.example.tcmhaa;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Button;
@@ -8,10 +9,19 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.tcmhaa.dto.ResetPasswordRequestDto;
+import com.example.tcmhaa.dto.ResetPasswordResponseDto;
+import com.example.tcmhaa.utils.api.ApiHelper;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.content.Context;
+
 public class Forget12Activity extends AppCompatActivity {
 
     private EditText etNewPassword, etConfirmPassword;
     private Button btnConfirm;
+
+    private int userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,9 +31,18 @@ public class Forget12Activity extends AppCompatActivity {
         etNewPassword = findViewById(R.id.etNewPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
         btnConfirm = findViewById(R.id.btnConfirm);
-
+        Intent from = getIntent();
+        if (from != null) {
+            userId = from.getIntExtra("user_id", -1);
+        }
+        if (userId <= 0) {
+            Toast.makeText(this, "請重新操作", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
         btnConfirm.setOnClickListener(v -> handleConfirm());
     }
+
 
     private void handleConfirm() {
         String pwd = etNewPassword.getText().toString().trim();
@@ -46,10 +65,43 @@ public class Forget12Activity extends AppCompatActivity {
             return;
         }
 
-        // TODO: 在這裡呼叫後端 API 送出重設密碼請求
-        // 成功後可結束或跳轉
-        Toast.makeText(this, "密碼已更新（示意）", Toast.LENGTH_SHORT).show();
-        // finish();
+        // 關鍵盤 + 鎖按鈕
+        hideKeyboard();
+        btnConfirm.setEnabled(false);
+
+        ApiHelper.httpPost(
+                "users/reset_password",
+                new ResetPasswordRequestDto(userId, pwd),
+                ResetPasswordResponseDto.class,
+                new ApiHelper.ApiCallback<ResetPasswordResponseDto>() {
+                    @Override
+                    public void onSuccess(ResetPasswordResponseDto resp) {
+                        btnConfirm.setEnabled(true);
+
+                        if (resp != null && resp.getError() != null) {
+                            Toast.makeText(getApplicationContext(), resp.getError(), Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        String msg = (resp != null && resp.getMessage() != null)
+                                ? resp.getMessage() : "密碼已重設";
+                        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+
+                        // TODO: 成功後導回登入頁
+                        Intent i = new Intent(Forget12Activity.this, LoginActivity.class);
+                        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(i);
+                        finish();
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        btnConfirm.setEnabled(true);
+                        String msg = (t != null && t.getMessage() != null) ? t.getMessage() : "連線失敗";
+                        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
     }
 
     // 至少6碼，含英數
@@ -62,5 +114,14 @@ public class Forget12Activity extends AppCompatActivity {
             if (hasLetter && hasDigit) return true;
         }
         return false;
+    }
+
+    private void hideKeyboard() {
+        View v = getCurrentFocus();
+        if (v == null) v = new View(this);
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+        }
     }
 }

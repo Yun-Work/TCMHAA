@@ -10,6 +10,10 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.tcmhaa.dto.VerifyCodeRequestDto;
+import com.example.tcmhaa.dto.VerifyCodeResponseDto;
+import com.example.tcmhaa.utils.api.ApiHelper;
+
 public class VerifyActivity extends AppCompatActivity {
 
     private EditText otpEditText;     // 對應 XML: @+id/otpEditText
@@ -18,6 +22,7 @@ public class VerifyActivity extends AppCompatActivity {
 
     private String email;   // 從上一頁帶入
     private String status;  // 狀態碼（例如 "2" 代表忘記密碼流程）
+    private int userId;     // 從上一頁帶入 user_id
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +37,7 @@ public class VerifyActivity extends AppCompatActivity {
         // 取得上一頁 extras
         Intent from = getIntent();
         if (from != null) {
-            email  = from.getStringExtra("email");
+            userId = from.getIntExtra("user_id",-1);
             status = from.getStringExtra("status");
         }
 
@@ -50,14 +55,49 @@ public class VerifyActivity extends AppCompatActivity {
                 return;
             }
 
-            // TODO: 在這裡呼叫後端驗證 API 驗證 code
-            // 假設驗證通過 → 跳轉到 Forget12Activity
-            Toast.makeText(this, "驗證成功！", Toast.LENGTH_SHORT).show();
 
-            Intent i = new Intent(VerifyActivity.this, Forget12Activity.class);
-            i.putExtra("email", email);   // 把 email 傳過去，方便重設密碼用
-            startActivity(i);
-            finish(); // 關掉驗證頁，避免返回
+            ApiHelper.httpPost(
+                    "users/verify_code",
+                    new VerifyCodeRequestDto(userId, code),
+                    VerifyCodeResponseDto.class,
+                    new ApiHelper.ApiCallback<VerifyCodeResponseDto>() {
+                        @Override
+                        public void onSuccess(VerifyCodeResponseDto resp) {
+                            if (resp.getError() != null) {
+                                Toast.makeText(getApplicationContext(),
+                                        resp.getError(),
+                                        Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            String msg = resp.getMessage() != null ? resp.getMessage() : "驗證成功";
+                            Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+
+                            // 驗證成功 → 跳轉到重設密碼頁
+                            Intent i = new Intent(VerifyActivity.this, Forget12Activity.class);
+                            i.putExtra("user_id", userId);  // 改成帶 user_id
+                            startActivity(i);
+                            finish(); // 關掉驗證頁，避免返回
+                        }
+
+                        @Override
+                        public void onFailure(Throwable t) {
+                            Toast.makeText(getApplicationContext(),
+                                    (t != null && t.getMessage() != null) ? t.getMessage() : "連線失敗",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+            );
         });
     }
 }
+//            // 假設驗證通過 → 跳轉到 Forget12Activity
+//            Toast.makeText(this, "驗證成功！", Toast.LENGTH_SHORT).show();
+//
+//            Intent i = new Intent(VerifyActivity.this, Forget12Activity.class);
+//            i.putExtra("email", email);   // 把 email 傳過去，方便重設密碼用
+//            startActivity(i);
+//            finish(); // 關掉驗證頁，避免返回
+//        });
+//    }
+//}

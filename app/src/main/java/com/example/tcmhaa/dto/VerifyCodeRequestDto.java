@@ -1,12 +1,16 @@
 package com.example.tcmhaa.dto;
 
-public class VerifyCodeRequestDto {
+import com.google.gson.annotations.SerializedName;
 
-    private String email;
+public class VerifyCodeRequestDto {
+    @SerializedName("user_id")
+    private int userId;
     private String code;
 
-    public VerifyCodeRequestDto(String email, String code) {
-        this.email = email;
+    public VerifyCodeRequestDto(int userId, String code) {
+        this.userId = userId;
         this.code = code;
     }
+    public int getUser_id() { return userId; }
+    public String getCode() { return code; }
 }

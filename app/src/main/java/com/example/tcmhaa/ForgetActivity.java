@@ -54,14 +54,13 @@ public class ForgetActivity extends AppCompatActivity {
                             // 成功：提示 + 倒數 + 導頁
                             startCountdown();
 
+                            Integer userId = resp.getUserId();
                             String msg = (resp != null && resp.getMessage() != null)
                                     ? resp.getMessage() : "驗證碼已寄出";
                             ToastHelper.show(getApplicationContext(), msg, Toast.LENGTH_SHORT);
-//                            toast(msg);
-
                             Intent intent = new Intent(ForgetActivity.this, VerifyActivity.class);
-                            intent.putExtra("email", email);   // 建議統一用 "email" 當 key
                             intent.putExtra("status", "2");
+                            intent.putExtra("user_id", userId);
                             startActivity(intent);
                         }
 
@@ -69,7 +68,6 @@ public class ForgetActivity extends AppCompatActivity {
                         public void onFailure(Throwable t) {
                             buttonSendCode.setEnabled(true);
                             ToastHelper.show(getApplicationContext(), Objects.requireNonNull(t.getMessage()), Toast.LENGTH_SHORT);
-//                            toast("連線錯誤：" + (t != null ? t.getMessage() : "未知錯誤"));
                         }
                     }
             );
