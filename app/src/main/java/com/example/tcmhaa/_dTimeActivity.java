@@ -1,5 +1,6 @@
 package com.example.tcmhaa;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
@@ -27,8 +28,9 @@ public class _dTimeActivity extends AppCompatActivity {
         timePicker = findViewById(R.id.timePicker);
         tvStatus = findViewById(R.id.tvStatus);
         Button btnSave = findViewById(R.id.btnSave);
+        Button btnBack = findViewById(R.id.btnBack); // ← XML 新增的返回按鈕
 
-        // 改在程式裡設定 24 小時制
+        // 設定 24 小時制
         timePicker.setIs24HourView(true);
 
         SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
@@ -36,28 +38,34 @@ public class _dTimeActivity extends AppCompatActivity {
         int hour = sp.getInt(KEY_HOUR, 9);
         int min = sp.getInt(KEY_MIN, 0);
 
-        // 設定初始時間
+        // 初始時間
         timePicker.setHour(hour);
         timePicker.setMinute(min);
 
         updateStatusText(enabled, hour, min);
 
+        // 儲存並啟用提醒
         btnSave.setOnClickListener(v -> {
             int h = timePicker.getHour();
             int m = timePicker.getMinute();
 
-            // 存檔並啟用提醒
             sp.edit()
                     .putBoolean(KEY_ENABLED, true)
                     .putInt(KEY_HOUR, h)
                     .putInt(KEY_MIN, m)
                     .apply();
 
-            // 呼叫我們的提醒排程工具
             ReminderScheduler.scheduleDailyReminder(this, h, m);
             updateStatusText(true, h, m);
 
             Toast.makeText(this, "已儲存並啟用每日提醒", Toast.LENGTH_SHORT).show();
+        });
+
+        // 返回按鈕 → 回到 _dMainActivity
+        btnBack.setOnClickListener(v -> {
+            Intent intent = new Intent(_dTimeActivity.this, _dMainActivity.class);
+            startActivity(intent);
+            finish(); // 關閉自己，避免返回堆疊
         });
     }
 
@@ -69,5 +77,14 @@ public class _dTimeActivity extends AppCompatActivity {
         } else {
             tvStatus.setText("目前：尚未開啟每日提醒");
         }
+    }
+
+    // 實體返回鍵 → 同樣回到 _dMainActivity
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Intent intent = new Intent(_dTimeActivity.this, _dMainActivity.class);
+        startActivity(intent);
+        finish();
     }
 }
