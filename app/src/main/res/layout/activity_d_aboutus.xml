@@ -13,13 +13,6 @@
         android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
         app:navigationIcon="@drawable/ic_arrow_back">
 
-        <!-- 左側 LOGO -->
-        <ImageView
-            android:id="@+id/ivLogo"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:contentDescription="@string/app_name"
-            android:src="@drawable/newlogo" />
 
         <!-- 標題 -->
         <TextView
@@ -29,7 +22,7 @@
             android:layout_gravity="center_vertical"
             android:layout_marginStart="8dp"
             android:text="@string/about_title"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textStyle="bold" />
     </com.google.android.material.appbar.MaterialToolbar>
 
