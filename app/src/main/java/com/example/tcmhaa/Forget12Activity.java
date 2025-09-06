@@ -1,5 +1,6 @@
 package com.example.tcmhaa;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Button;
@@ -29,7 +30,7 @@ public class Forget12Activity extends AppCompatActivity {
         String pwd = etNewPassword.getText().toString().trim();
         String pwd2 = etConfirmPassword.getText().toString().trim();
 
-        // 簡單驗證：必填、長度、英文+數字、兩次一致
+        // 驗證：必填、長度、英文+數字、兩次一致
         if (TextUtils.isEmpty(pwd)) {
             etNewPassword.setError("請輸入新密碼");
             etNewPassword.requestFocus();
@@ -46,10 +47,15 @@ public class Forget12Activity extends AppCompatActivity {
             return;
         }
 
-        // TODO: 在這裡呼叫後端 API 送出重設密碼請求
-        // 成功後可結束或跳轉
+        // TODO: 這裡呼叫後端 API 更新密碼
         Toast.makeText(this, "密碼已更新（示意）", Toast.LENGTH_SHORT).show();
-        // finish();
+
+        // 成功後跳回登入頁
+        Intent intent = new Intent(Forget12Activity.this, LoginActivity.class);
+        // 清掉舊的 activity stack，避免按返回再回到忘記密碼流程
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
 
     // 至少6碼，含英數
