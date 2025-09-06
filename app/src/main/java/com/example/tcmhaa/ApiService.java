@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -16,11 +17,13 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class ApiService {
     private static final String TAG = "ApiService";
@@ -29,16 +32,51 @@ public class ApiService {
     private static final String ANALYZE_ENDPOINT = "/api/face/upload";
     private static final String HEALTH_ENDPOINT = "/api/face/health";
 
+    private static final int MAX_RETRY_ATTEMPTS = 3;
+    private static final long RETRY_DELAY_MS = 2000; // 2秒
+    private static final long PROGRESSIVE_DELAY_MULTIPLIER = 2;
+    private static final int MAX_RESPONSE_SIZE = 50 * 1024 * 1024; // 50MB
+
     private OkHttpClient client;
 
     public ApiService() {
         client = new OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS)
-                .readTimeout(60, TimeUnit.SECONDS)
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(180, TimeUnit.SECONDS)   // 3分鐘寫入超時
+                .readTimeout(180, TimeUnit.SECONDS)    // 3分鐘讀取超時
+                .callTimeout(300, TimeUnit.SECONDS)    // 5分鐘總超時
+                .retryOnConnectionFailure(true)
+                .addNetworkInterceptor(new ResponseBufferingInterceptor())
                 .build();
 
         testConnectionOnInit();
+    }
+
+    // 響應緩衝攔截器
+    private static class ResponseBufferingInterceptor implements Interceptor {
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            Request request = chain.request();
+            Response response = chain.proceed(request);
+
+            if (response.body() != null) {
+                ResponseBody originalBody = response.body();
+                try {
+                    // 預先讀取所有數據到內存中
+                    byte[] bodyBytes = originalBody.bytes();
+                    ResponseBody newBody = ResponseBody.create(bodyBytes, originalBody.contentType());
+
+                    return response.newBuilder()
+                            .body(newBody)
+                            .build();
+                } catch (OutOfMemoryError e) {
+                    Log.w("ApiService", "響應數據過大，跳過緩衝");
+                    return response;
+                }
+            }
+
+            return response;
+        }
     }
 
     private void testConnectionOnInit() {
@@ -112,7 +150,7 @@ public class ApiService {
         private boolean molesRemoved;
         private int moleCount;
 
-        // 新增：鬍鬚檢測相關欄位
+        // 鬍鬚檢測相關欄位
         private boolean hasBeard;
         private boolean beardRemoved;
         private int beardCount;
@@ -122,7 +160,7 @@ public class ApiService {
             regionResults = new HashMap<>();
         }
 
-        // 原有的 Getters
+        // Getters
         public boolean isSuccess() { return success; }
         public String getError() { return error; }
         public int getAbnormalCount() { return abnormalCount; }
@@ -133,13 +171,11 @@ public class ApiService {
         public boolean hasMoles() { return hasMoles; }
         public boolean isMolesRemoved() { return molesRemoved; }
         public int getMoleCount() { return moleCount; }
-
-        // 新增：鬍鬚相關 Getters
         public boolean hasBeard() { return hasBeard; }
         public boolean isBeardRemoved() { return beardRemoved; }
         public int getBeardCount() { return beardCount; }
 
-        // 原有的 Setters
+        // Setters
         public void setSuccess(boolean success) { this.success = success; }
         public void setError(String error) { this.error = error; }
         public void setAbnormalCount(int abnormalCount) { this.abnormalCount = abnormalCount; }
@@ -150,8 +186,6 @@ public class ApiService {
         public void setHasMoles(boolean hasMoles) { this.hasMoles = hasMoles; }
         public void setMolesRemoved(boolean molesRemoved) { this.molesRemoved = molesRemoved; }
         public void setMoleCount(int moleCount) { this.moleCount = moleCount; }
-
-        // 新增：鬍鬚相關 Setters
         public void setHasBeard(boolean hasBeard) { this.hasBeard = hasBeard; }
         public void setBeardRemoved(boolean beardRemoved) { this.beardRemoved = beardRemoved; }
         public void setBeardCount(int beardCount) { this.beardCount = beardCount; }
@@ -164,7 +198,6 @@ public class ApiService {
             return "檢測到 " + moleCount + " 個痣";
         }
 
-        // 新增：鬍鬚描述方法
         public String getBeardDescription() {
             if (!hasBeard) {
                 return "未檢測到明顯的鬍鬚";
@@ -172,7 +205,6 @@ public class ApiService {
             return "檢測到 " + beardCount + " 處鬍鬚";
         }
 
-        // 新增：綜合特徵描述
         public String getFeatureDescription() {
             StringBuilder desc = new StringBuilder();
 
@@ -230,7 +262,7 @@ public class ApiService {
                     }
                 }
 
-                // *** 痣檢測分析 ***
+                // 痣檢測分析
                 result.hasMoles = json.optBoolean("has_moles", false);
                 result.molesRemoved = json.optBoolean("moles_removed", false);
 
@@ -241,11 +273,10 @@ public class ApiService {
                     result.moleCount = 0;
                 }
 
-                // *** 鬍鬚檢測分析 - 關鍵修正 ***
+                // 鬍鬚檢測分析
                 result.hasBeard = json.optBoolean("has_beard", false);
                 result.beardRemoved = json.optBoolean("beard_removed", false);
 
-                // 檢查 beard_analysis 對象
                 JSONObject beardAnalysisJson = json.optJSONObject("beard_analysis");
                 if (beardAnalysisJson != null && !beardAnalysisJson.toString().equals("null")) {
                     result.beardCount = beardAnalysisJson.optInt("beard_count", 0);
@@ -254,10 +285,8 @@ public class ApiService {
                     }
                 } else {
                     result.beardCount = 0;
-                    Log.d("ApiService", "beard_analysis 為 null，使用預設值");
                 }
 
-                // 添加調試日志
                 Log.d("ApiService", "JSON解析結果:");
                 Log.d("ApiService", "  has_moles: " + result.hasMoles);
                 Log.d("ApiService", "  has_beard: " + result.hasBeard);
@@ -304,8 +333,50 @@ public class ApiService {
         }
     }
 
+    // 主要的分析方法 - 智能重試版本
+    public void analyzeFaceWithSmartRetry(Bitmap bitmap, boolean removeMoles, boolean removeBeard, AnalysisCallback callback) {
+        analyzeFaceWithSmartRetry(bitmap, removeMoles, removeBeard, callback, 0, System.currentTimeMillis());
+    }
+
+    private void analyzeFaceWithSmartRetry(Bitmap bitmap, boolean removeMoles, boolean removeBeard,
+                                           AnalysisCallback callback, int attemptCount, long startTime) {
+
+        Log.d(TAG, "開始智能重試分析 - 第" + (attemptCount + 1) + "次嘗試");
+
+        analyzeFaceWithFeatureRemoval(bitmap, removeMoles, removeBeard, new AnalysisCallback() {
+            @Override
+            public void onSuccess(AnalysisResult result) {
+                long totalTime = System.currentTimeMillis() - startTime;
+                Log.d(TAG, "分析成功！總耗時: " + totalTime + "ms, 嘗試次數: " + (attemptCount + 1));
+                callback.onSuccess(result);
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Log.w(TAG, "第" + (attemptCount + 1) + "次嘗試失敗: " + error);
+
+                boolean shouldRetry = shouldRetryOnError(error, attemptCount);
+
+                if (shouldRetry && attemptCount < MAX_RETRY_ATTEMPTS - 1) {
+                    long delay = RETRY_DELAY_MS * (long) Math.pow(PROGRESSIVE_DELAY_MULTIPLIER, attemptCount);
+
+                    Log.d(TAG, "將在" + delay + "ms後進行第" + (attemptCount + 2) + "次重試");
+
+                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                        analyzeFaceWithSmartRetry(bitmap, removeMoles, removeBeard, callback,
+                                attemptCount + 1, startTime);
+                    }, delay);
+                } else {
+                    String finalError = buildFinalErrorMessage(error, attemptCount + 1);
+                    Log.e(TAG, "所有重試失敗: " + finalError);
+                    callback.onFailure(finalError);
+                }
+            }
+        });
+    }
+
     /**
-     * 新增：分析面部圖片（包含痣和鬍鬚檢測功能）
+     * 分析面部圖片（包含痣和鬍鬚檢測功能）
      */
     public void analyzeFaceWithFeatureRemoval(String base64Image, boolean removeMoles, boolean removeBeard, AnalysisCallback callback) {
         Log.d(TAG, "開始面部分析，移除痣: " + removeMoles + ", 移除鬍鬚: " + removeBeard);
@@ -314,7 +385,7 @@ public class ApiService {
             JSONObject requestJson = new JSONObject();
             requestJson.put("image", base64Image);
             requestJson.put("remove_moles", removeMoles);
-            requestJson.put("remove_beard", removeBeard);  // 新增鬍鬚移除參數
+            requestJson.put("remove_beard", removeBeard);
 
             RequestBody requestBody = RequestBody.create(
                     requestJson.toString(),
@@ -347,55 +418,7 @@ public class ApiService {
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
-                    try {
-                        String responseBody = response.body().string();
-                        Log.d(TAG, "API響應狀態碼: " + response.code());
-                        Log.d(TAG, "API完整響應內容: " + responseBody);
-
-                        if (response.isSuccessful()) {
-                            JSONObject jsonResponse = new JSONObject(responseBody);
-                            // 添加特定字段檢查
-                            Log.d(TAG, "JSON中的關鍵字段檢查:");
-                            Log.d(TAG, "  has_beard: " + jsonResponse.optBoolean("has_beard", false));
-                            Log.d(TAG, "  has_moles: " + jsonResponse.optBoolean("has_moles", false));
-                            Log.d(TAG, "  beard_analysis存在: " + jsonResponse.has("beard_analysis"));
-
-                            if (jsonResponse.has("beard_analysis")) {
-                                JSONObject beardAnalysis = jsonResponse.optJSONObject("beard_analysis");
-                                if (beardAnalysis != null) {
-                                    Log.d(TAG, "  beard_analysis內容: " + beardAnalysis.toString());
-                                } else {
-                                    Log.d(TAG, "  beard_analysis為null");
-                                }
-                            }
-
-
-                            AnalysisResult result = AnalysisResult.fromJson(jsonResponse);
-
-                            if (result.success) {
-                                Log.d(TAG, "分析成功！異常區域數量: " + result.abnormalCount +
-                                        ", 檢測到痣: " + result.hasMoles +
-                                        ", 檢測到鬍鬚: " + result.hasBeard);
-                                callback.onSuccess(result);
-                            } else {
-                                Log.w(TAG, "分析失敗: " + result.error);
-                                callback.onFailure(result.error != null ? result.error : "分析失敗");
-                            }
-                        } else {
-                            Log.e(TAG, "HTTP錯誤: " + response.code());
-                            if (response.code() == 404) {
-                                callback.onFailure("API端點不存在 (404)");
-                            } else {
-                                callback.onFailure("服務器錯誤 (" + response.code() + ")");
-                            }
-                        }
-                    } catch (JSONException e) {
-                        Log.e(TAG, "解析響應JSON失敗", e);
-                        callback.onFailure("解析服務器響應失敗: " + e.getMessage());
-                    } catch (Exception e) {
-                        Log.e(TAG, "處理響應時發生錯誤", e);
-                        callback.onFailure("處理結果時發生錯誤: " + e.getMessage());
-                    }
+                    handleResponse(response, callback);
                 }
             });
 
@@ -408,8 +431,216 @@ public class ApiService {
         }
     }
 
+    private void handleResponse(Response response, AnalysisCallback callback) throws IOException {
+        String responseBody = null;
+        boolean isPartialResponse = false;
+
+        try {
+            ResponseBody body = response.body();
+            if (body == null) {
+                callback.onFailure("服務器響應為空");
+                return;
+            }
+
+            // 嘗試讀取響應，支持部分響應恢復
+            try {
+                responseBody = readResponseWithFallback(body);
+            } catch (IOException e) {
+                if (e.getMessage() != null && e.getMessage().contains("unexpected end of stream")) {
+                    Log.w(TAG, "檢測到流截斷，嘗試使用部分數據");
+                    responseBody = getPartialResponseIfAvailable(body);
+                    isPartialResponse = true;
+                }
+                if (responseBody == null) {
+                    throw e;
+                }
+            }
+
+            Log.d(TAG, "響應狀態: " + response.code() +
+                    ", 長度: " + (responseBody != null ? responseBody.length() : 0) +
+                    (isPartialResponse ? " (部分數據)" : ""));
+
+            if (response.isSuccessful()) {
+                JSONObject jsonResponse = parseJsonWithFallback(responseBody);
+
+                if (jsonResponse == null) {
+                    callback.onFailure("無法解析服務器響應" + (isPartialResponse ? "（數據不完整）" : ""));
+                    return;
+                }
+
+                AnalysisResult result = AnalysisResult.fromJson(jsonResponse);
+
+                if (result.success) {
+                    if (isPartialResponse) {
+                        Log.w(TAG, "使用部分響應數據，結果可能不完整");
+                    }
+
+                    Log.d(TAG, "分析成功 - 異常區域: " + result.abnormalCount +
+                            ", 痣: " + result.hasMoles + ", 鬍鬚: " + result.hasBeard +
+                            (isPartialResponse ? " (使用部分數據)" : ""));
+
+                    callback.onSuccess(result);
+                } else {
+                    callback.onFailure(result.error != null ? result.error : "分析失敗");
+                }
+            } else {
+                handleHttpError(response.code(), callback);
+            }
+
+        } catch (OutOfMemoryError e) {
+            Log.e(TAG, "內存不足，響應數據過大", e);
+            callback.onFailure("響應數據過大，請稍後重試");
+        } catch (IOException e) {
+            Log.e(TAG, "IO異常", e);
+            String errorMsg = e.getMessage();
+            if (errorMsg != null && errorMsg.contains("unexpected end of stream")) {
+                callback.onFailure("網絡傳輸中斷，請檢查網絡連接後重試");
+            } else {
+                callback.onFailure("網絡錯誤: " + errorMsg);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "處理響應時發生錯誤", e);
+            callback.onFailure("處理結果時發生錯誤: " + e.getMessage());
+        }
+    }
+
+    // 安全讀取響應體
+    private String readResponseWithFallback(ResponseBody body) throws IOException {
+        try (InputStream inputStream = body.byteStream();
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            int totalBytes = 0;
+
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                totalBytes += bytesRead;
+                if (totalBytes > MAX_RESPONSE_SIZE) {
+                    Log.e(TAG, "響應數據超過最大允許大小");
+                    throw new IOException("響應數據過大");
+                }
+                outputStream.write(buffer, 0, bytesRead);
+            }
+
+            return outputStream.toString("UTF-8");
+
+        } catch (IOException e) {
+            Log.e(TAG, "讀取響應體失敗", e);
+            throw e;
+        }
+    }
+
+    // 嘗試獲取部分響應數據
+    private String getPartialResponseIfAvailable(ResponseBody body) {
+        try {
+            // 這是一個簡化的實現，實際中可能需要更複雜的邏輯
+            String content = body.string();
+            if (content != null && content.length() > 0) {
+                return content;
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "無法獲取部分響應數據", e);
+        }
+        return null;
+    }
+
+    // 更寬容的JSON解析
+    private JSONObject parseJsonWithFallback(String jsonString) {
+        try {
+            return new JSONObject(jsonString);
+        } catch (JSONException e) {
+            Log.w(TAG, "標準JSON解析失敗，嘗試修復", e);
+
+            // 嘗試修復常見的JSON問題
+            String fixedJson = jsonString.trim();
+
+            // 如果JSON被截斷，嘗試找到最後一個完整的對象
+            if (!fixedJson.endsWith("}")) {
+                int lastBrace = fixedJson.lastIndexOf("}");
+                if (lastBrace > 0) {
+                    fixedJson = fixedJson.substring(0, lastBrace + 1);
+                    Log.d(TAG, "嘗試使用截斷修復的JSON");
+                }
+            }
+
+            try {
+                return new JSONObject(fixedJson);
+            } catch (JSONException e2) {
+                Log.e(TAG, "JSON修復也失敗", e2);
+                return null;
+            }
+        }
+    }
+
+    // HTTP錯誤處理
+    private void handleHttpError(int code, AnalysisCallback callback) {
+        String errorMessage;
+        switch (code) {
+            case 404:
+                errorMessage = "API端點不存在 (404)";
+                break;
+            case 413:
+                errorMessage = "請求數據過大 (413)，請嘗試使用較小的圖片";
+                break;
+            case 500:
+                errorMessage = "服務器內部錯誤 (500)，請稍後重試";
+                break;
+            case 502:
+                errorMessage = "服務器網關錯誤 (502)";
+                break;
+            case 503:
+                errorMessage = "服務暫時不可用 (503)，請稍後重試";
+                break;
+            case 504:
+                errorMessage = "服務器處理超時 (504)，分析可能需要更多時間";
+                break;
+            default:
+                errorMessage = "服務器錯誤 (" + code + ")";
+        }
+
+        Log.e(TAG, "HTTP錯誤: " + errorMessage);
+        callback.onFailure(errorMessage);
+    }
+
+    // 判斷是否應該重試
+    private boolean shouldRetryOnError(String error, int attemptCount) {
+        if (attemptCount >= MAX_RETRY_ATTEMPTS - 1) {
+            return false;
+        }
+
+        if (error == null) {
+            return true;
+        }
+
+        String lowerError = error.toLowerCase();
+        return lowerError.contains("unexpected end of stream") ||
+                lowerError.contains("網絡傳輸中斷") ||
+                lowerError.contains("網絡連接失敗") ||
+                lowerError.contains("timeout") ||
+                lowerError.contains("超時") ||
+                lowerError.contains("connection reset") ||
+                lowerError.contains("socket") ||
+                lowerError.contains("504") ||
+                lowerError.contains("502") ||
+                lowerError.contains("503");
+    }
+
+    // 構建最終錯誤消息
+    private String buildFinalErrorMessage(String lastError, int totalAttempts) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("經過").append(totalAttempts).append("次嘗試後仍然失敗\n\n");
+        sb.append("最後錯誤: ").append(lastError).append("\n\n");
+        sb.append("可能的解決方案:\n");
+        sb.append("• 檢查網絡連接是否穩定\n");
+        sb.append("• 確認後端服務是否正常運行\n");
+        sb.append("• 嘗試使用較小的圖片\n");
+        sb.append("• 稍後再試");
+
+        return sb.toString();
+    }
+
     /**
-     * 分析面部圖片（包含痣和鬍鬚檢測功能）- Bitmap版本
+     * Bitmap版本的分析方法
      */
     public void analyzeFaceWithFeatureRemoval(Bitmap bitmap, boolean removeMoles, boolean removeBeard, AnalysisCallback callback) {
         String base64 = bitmapToBase64(bitmap);
@@ -417,28 +648,22 @@ public class ApiService {
     }
 
     /**
-     * 向後兼容：分析面部圖片（包含痣檢測功能）
+     * 向後兼容的方法
      */
     public void analyzeFaceWithMoleDetection(Bitmap bitmap, boolean removeMoles, AnalysisCallback callback) {
-        analyzeFaceWithFeatureRemoval(bitmap, removeMoles, false, callback);
+        analyzeFaceWithSmartRetry(bitmap, removeMoles, false, callback);
     }
 
-    /**
-     * 向後兼容：使用base64分析面部（包含痣檢測功能）
-     */
     public void analyzeFaceWithBase64(String base64Image, boolean removeMoles, AnalysisCallback callback) {
         analyzeFaceWithFeatureRemoval(base64Image, removeMoles, false, callback);
     }
 
-    /**
-     * 向後兼容：分析面部圖片（原始方法）
-     */
     public void analyzeFace(Bitmap bitmap, AnalysisCallback callback) {
-        analyzeFaceWithFeatureRemoval(bitmap, false, false, callback);
+        analyzeFaceWithSmartRetry(bitmap, false, false, callback);
     }
 
     public void analyzeFace(Bitmap bitmap, boolean includeImages, AnalysisCallback callback) {
-        analyzeFaceWithFeatureRemoval(bitmap, false, false, callback);
+        analyzeFaceWithSmartRetry(bitmap, false, false, callback);
     }
 
     public void testConnection(TestCallback callback) {
