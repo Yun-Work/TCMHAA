@@ -85,13 +85,14 @@ public class Forget12Activity extends AppCompatActivity {
                                 ? resp.getMessage() : "密碼已重設";
                         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
 
-        // 成功後跳回登入頁
-        Intent intent = new Intent(Forget12Activity.this, LoginActivity.class);
-        // 清掉舊的 activity stack，避免按返回再回到忘記密碼流程
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
-        finish();
-    }
+                        // 成功後跳回登入頁
+                        Intent intent = new Intent(Forget12Activity.this, LoginActivity.class);
+                        // 清掉舊的 activity stack，避免按返回再回到忘記密碼流程
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        finish();
+                    }
+
                     @Override
                     public void onFailure(Throwable t) {
                         btnConfirm.setEnabled(true);
@@ -100,7 +101,8 @@ public class Forget12Activity extends AppCompatActivity {
                     }
                 }
         );
-}
+    }
+
     // 至少6碼，含英數
     private boolean isValidPassword(String pwd) {
         if (pwd.length() < 6) return false;
