@@ -11,35 +11,18 @@
         android:layout_height="82dp"
         android:background="@color/maincolor"
         android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
+        app:title="關於我們"
         app:navigationIcon="@drawable/ic_arrow_back">
 
-        <!-- 左側 LOGO -->
-        <ImageView
-            android:id="@+id/ivLogo"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:contentDescription="@string/app_name"
-            android:src="@drawable/newlogo" />
 
-        <!-- 標題 -->
-        <TextView
-            android:id="@+id/tvToolbarTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginStart="8dp"
-            android:text="@string/about_title"
-            android:textSize="18sp"
-            android:textStyle="bold" />
     </com.google.android.material.appbar.MaterialToolbar>
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="633dp"
+        android:layout_height="match_parent"
         android:layout_marginTop="?attr/actionBarSize"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <!-- 這裡就是原本文字區塊，維持不變 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -62,7 +45,6 @@
                 android:text="@string/about_intro"
                 android:textSize="16sp" />
 
-            <!-- 分隔線 -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -108,7 +90,18 @@
                 android:lineSpacingExtra="3dp"
                 android:text="@string/about_contact_body" />
 
+            <!-- 新增返回按鈕 -->
+            <Button
+                android:id="@+id/btnBackAbout"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="24dp"
+                android:backgroundTint="@color/maincolor"
+                android:text="返回"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"/>
         </LinearLayout>
     </ScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
 

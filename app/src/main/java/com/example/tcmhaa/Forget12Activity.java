@@ -43,12 +43,11 @@ public class Forget12Activity extends AppCompatActivity {
         btnConfirm.setOnClickListener(v -> handleConfirm());
     }
 
-
     private void handleConfirm() {
         String pwd = etNewPassword.getText().toString().trim();
         String pwd2 = etConfirmPassword.getText().toString().trim();
 
-        // 簡單驗證：必填、長度、英文+數字、兩次一致
+        // 驗證：必填、長度、英文+數字、兩次一致
         if (TextUtils.isEmpty(pwd)) {
             etNewPassword.setError("請輸入新密碼");
             etNewPassword.requestFocus();
@@ -64,7 +63,6 @@ public class Forget12Activity extends AppCompatActivity {
             etConfirmPassword.requestFocus();
             return;
         }
-
         // 關鍵盤 + 鎖按鈕
         hideKeyboard();
         btnConfirm.setEnabled(false);
@@ -87,13 +85,13 @@ public class Forget12Activity extends AppCompatActivity {
                                 ? resp.getMessage() : "密碼已重設";
                         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
 
-                        // TODO: 成功後導回登入頁
-                        Intent i = new Intent(Forget12Activity.this, LoginActivity.class);
-                        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(i);
-                        finish();
-                    }
-
+        // 成功後跳回登入頁
+        Intent intent = new Intent(Forget12Activity.this, LoginActivity.class);
+        // 清掉舊的 activity stack，避免按返回再回到忘記密碼流程
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
+    }
                     @Override
                     public void onFailure(Throwable t) {
                         btnConfirm.setEnabled(true);
@@ -102,8 +100,7 @@ public class Forget12Activity extends AppCompatActivity {
                     }
                 }
         );
-    }
-
+}
     // 至少6碼，含英數
     private boolean isValidPassword(String pwd) {
         if (pwd.length() < 6) return false;
@@ -115,6 +112,7 @@ public class Forget12Activity extends AppCompatActivity {
         }
         return false;
     }
+
 
     private void hideKeyboard() {
         View v = getCurrentFocus();
