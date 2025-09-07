@@ -21,23 +21,23 @@ public class WelcomeActivity extends AppCompatActivity {
         nextButton.setOnClickListener(v ->
                 startActivity(new Intent(WelcomeActivity.this, MainhealthyActivity.class)));
 
-        maybeShowPermissionsDialog();
+//        maybeShowPermissionsDialog();
     }
 
-    private void maybeShowPermissionsDialog() {
-        // ★ 只要顯示過一次，就不再顯示
-        if (!PrefsHelper.isPermissionsDialogShownOnce(this)) {
-            nextButton.setEnabled(false);
-
-            PermissionsDialogFragment dialog = new PermissionsDialogFragment();
-            dialog.setOnAllGrantedListener(() -> nextButton.setEnabled(true));
-            dialog.setCancelable(false);
-            dialog.show(getSupportFragmentManager(), "perms");
-
-            // ★ 記錄：已顯示過一次（無論是否授權成功）
-            PrefsHelper.setPermissionsDialogShownOnce(this, true);
-        } else {
-            nextButton.setEnabled(true);
-        }
-    }
+//    private void maybeShowPermissionsDialog() {
+//        // ★ 只要顯示過一次，就不再顯示
+//        if (!PrefsHelper.isPermissionsDialogShownOnce(this)) {
+//            nextButton.setEnabled(false);
+//
+//            PermissionsDialogFragment dialog = new PermissionsDialogFragment();
+//            dialog.setOnAllGrantedListener(() -> nextButton.setEnabled(true));
+//            dialog.setCancelable(false);
+//            dialog.show(getSupportFragmentManager(), "perms");
+//
+//            // ★ 記錄：已顯示過一次（無論是否授權成功）
+//            PrefsHelper.setPermissionsDialogShownOnce(this, true);
+//        } else {
+//            nextButton.setEnabled(true);
+//        }
+//    }
 }

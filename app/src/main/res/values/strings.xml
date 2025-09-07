@@ -21,7 +21,7 @@
 
     <string name="item_profile">個人資料</string>
     <string name="item_daily_notify">每日通知時間</string>
-    <string name="item_popup_notify">通知提醒（彈跳視窗開/關）</string>
+    <string name="item_popup_notify">通知提醒</string>
     <string name="item_change_password">修改密碼</string>
     <string name="item_privacy">隱私政策</string>
     <string name="item_about">關於我們</string>

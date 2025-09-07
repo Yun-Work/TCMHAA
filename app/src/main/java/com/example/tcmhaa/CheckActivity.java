@@ -1,35 +1,30 @@
 package com.example.tcmhaa;
 
 import android.app.DatePickerDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.tcmhaa.utils.api.ApiHelper;
 import com.example.tcmhaa.dto.RegisterRequestDto;
 import com.example.tcmhaa.dto.RegisterResponseDto;
+import com.example.tcmhaa.utils.api.ApiHelper;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import okhttp3.OkHttpClient;
-
 public class CheckActivity extends AppCompatActivity {
 
-    private EditText etEmail, etPassword, etConfirmPassword,etUsername, etBirthday;
+    private EditText etEmail, etPassword, etConfirmPassword, etUsername, etBirthday;
     private RadioGroup rgGender;
     private Button btnSubmit;
-    //private AuthApi api;
     private final SimpleDateFormat ymd = new SimpleDateFormat("yyyy/MM/dd", Locale.TAIWAN);
 
     @Override
@@ -45,46 +40,46 @@ public class CheckActivity extends AppCompatActivity {
         rgGender          = findViewById(R.id.rgGender);
         btnSubmit         = findViewById(R.id.btnSubmit);
 
-        //api = ApiClient.get().create(AuthApi.class);
         // 生日 DatePicker
         etBirthday.setOnClickListener(v -> showDatePicker());
 
         btnSubmit.setOnClickListener(view -> {
-            String email    = etEmail.getText().toString().trim();
-            String password = etPassword.getText().toString();
-            String confirm  = etConfirmPassword.getText().toString();
-            String name     = etUsername.getText().toString().trim();
-            String birthStr = etBirthday.getText().toString().trim();
+            String email    = safeTrim(etEmail.getText());
+            String password = etPassword.getText() != null ? etPassword.getText().toString() : "";
+            String confirm  = etConfirmPassword.getText() != null ? etConfirmPassword.getText().toString() : "";
+            String name     = safeTrim(etUsername.getText());
+            String birthStr = safeTrim(etBirthday.getText());
 
-            // 性別：把「男 / 女」映射為後端要的「男生 / 女生」
+            // 性別：把「男 / 女」映射為後端要的「男生 / 女生」（請依你後端實際值調整）
             int checkedId = rgGender.getCheckedRadioButtonId();
             String gender = null;
             if (checkedId == R.id.rbMale)   gender = "男生";
             if (checkedId == R.id.rbFemale) gender = "女生";
 
             // 前端驗證（與後端對齊）
-            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches())
-            { toast("請輸入正確的 Email");
+            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                toast("請輸入正確的 Email");
             } else if (!password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$")) {
                 toast("密碼需包含英文字母與數字，長度至少6位");
-            } else if (!password.equals(confirm)) { toast("密碼與確認密碼不一致");
-            } else if (name.isEmpty()) { toast("請輸入用戶名");
-            } else if (gender == null) { toast("請選擇性別");
-            } else if (!isValidDate(birthStr)) { toast("生日格式需為 YYYY/MM/DD");
-            }else{
-                loginToServer(email, password, name, gender, birthStr);
+            } else if (!password.equals(confirm)) {
+                toast("密碼與確認密碼不一致");
+            } else if (name.isEmpty()) {
+                toast("請輸入用戶名");
+            } else if (gender == null) {
+                toast("請選擇性別");
+            } else if (!isValidDate(birthStr)) {
+                toast("生日格式需為 YYYY/MM/DD");
+            } else {
+                registerToServer(email, password, name, gender, birthStr);
             }
-
         });
     }
 
-    private void loginToServer(String email,String password,String name,String gender,String birthStr) {
-        OkHttpClient client = new OkHttpClient();
-
+    private void registerToServer(String email, String password, String name, String gender, String birthStr) {
         btnSubmit.setEnabled(false);
 
         ApiHelper.httpPost(
-                "users/register",                                // 依你的後端路徑調整
+                "users/register", // 依你的後端路徑調整
                 new RegisterRequestDto(email, password, name, gender, birthStr),
                 RegisterResponseDto.class,
                 new ApiHelper.ApiCallback<>() {
@@ -92,39 +87,43 @@ public class CheckActivity extends AppCompatActivity {
                     public void onSuccess(RegisterResponseDto resp) {
                         btnSubmit.setEnabled(true);
 
-                        // 成功條件：success=true，或沒有 error 且有 userId（相容不同後端實作）
+                        if (resp == null) {
+                            toast("註冊失敗：伺服器未回傳內容");
+                            return;
+                        }
 
-
-                        if (resp != null) {
-                            if (resp.success) {
-                                showSuccessDialog();
-                            } else {
-                                // 後端邏輯失敗（例如 Email 已被註冊）
-                                String msg = (resp.message != null && !resp.message.isEmpty()) ? resp.message : "註冊失敗";
-                                toast(msg);
-                                if ("Email 已被註冊".equals(resp.message) || "EMAIL_TAKEN".equals(resp.code)) {
-                                    etEmail.setError("該 Email 已註冊過");
-                                    etEmail.requestFocus();
-                                }
-                            }
+                        // 「成功」條件請依你的後端定義調整（這裡用 resp.success）
+                        if (Boolean.TRUE.equals(resp.success)) {
+                            // ✅ 改成註冊成功就前往 VerifyActivity
+                            goToVerifyActivity(email);
                         } else {
+                            // 後端邏輯失敗（例如 Email 已被註冊）
+                            String msg = (resp.message != null && !resp.message.isEmpty())
+                                    ? resp.message
+                                    : "註冊失敗";
+                            toast(msg);
 
-                            toast(resp.message);
+                            // 針對 Email 已存在的提示（依你的後端 code/message 調整）
+                            if ("Email 已被註冊".equals(resp.message) || "EMAIL_TAKEN".equals(resp.code)) {
+                                etEmail.setError("該 Email 已註冊過");
+                                etEmail.requestFocus();
+                            }
                         }
                     }
 
-                        @Override
-                        public void onFailure(Throwable t) {
-                            btnSubmit.setEnabled(true);
-                            toast("連線錯誤：" + t.getMessage());
-
-                        }
+                    @Override
+                    public void onFailure(Throwable t) {
+                        btnSubmit.setEnabled(true);
+                        toast("連線錯誤：" + (t != null ? t.getMessage() : "未知錯誤"));
                     }
-            );
-    }private boolean isValidDate(String s) {
+                }
+        );
+    }
+
+    private boolean isValidDate(String s) {
         try {
             ymd.setLenient(false);
-            ymd.parse(s);                 // 只能接受 yyyy/MM/dd
+            ymd.parse(s); // 只能接受 yyyy/MM/dd
             return s.matches("^\\d{4}/\\d{2}/\\d{2}$");
         } catch (ParseException e) {
             return false;
@@ -142,18 +141,21 @@ public class CheckActivity extends AppCompatActivity {
         dlg.show();
     }
 
-    private void showSuccessDialog() {
-        new android.app.AlertDialog.Builder(this)
-                .setTitle("註冊成功")
-                .setMessage("已成功註冊，請重新登入。")
-                .setCancelable(false)
-                .setPositiveButton("確定", (dialog, which) -> {
-                    dialog.dismiss();
-                    finish(); // 回登入頁
-                })
-                .show();
+    // ✅ 新增：導向 VerifyActivity（把 email 與狀態帶過去）
+    private void goToVerifyActivity(String email) {
+        Intent i = new Intent(CheckActivity.this, VerifyActivity.class);
+        i.putExtra("email", email);
+        i.putExtra("status", "register"); // 或 "1"；依你後端/流程的定義
+        startActivity(i);
+        // 視需求決定是否 finish()：若要禁止返回註冊頁就開啟
+        // finish();
     }
 
-    private void toast(String s){ Toast.makeText(this, s, Toast.LENGTH_SHORT).show(); }
-}
+    private String safeTrim(CharSequence cs) {
+        return cs == null ? "" : cs.toString().trim();
+    }
 
+    private void toast(String s) {
+        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+    }
+}
