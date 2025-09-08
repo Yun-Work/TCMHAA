@@ -41,10 +41,10 @@
                     android:id="@+id/spOrgan"
                     android:layout_width="wrap_content"
                     android:layout_height="56dp"
-                    android:spinnerMode="dropdown"
+                    android:entries="@array/organs_options"
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"
-                    android:entries="@array/organs_options" />
+                    android:spinnerMode="dropdown" />
 
                 <!-- 時間軸按鈕：加寬 + 自動縮字 -->
                 <Button
@@ -81,11 +81,11 @@
                 android:layout_marginTop="16dp"
                 android:background="@color/placeholderGray">
 
-                <com.github.mikephil.charting.charts.BarChart
-                    android:id="@+id/barChart"
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/lineChart"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:visibility="invisible" />
+                    android:layout_height="280dp"
+                    android:layout_marginTop="12dp" />
 
                 <TextView
                     android:id="@+id/tvChartPlaceholder"
