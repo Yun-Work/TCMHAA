@@ -237,7 +237,7 @@ public class CameraActivity extends AppCompatActivity {
                                 Log.d(TAG, "開始分析拍攝的照片，尺寸: " + processedBitmap.getWidth() + "x" + processedBitmap.getHeight());
 
                                 // 調用API分析（使用處理後的圖片以提高速度）
-                                apiService.analyzeFace(processedBitmap, userId, new ApiService.AnalysisCallback() {
+                                apiService.analyzeFace(processedBitmap,new ApiService.AnalysisCallback() {
                                     @Override
                                     public void onSuccess(ApiService.AnalysisResult result) {
                                         runOnUiThread(() -> {

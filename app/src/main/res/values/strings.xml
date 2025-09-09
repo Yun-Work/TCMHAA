@@ -36,10 +36,9 @@
         <item>胃</item>
         <item>小腸</item>
         <item>大腸</item>
-        <item>腎區</item>
+        <item>腎總區</item>
         <item>膀胱</item>
-        <item>生殖系統</item>
-        <item>肝膽代謝</item>
+        <item>腎(生殖系統)</item>
     </string-array>
     <string name="privacy_policy_body">
     <![CDATA[
