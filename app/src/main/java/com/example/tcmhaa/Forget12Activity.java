@@ -1,5 +1,6 @@
 package com.example.tcmhaa;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Button;
@@ -67,9 +68,16 @@ public class Forget12Activity extends AppCompatActivity {
                     public void onSuccess(ChangePasswordResponseDto resp) {
                         if (resp != null && resp.success) {
                             Toast.makeText(Forget12Activity.this,
-                                    resp.message != null ? resp.message : "密碼修改成功",
+                                    "密碼已更新",
                                     Toast.LENGTH_SHORT).show();
+
+                            // 跳回登入頁
+
+                            Intent intent = new Intent(Forget12Activity.this, LoginActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
                             finish();
+
                         } else {
                             Toast.makeText(Forget12Activity.this,
                                     resp != null ? resp.message : "修改失敗",
@@ -85,9 +93,6 @@ public class Forget12Activity extends AppCompatActivity {
                     }
                 }
         );
-        // 成功後可結束或跳轉
-        Toast.makeText(this, "密碼已更新", Toast.LENGTH_SHORT).show();
-        // finish();
     }
 
     // 至少6碼，含英數
