@@ -3,15 +3,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF">
-    <!-- 確認可刪 -->
-    <!-- 確認可刪 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center_horizontal"
         android:padding="24dp">
-        <!-- 確認可刪 -->
         <!-- Logo -->
         <ImageView
             android:layout_width="131dp"

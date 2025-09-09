@@ -40,12 +40,24 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textIsSelectable="true"
-
                 android:text="隱私政策將載入..."
                 android:lineSpacingExtra="4dp"
                 android:textSize="16sp"
                 android:autoLink="email|web"
                 android:linksClickable="true"/>
+
+            <!-- 新增的返回按鈕 -->
+            <Button
+                android:id="@+id/btnBackPrivacy"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="24dp"
+                android:backgroundTint="@color/maincolor"
+                android:text="返回"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"/>
+
         </LinearLayout>
     </ScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
+

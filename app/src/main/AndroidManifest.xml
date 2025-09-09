@@ -1,22 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- ✅ 硬體特性（相機可選） -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <!-- ✅ 權限宣告 -->
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Android 13+ 讀取相簿（選圖用） -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <!-- Android 12 及以下讀取相簿 -->
+
+    <!-- Android 13+ 通知權限（動態請求） -->
+    <uses-permission
+        android:name="android.permission.POST_NOTIFICATIONS"
+        tools:targetApi="33" />
+
+    <!-- Android 13+ 相簿讀取（選圖） -->
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_IMAGES"
+        tools:targetApi="33" />
+
+    <!-- Android 12 及以下相簿讀取 -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
-    <!-- Android 13+ 需要這個權限才能顯示通知 -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- 🔌 網路權限（一定要有，否則 Retrofit 會連不上） -->
+
+    <!-- 網路 -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- 可選：查詢網路狀態 -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- 🎯 精準鬧鐘（Android 12+，若使用 scheduleDailyExact 建議宣告） -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Android 14+ 新增路徑 -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+
+
+    <!-- 若你要開機後自動重排提醒，解註這行並加入 BootReceiver（下方有樣板） -->
+    <!-- <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" /> -->
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -27,12 +48,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TCMHAA"
         android:usesCleartextTraffic="true"
-        android:networkSecurityConfig="@xml/network_security_config"
-        >  <!-- 你有連 http://10.0.2.2 -->
+        android:networkSecurityConfig="@xml/network_security_config">
 
-        <!-- 首頁或主入口 -->
-
-        <!-- 首頁 -->
+        <!-- 🔐 啟動入口（有 intent-filter → 必須 exported=true） -->
         <activity
             android:name=".LoginActivity"
             android:exported="true">
@@ -41,7 +59,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!-- 🔐 登入畫面 -->
+
+        <!-- 其他畫面（無 intent-filter，不需顯式 exported） -->
         <activity android:name=".ForgetActivity" />
         <activity android:name=".VerifyActivity" />
         <activity android:name=".Forget12Activity" />
@@ -55,18 +74,18 @@
         <activity android:name="._bMainActivity" />
         <activity android:name="._cMainActivity" />
         <activity android:name="._dMainActivity" />
-        <activity android:name="._dProfileActivity"/>
-        <activity android:name="._dTimeActivity"/>
-        <activity android:name="._dNotifySettingsActivity"/>
-        <activity android:name="._dPrivacyActivity"/>
-        <activity android:name="._dAboutActivity"/>
+        <activity android:name="._dProfileActivity" />
+        <activity android:name="._dTimeActivity" />
+        <activity android:name="._dNotifySettingsActivity" />
+        <activity android:name="._dPrivacyActivity" />
+        <activity android:name="._dAboutActivity" />
 
-        <!-- 排程觸發的接收器 -->
+        <!-- ⏰ 排程觸發的接收器（顯式 PendingIntent 觸發，無需 intent-filter） -->
         <receiver
             android:name=".NotificationReceiver"
             android:exported="false" />
 
-        <!-- FileProvider（供 CameraActivity 產生的檔案授權給外部/其他 app 使用） -->
+        <!-- 📂 FileProvider（Camera/分享檔案用） -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
@@ -76,6 +95,19 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- （可選）若要在重開機後自動重排每日提醒，解註本段並提供對應的 BootReceiver 類別
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true"
+            android:directBootAware="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+        -->
     </application>
 
 </manifest>

@@ -86,7 +86,7 @@ public class Forget12Activity extends AppCompatActivity {
                 }
         );
         // 成功後可結束或跳轉
-        Toast.makeText(this, "密碼已更新（示意）", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "密碼已更新", Toast.LENGTH_SHORT).show();
         // finish();
     }
 
