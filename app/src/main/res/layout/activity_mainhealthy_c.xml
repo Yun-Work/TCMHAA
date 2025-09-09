@@ -28,7 +28,7 @@
                 android:src="@drawable/newlogo"
                 android:contentDescription="@string/app_name" />
 
-            <!-- 下拉 + 時間軸 + 確認 -->
+            <!-- 下拉 + 時間範圍 + 確認 -->
             <LinearLayout
                 android:id="@+id/rowFilters"
                 android:layout_width="match_parent"
@@ -46,7 +46,6 @@
                     android:paddingEnd="8dp"
                     android:entries="@array/organs_options" />
 
-                <!-- 時間軸按鈕：加寬 + 自動縮字 -->
                 <Button
                     android:id="@+id/btnPickRange"
                     android:layout_width="0dp"
@@ -90,20 +89,61 @@
                     android:layout_gravity="center" />
             </FrameLayout>
 
-            <!-- 文字分析結果 -->
-            <TextView
-                android:id="@+id/tvTextResult"
+            <!-- 問題輸入列（取代原「文字分析結果」） -->
+            <LinearLayout
+                android:id="@+id/rowQuestion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/label_text_result"
-                android:textSize="18sp"
-                android:textColor="@color/placeholderText"
-                android:layout_marginTop="16dp"
-                android:gravity="center" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="16dp">
+
+                <EditText
+                    android:id="@+id/etQuestion"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:hint="輸入想詢問的問題…"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:background="@android:drawable/edit_text"
+                    android:singleLine="true"
+                    android:imeOptions="actionSend" />
+
+                <Button
+                    android:id="@+id/btnAskConfirm"
+                    android:layout_width="96dp"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="8dp"
+                    android:text="確定"
+                    android:textAllCaps="false"
+                    android:backgroundTint="@color/maincolor"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
+
+            <!-- 回應區（顯示後端回答） -->
+            <FrameLayout
+                android:id="@+id/blockAnswer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="160dp"
+                android:layout_marginTop="12dp"
+                android:background="@color/placeholderGray">
+
+                <TextView
+                    android:id="@+id/tvAnswer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="12dp"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp"
+                    tools:text="這裡顯示對您問題的回答…" />
+            </FrameLayout>
+
         </LinearLayout>
     </ScrollView>
 
-    <!-- 下方導覽列（先畫出來，FAB 放後面才會在最上層） -->
+    <!-- 下方導覽列 -->
     <include
         android:id="@+id/bottomBar"
         layout="@layout/layout_bottom_nav"
@@ -111,7 +151,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"/>
 
-    <!-- 固定右下角的下載 FAB（畫在最後，位於最上層） -->
+    <!-- 右下角下載 FAB -->
     <ImageButton
         android:id="@+id/btnDownload"
         android:layout_width="72dp"
