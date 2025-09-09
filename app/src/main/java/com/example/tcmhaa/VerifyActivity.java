@@ -41,13 +41,10 @@ public class VerifyActivity extends AppCompatActivity {
         if (from != null) {
             email  = from.getStringExtra(EXTRA_EMAIL);
             status = from.getStringExtra(EXTRA_STATUS);
+            userId = from.getIntExtra(EXTRA_USER_ID,-1);
 
         }
-        if (status == null || status.trim().isEmpty()) {
-            status = "register"; // 預設走註冊驗證流程
-            userId = from.getIntExtra("user_id",-1);
-            status = from.getStringExtra("status");
-        }
+
 
         // 重新寄送驗證碼（可在此接後端 API）
         resendText.setOnClickListener(v ->
@@ -63,6 +60,7 @@ public class VerifyActivity extends AppCompatActivity {
                         otpEditText.requestFocus();
                         return;
                     }
+
 
                     // 呼叫後端驗證 API
                     // 你提供的版本是用 userId + code 驗證，沿用如下：
@@ -81,21 +79,11 @@ public class VerifyActivity extends AppCompatActivity {
                                     String msg = (resp != null && resp.getMessage() != null) ? resp.getMessage() : "驗證成功";
                                     Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
 
-                                    // 依來源流程導向
-                                    if (isForgotFlow(status)) {
-                                        // 忘記密碼 → 前往重設密碼（把 user_id 帶過去）
-                                        Intent i = new Intent(VerifyActivity.this, Forget12Activity.class);
-                                        i.putExtra(EXTRA_USER_ID, userId);
-                                        i.putExtra(EXTRA_EMAIL, email); // 若下一頁也想用到 email 可一併帶上
-                                        startActivity(i);
-                                        finish();
-                                    } else {
-                                        // 註冊 → 回登入頁重新登入（清堆疊）
-                                        Intent i = new Intent(VerifyActivity.this, LoginActivity.class);
-                                        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                        startActivity(i);
-                                        finishAffinity();
-                                    }
+                                    Intent i = new Intent(VerifyActivity.this, Forget12Activity.class);
+                                    i.putExtra(EXTRA_USER_ID, userId);
+                                    startActivity(i);
+                                    finish();
+
                                 }
 
                                 @Override
@@ -111,10 +99,10 @@ public class VerifyActivity extends AppCompatActivity {
                 });
             }
 
-            /** 支援兩種帶法：forgot/2 為忘記密碼，其餘視為註冊 */
-            private boolean isForgotFlow(String s) {
-                if (s == null) return false;
-                String v = s.trim().toLowerCase();
-                return "forgot".equals(v) || "2".equals(v);
-            }
+//            /** 支援兩種帶法：forgot/2 為忘記密碼，其餘視為註冊 */
+//            private boolean isForgotFlow(String s) {
+//                if (s == null) return false;
+//                String v = s.trim().toLowerCase();
+//                return "forgot".equals(v) || "2".equals(v);
+//            }
         }
