@@ -396,6 +396,7 @@ public class ApiService {
                     .url(BASE_URL + ANALYZE_ENDPOINT)
                     .post(requestBody)
                     .addHeader("Content-Type", "application/json")
+//                    .addHeader("X-User-Id", String.valueOf(userId))   //把 user_id 放在 header
                     .build();
 
             Log.d(TAG, "發送分析請求到: " + BASE_URL + ANALYZE_ENDPOINT);

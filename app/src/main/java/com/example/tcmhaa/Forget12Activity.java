@@ -8,20 +8,17 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.example.tcmhaa.dto.ResetPasswordRequestDto;
-import com.example.tcmhaa.dto.ResetPasswordResponseDto;
+// 你專案的工具類
 import com.example.tcmhaa.utils.api.ApiHelper;
-import android.view.View;
-import android.view.inputmethod.InputMethodManager;
-import android.content.Context;
+
+// 你專案裡新增的 DTO
+import com.example.tcmhaa.dto.ChangePasswordRequestDto;
+import com.example.tcmhaa.dto.ChangePasswordResponseDto;
 
 public class Forget12Activity extends AppCompatActivity {
 
     private EditText etNewPassword, etConfirmPassword;
     private Button btnConfirm;
-
-    private int userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,15 +28,7 @@ public class Forget12Activity extends AppCompatActivity {
         etNewPassword = findViewById(R.id.etNewPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
         btnConfirm = findViewById(R.id.btnConfirm);
-        Intent from = getIntent();
-        if (from != null) {
-            userId = from.getIntExtra("user_id", -1);
-        }
-        if (userId <= 0) {
-            Toast.makeText(this, "請重新操作", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
+
         btnConfirm.setOnClickListener(v -> handleConfirm());
     }
 
@@ -47,7 +36,7 @@ public class Forget12Activity extends AppCompatActivity {
         String pwd = etNewPassword.getText().toString().trim();
         String pwd2 = etConfirmPassword.getText().toString().trim();
 
-        // 驗證：必填、長度、英文+數字、兩次一致
+        // 簡單驗證：必填、長度、英文+數字、兩次一致
         if (TextUtils.isEmpty(pwd)) {
             etNewPassword.setError("請輸入新密碼");
             etNewPassword.requestFocus();
@@ -63,41 +52,44 @@ public class Forget12Activity extends AppCompatActivity {
             etConfirmPassword.requestFocus();
             return;
         }
-        // 關鍵盤 + 鎖按鈕
-        hideKeyboard();
-        btnConfirm.setEnabled(false);
+        int userId = getSharedPreferences("auth", MODE_PRIVATE).getInt("user_id", -1);
+        if (userId == -1) {
+            Toast.makeText(this, "請先登入", Toast.LENGTH_LONG).show();
+            return;
+        }
 
+        // TODO: 在這裡呼叫後端 API 送出重設密碼請求
         ApiHelper.httpPost(
-                "users/reset_password",
-                new ResetPasswordRequestDto(userId, pwd),
-                ResetPasswordResponseDto.class,
-                new ApiHelper.ApiCallback<ResetPasswordResponseDto>() {
+                "users/change_password",
+                new ChangePasswordRequestDto(userId, pwd),
+                ChangePasswordResponseDto.class,
+                new ApiHelper.ApiCallback<>() {
                     @Override
-                    public void onSuccess(ResetPasswordResponseDto resp) {
-                        btnConfirm.setEnabled(true);
+                    public void onSuccess(ChangePasswordResponseDto resp) {
+                        if (resp != null && resp.success) {
+                            Toast.makeText(Forget12Activity.this,
+                                    "密碼已更新",
+                                    Toast.LENGTH_SHORT).show();
 
-                        if (resp != null && resp.getError() != null) {
-                            Toast.makeText(getApplicationContext(), resp.getError(), Toast.LENGTH_SHORT).show();
-                            return;
+                            // 跳回登入頁
+
+                            Intent intent = new Intent(Forget12Activity.this, LoginActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                            finish();
+
+                        } else {
+                            Toast.makeText(Forget12Activity.this,
+                                    resp != null ? resp.message : "修改失敗",
+                                    Toast.LENGTH_LONG).show();
                         }
-
-                        String msg = (resp != null && resp.getMessage() != null)
-                                ? resp.getMessage() : "密碼已重設";
-                        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-
-                        // 成功後跳回登入頁
-                        Intent intent = new Intent(Forget12Activity.this, LoginActivity.class);
-                        // 清掉舊的 activity stack，避免按返回再回到忘記密碼流程
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
-                        finish();
                     }
 
                     @Override
                     public void onFailure(Throwable t) {
-                        btnConfirm.setEnabled(true);
-                        String msg = (t != null && t.getMessage() != null) ? t.getMessage() : "連線失敗";
-                        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(Forget12Activity.this,
+                                "連線錯誤：" + t.getMessage(),
+                                Toast.LENGTH_LONG).show();
                     }
                 }
         );
@@ -113,15 +105,5 @@ public class Forget12Activity extends AppCompatActivity {
             if (hasLetter && hasDigit) return true;
         }
         return false;
-    }
-
-
-    private void hideKeyboard() {
-        View v = getCurrentFocus();
-        if (v == null) v = new View(this);
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (imm != null) {
-            imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-        }
     }
 }

@@ -55,11 +55,20 @@ public class CameraActivity extends AppCompatActivity {
 
     private ActivityResultLauncher<String[]> requestPermissionsLauncher;
     private Uri photoUri;
+    private int userId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera_5_1);
+        userId = getSharedPreferences("auth", MODE_PRIVATE).getInt("user_id", -1);
+        if (userId == -1) {
+            Toast.makeText(this, "請先登入", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
+
 
         // 螢幕常亮與高亮度
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -228,7 +237,7 @@ public class CameraActivity extends AppCompatActivity {
                                 Log.d(TAG, "開始分析拍攝的照片，尺寸: " + processedBitmap.getWidth() + "x" + processedBitmap.getHeight());
 
                                 // 調用API分析（使用處理後的圖片以提高速度）
-                                apiService.analyzeFace(processedBitmap, new ApiService.AnalysisCallback() {
+                                apiService.analyzeFace(processedBitmap,new ApiService.AnalysisCallback() {
                                     @Override
                                     public void onSuccess(ApiService.AnalysisResult result) {
                                         runOnUiThread(() -> {
