@@ -69,18 +69,18 @@ public class _cMainActivity extends AppCompatActivity {
     private Long selectedStartMillis;
     private Long selectedEndMillis;
 
-    // API
-    private static final String HISTORY_API_PATH_COLOR_SERIES = "history/status-bar"; // 走 ApiHelper（自帶 /api 前綴）
-    private static final String API_BASE = "http://10.0.2.2:6060/api/"; // 直連 OkHttp 用
-    private static final String RAG_WEB_ASK_API_PATH = "rag/web-ask";   // 若你沒有 web-ask，可改成 "rag/ask"
+    // ====== 後端：歷史折線圖 ======
+    private static final String HISTORY_API_PATH_COLOR_SERIES = "history/status-bar"; // ApiHelper（自帶 /api 前綴）
 
-    // OkHttp（拉長讀取逾時給 RAG 用）
+    // ====== Ollama（直接呼叫）======
+    // 模擬器請用 10.0.2.2；實機請換成電腦的區網 IP（例：192.168.x.x）
+    private static final String OLLAMA_BASE = "http://10.0.2.2:11434";
+    private static final String OLLAMA_MODEL = "qwen2.5:7b";
     private static final MediaType JSON_MT = MediaType.parse("application/json; charset=utf-8");
-    private final OkHttpClient ragClient = new OkHttpClient.Builder()
+    private final OkHttpClient ollamaClient = new OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(180, TimeUnit.SECONDS)   // 依後端推論時間調整
-            .callTimeout(0, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS) // 視模型推論調整
             .build();
 
     @Override
@@ -88,7 +88,7 @@ public class _cMainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mainhealthy_c);
 
-        // 綁定元件（已無 btnDownload）
+        // 綁定元件
         spOrgan            = findViewById(R.id.spOrgan);
         btnPickRange       = findViewById(R.id.btnPickRange);
         btnConfirm         = findViewById(R.id.btnConfirm);
@@ -129,21 +129,21 @@ public class _cMainActivity extends AppCompatActivity {
             fetchColorSeries(organ, start, end, uid);
         });
 
-        // 問答：呼叫 /api/rag/web-ask（或 /api/rag/ask）
+        // 問答：直接呼叫 Ollama
         btnAskConfirm.setOnClickListener(v -> {
             String question = (etQuestion.getText() != null) ? etQuestion.getText().toString().trim() : "";
             if (TextUtils.isEmpty(question)) {
                 Toast.makeText(this, "請先輸入問題", Toast.LENGTH_SHORT).show();
                 return;
             }
-            askWebAsk(question);
+            askOllama(question);
         });
 
-        setupBottomNav();     // 已做 null-safe
+        setupBottomNav();
         setupLineChartStyle();
     }
 
-    /** /api/history/status-bar：多色 0/1 折線資料 */
+    /** /api/history/status-bar：多色 0/1 折線資料（維持用 ApiHelper） */
     private void fetchColorSeries(String organ, String start, String end, int userId) {
         HistoryStatusBarRequestDto req = new HistoryStatusBarRequestDto(organ, start, end, userId);
         ApiHelper.httpPost(
@@ -169,75 +169,68 @@ public class _cMainActivity extends AppCompatActivity {
     }
 
     // =========================
-    // /api/rag/web-ask（或 rag/ask）
+    // Ollama /api/chat（非串流）
     // =========================
-    private void askWebAsk(String question) {
+    private void askOllama(String question) {
         btnAskConfirm.setEnabled(false);
-        tvAnswer.setText("從網路蒐集資料中…");
+        tvAnswer.setText("思考中…");
 
         try {
-            JSONObject body = new JSONObject();
-            body.put("question", question);
+            // 新增一個 system 提示，要求模型用繁體中文回答
+            JSONObject sysMsg = new JSONObject()
+                    .put("role", "system")
+                    .put("content", "你是一個中醫小助手，請務必用繁體中文回答所有問題。");
+
+            JSONObject userMsg = new JSONObject()
+                    .put("role", "user")
+                    .put("content", question);
+
+            JSONArray messages = new JSONArray()
+                    .put(sysMsg)   // 先放 system 訊息
+                    .put(userMsg); // 再放使用者問題
+
+            JSONObject body = new JSONObject()
+                    .put("model", OLLAMA_MODEL)
+                    .put("messages", messages)
+                    .put("stream", false);
 
             Request req = new Request.Builder()
-                    .url(API_BASE + RAG_WEB_ASK_API_PATH)
+                    .url(OLLAMA_BASE + "/api/chat")
                     .post(RequestBody.create(body.toString(), JSON_MT))
                     .build();
 
-            ragClient.newCall(req).enqueue(new Callback() {
-                @Override public void onFailure(Call call, IOException e) {
+            ollamaClient.newCall(req).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
                     runOnUiThread(() -> {
                         btnAskConfirm.setEnabled(true);
-                        tvAnswer.setText("");
-                        Toast.makeText(_cMainActivity.this, "發問失敗：" + e.getMessage(), Toast.LENGTH_LONG).show();
+                        tvAnswer.setText(
+                                "連線失敗：" + e.getMessage() + "\n\n請檢查：\n" +
+                                        "1) Ollama 是否在執行（預設 11434）\n" +
+                                        "2) IP 是否正確（模擬器用 10.0.2.2；實機用電腦區網 IP）\n" +
+                                        "3) AndroidManifest 是否允許明文 HTTP（usesCleartextTraffic）"
+                        );
                     });
                 }
 
-                @Override public void onResponse(Call call, Response response) {
-                    String respStr = "";
-                    try { respStr = response.body() != null ? response.body().string() : ""; }
-                    catch (Exception ignore) {}
-                    finally { if (response.body() != null) response.close(); }
-
-                    final boolean ok = response.isSuccessful();
-                    final String finalResp = respStr;
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    String raw = response.body() != null ? response.body().string() : "";
+                    response.close();
 
                     runOnUiThread(() -> {
                         btnAskConfirm.setEnabled(true);
-
-                        if (!ok) {
-                            tvAnswer.setText("");
-                            Toast.makeText(_cMainActivity.this, "伺服器錯誤：" + response.code(), Toast.LENGTH_LONG).show();
+                        if (!response.isSuccessful()) {
+                            tvAnswer.setText("伺服器錯誤：" + response.code() + "\n" + raw);
                             return;
                         }
-
                         try {
-                            JSONObject obj = new JSONObject(finalResp);
-                            // web-ask: {success, answer, sources: [{title,url}]}
-                            boolean success = obj.optBoolean("success", true); // 若是 /rag/ask 可能沒有 success
-                            String answer = obj.optString("answer", finalResp);
-
-                            StringBuilder sb = new StringBuilder();
-                            if (!TextUtils.isEmpty(answer)) sb.append(answer.trim());
-
-                            JSONArray srcs = obj.optJSONArray("sources");
-                            if (srcs != null && srcs.length() > 0) {
-                                sb.append("\n\n參考來源：\n");
-                                for (int i = 0; i < srcs.length(); i++) {
-                                    JSONObject s = srcs.optJSONObject(i);
-                                    if (s == null) continue;
-                                    String title = s.optString("title", "來源 " + (i + 1));
-                                    String url   = s.optString("url", "");
-                                    sb.append(i + 1).append(". ").append(title);
-                                    if (!TextUtils.isEmpty(url)) sb.append("\n").append(url);
-                                    sb.append("\n");
-                                }
-                            }
-
-                            tvAnswer.setText(sb.toString().trim());
+                            JSONObject obj = new JSONObject(raw);
+                            JSONObject msg = obj.optJSONObject("message");
+                            String content = (msg != null) ? msg.optString("content", "").trim() : "";
+                            tvAnswer.setText(content.isEmpty() ? "（沒有內容）" : content);
                         } catch (Exception e) {
-                            // 非預期 JSON，直接顯示原字串
-                            tvAnswer.setText(finalResp);
+                            tvAnswer.setText(raw);
                         }
                     });
                 }
@@ -245,10 +238,14 @@ public class _cMainActivity extends AppCompatActivity {
 
         } catch (Exception e) {
             btnAskConfirm.setEnabled(true);
-            tvAnswer.setText("");
-            Toast.makeText(this, "參數錯誤：" + e.getMessage(), Toast.LENGTH_LONG).show();
+            tvAnswer.setText("建立請求失敗：" + e.getMessage());
         }
     }
+
+    /** 想改 /api/generate：把上面 url 換成 OLLAMA_BASE + "/api/generate"，body 改為
+     * new JSONObject().put("model", OLLAMA_MODEL).put("prompt", question).put("stream", false);
+     * 解析改抓 obj.optString("response","")
+     */
 
     /** 繪製多色折線（發紅/發黑/發黃/發白/發青 → 5 條 0/1 線） */
     private void renderMultiColorLineChart(HistoryStatusBarResponseDto r) {
