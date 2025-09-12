@@ -74,7 +74,7 @@ public class _cMainActivity extends AppCompatActivity {
 
     // ====== Ollama（直接呼叫）======
     // 模擬器請用 10.0.2.2；實機請換成電腦的區網 IP（例：192.168.x.x）
-    private static final String OLLAMA_BASE = "http://10.0.2.2:11434";
+    private static final String OLLAMA_BASE = "http://163.13.202.117:11434";
     private static final String OLLAMA_MODEL = "qwen2.5:7b";
     private static final MediaType JSON_MT = MediaType.parse("application/json; charset=utf-8");
     private final OkHttpClient ollamaClient = new OkHttpClient.Builder()

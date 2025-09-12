@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <domain-config cleartextTrafficPermitted="true">
-        <!-- 允許本地開發環境的HTTP連接 -->
-        <domain includeSubdomains="true">10.0.2.2</domain> <!-- Android模擬器 -->
-        <domain includeSubdomains="true">localhost</domain>
-        <domain includeSubdomains="true"> 192.168.52.1</domain>
-        <!-- 如果使用實體設備，請添加你的電腦IP地址 -->
-    </domain-config>
+<!-- 全域允許 HTTP（包含 IP 位址） -->
+<base-config cleartextTrafficPermitted="true" />
+
+<!-- 如果想只針對特定網域/IP 開啟，可以保留下面 -->
+<domain-config cleartextTrafficPermitted="true">
+    <!-- Android 模擬器專用 -->
+    <domain includeSubdomains="true">10.0.2.2</domain>
+    <domain includeSubdomains="true">localhost</domain>
+
+    <!-- 你的電腦區網 IP（實體裝置用） -->
+    <domain includeSubdomains="true">192.168.52.1</domain>
+    <domain includeSubdomains="true">163.13.202.117</domain>
+</domain-config>
 </network-security-config>
