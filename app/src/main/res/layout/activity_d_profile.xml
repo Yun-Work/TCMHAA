@@ -33,57 +33,116 @@
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp">
 
+        <!-- 使用者名稱 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="使用者名稱"
+            android:textColor="@color/material_dynamic_neutral40"
+            android:textStyle="bold"
+            android:includeFontPadding="false"
+            android:layout_marginBottom="8dp" />
+
         <EditText
             android:id="@+id/etName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="使用者名稱"
             android:drawableStart="@android:drawable/ic_menu_myplaces"
-            android:padding="12dp" />
+            android:hint="使用者名稱"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"
+            android:textColorHint="@color/material_dynamic_neutral50" />
 
-        <EditText
-            android:id="@+id/etGender"
+        <!-- 出生年月日 -->
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="性別"
-            android:drawableStart="@android:drawable/ic_menu_myplaces"
-            android:padding="12dp" />
+            android:text="出生年月日 (YYYY/MM/DD)"
+            android:textColor="@color/material_dynamic_neutral40"
+            android:textStyle="bold"
+            android:includeFontPadding="false"
+            android:layout_marginBottom="8dp" />
 
         <EditText
             android:id="@+id/etBirthday"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="生日"
-            android:drawableStart="@android:drawable/ic_menu_myplaces"
-            android:padding="12dp" />
+            android:minHeight="48dp"
+            android:clickable="true"
+            android:focusable="false"
+            android:hint="YYYY/MM/DD"
+            android:inputType="text"
+            android:padding="12dp"
+            android:textColorHint="@color/material_dynamic_neutral60"
+            android:textStyle="bold"
+            android:layout_marginBottom="10dp" />
 
+        <!-- 性別 -->
+        <TextView
+            android:id="@+id/tvGender"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="性別"
+            android:textColor="@color/material_dynamic_neutral40"
+            android:textStyle="bold"
+            android:includeFontPadding="false"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <RadioGroup
+                android:id="@+id/rgGender"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/rbMale"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="男"
+                    android:layout_marginEnd="16dp"
+                    android:textColor="@color/material_dynamic_neutral40" />
+
+                <RadioButton
+                    android:id="@+id/rbFemale"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="女"
+                    android:textColor="@color/material_dynamic_neutral40" />
+            </RadioGroup>
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- 返回按鈕（左下） -->
+    <!-- 返回按鈕 -->
     <Button
         android:id="@+id/btnBackProfile"
         android:layout_width="120dp"
         android:layout_height="48dp"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="18dp"
+        android:layout_marginStart="24dp"
         android:layout_marginBottom="24dp"
         android:backgroundTint="#CCCCCC"
         android:text="返回"
-        android:textColor="@color/black"
+        android:textColor="@android:color/black"
         android:textSize="18sp" />
 
-    <!-- 儲存按鈕（右下） -->
+    <!-- 儲存按鈕 -->
     <Button
         android:id="@+id/btnSaveProfile"
         android:layout_width="120dp"
         android:layout_height="48dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginEnd="18dp"
+        android:layout_marginEnd="24dp"
         android:layout_marginBottom="24dp"
         android:backgroundTint="#56C8D8"
         android:text="儲存"
-        android:textColor="@color/black"
+        android:textColor="@android:color/black"
         android:textSize="18sp" />
-
 </RelativeLayout>
