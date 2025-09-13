@@ -38,6 +38,11 @@ public class ApiService {
     private static final int MAX_RESPONSE_SIZE = 50 * 1024 * 1024; // 50MB
 
     private OkHttpClient client;
+    private Integer userId;          // ← 新增
+
+    public void setUserId(int userId) {  // ← 新增
+        this.userId = userId;
+    }
 
     public ApiService() {
         client = new OkHttpClient.Builder()
@@ -343,7 +348,7 @@ public class ApiService {
 
         Log.d(TAG, "開始智能重試分析 - 第" + (attemptCount + 1) + "次嘗試");
 
-        analyzeFaceWithFeatureRemoval(bitmap, removeMoles, removeBeard, new AnalysisCallback() {
+        analyzeFaceWithFeatureRemoval(bitmap, removeMoles, removeBeard,userId,new AnalysisCallback() {
             @Override
             public void onSuccess(AnalysisResult result) {
                 long totalTime = System.currentTimeMillis() - startTime;
@@ -378,7 +383,7 @@ public class ApiService {
     /**
      * 分析面部圖片（包含痣和鬍鬚檢測功能）
      */
-    public void analyzeFaceWithFeatureRemoval(String base64Image, boolean removeMoles, boolean removeBeard, AnalysisCallback callback) {
+    public void analyzeFaceWithFeatureRemoval(String base64Image, boolean removeMoles, boolean removeBeard,int userId, AnalysisCallback callback) {
         Log.d(TAG, "開始面部分析，移除痣: " + removeMoles + ", 移除鬍鬚: " + removeBeard);
 
         try {
@@ -386,6 +391,7 @@ public class ApiService {
             requestJson.put("image", base64Image);
             requestJson.put("remove_moles", removeMoles);
             requestJson.put("remove_beard", removeBeard);
+            requestJson.put("user_id", userId);
 
             RequestBody requestBody = RequestBody.create(
                     requestJson.toString(),
@@ -642,9 +648,9 @@ public class ApiService {
     /**
      * Bitmap版本的分析方法
      */
-    public void analyzeFaceWithFeatureRemoval(Bitmap bitmap, boolean removeMoles, boolean removeBeard, AnalysisCallback callback) {
+    public void analyzeFaceWithFeatureRemoval(Bitmap bitmap, boolean removeMoles, boolean removeBeard, int userId,AnalysisCallback callback) {
         String base64 = bitmapToBase64(bitmap);
-        analyzeFaceWithFeatureRemoval(base64, removeMoles, removeBeard, callback);
+        analyzeFaceWithFeatureRemoval(base64, removeMoles, removeBeard, userId, callback);
     }
 
     /**
@@ -654,8 +660,8 @@ public class ApiService {
         analyzeFaceWithSmartRetry(bitmap, removeMoles, false, callback);
     }
 
-    public void analyzeFaceWithBase64(String base64Image, boolean removeMoles, AnalysisCallback callback) {
-        analyzeFaceWithFeatureRemoval(base64Image, removeMoles, false, callback);
+    public void analyzeFaceWithBase64(String base64Image, boolean removeMoles, int userId,AnalysisCallback callback) {
+        analyzeFaceWithFeatureRemoval(base64Image, removeMoles, false,  userId,callback);
     }
 
     public void analyzeFace(Bitmap bitmap, AnalysisCallback callback) {
