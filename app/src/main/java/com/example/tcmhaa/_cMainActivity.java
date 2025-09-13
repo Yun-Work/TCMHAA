@@ -75,7 +75,7 @@ public class _cMainActivity extends AppCompatActivity {
     // ====== Ollama（直接呼叫）======
     // 模擬器請用 10.0.2.2；實機請換成電腦的區網 IP（例：192.168.x.x）
     private static final String OLLAMA_BASE = "http://163.13.202.117:11434";
-    private static final String OLLAMA_MODEL = "qwen2.5:7b";
+    private static final String OLLAMA_MODEL = "cwchang/llama-3-taiwan-8b-instruct";
     private static final MediaType JSON_MT = MediaType.parse("application/json; charset=utf-8");
     private final OkHttpClient ollamaClient = new OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
@@ -176,14 +176,13 @@ public class _cMainActivity extends AppCompatActivity {
         tvAnswer.setText("思考中…");
 
         try {
-            // 新增一個 system 提示，要求模型用繁體中文回答
             JSONObject sysMsg = new JSONObject()
                     .put("role", "system")
-                    .put("content", "你是一個中醫小助手，請務必用繁體中文回答所有問題。");
+                    .put("content", "你是一個中醫小助手，請務必用繁體中文回答所有問題，禁止輸出任何簡體字或簡化字。");
 
             JSONObject userMsg = new JSONObject()
                     .put("role", "user")
-                    .put("content", question);
+                    .put("content","請嚴格用繁體中文回答，若含任何簡體字請自行改寫成繁體。\n問題："+question);
 
             JSONArray messages = new JSONArray()
                     .put(sysMsg)   // 先放 system 訊息
