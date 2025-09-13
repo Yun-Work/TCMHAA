@@ -149,7 +149,8 @@ public class PhotoActivity extends AppCompatActivity {
             Log.d(TAG, "開始分析圖片，尺寸: " + originalBitmap.getWidth() + "x" + originalBitmap.getHeight());
 
             // 修正：使用完整的特徵檢測，包含痣和鬍鬚檢測
-            apiService.analyzeFaceWithFeatureRemoval(originalBitmap, false, false, new ApiService.AnalysisCallback() {
+            int userId = getSharedPreferences("auth", MODE_PRIVATE).getInt("user_id", -1);
+            apiService.analyzeFaceWithFeatureRemoval(originalBitmap, false, false, userId,new ApiService.AnalysisCallback() {
                 @Override
                 public void onSuccess(ApiService.AnalysisResult result) {
                     runOnUiThread(() -> {

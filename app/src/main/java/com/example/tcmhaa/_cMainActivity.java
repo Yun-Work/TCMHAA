@@ -379,8 +379,24 @@ public class _cMainActivity extends AppCompatActivity {
 
         picker.addOnPositiveButtonClickListener(selection -> {
             if (selection != null && selection.first != null && selection.second != null) {
-                selectedStartMillis = selection.first;
-                selectedEndMillis   = selection.second;
+                long start = selection.first;
+                long end   = selection.second;
+
+                final long DAY_MS = 24L * 60 * 60 * 1000;
+                long daysInclusive = (end - start) / DAY_MS + 1; // 含起訖天數
+
+                if (daysInclusive > 7) {
+                    // 超過 7 天 → 自動縮短到 7 天（起日 + 6 天）
+                    long clampedEnd = start + 6 * DAY_MS;
+                    Toast.makeText(this, "一次最多只能選 7 天，已自動縮短區間", Toast.LENGTH_SHORT).show();
+
+                    selectedStartMillis = start;
+                    selectedEndMillis   = clampedEnd;
+                } else {
+                    selectedStartMillis = start;
+                    selectedEndMillis   = end;
+                }
+
                 btnPickRange.setText(formatDate(selectedStartMillis) + " ~ " + formatDate(selectedEndMillis));
             }
         });
