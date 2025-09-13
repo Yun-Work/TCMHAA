@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 public class Forget12Activity extends AppCompatActivity {
 
     private EditText etNewPassword, etConfirmPassword;
-    private Button btnConfirm;
+    private Button btnConfirm, btnBack;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +24,13 @@ public class Forget12Activity extends AppCompatActivity {
         btnConfirm = findViewById(R.id.btnConfirm);
 
         btnConfirm.setOnClickListener(v -> handleConfirm());
+        btnBack = findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v -> {
+            Intent i = new Intent(Forget12Activity.this, _dMainActivity.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(i);
+            finish();
+        });
     }
 
     private void handleConfirm() {
