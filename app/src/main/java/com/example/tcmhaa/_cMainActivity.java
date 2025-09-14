@@ -33,25 +33,12 @@ import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.MaterialDatePicker;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class _cMainActivity extends AppCompatActivity {
 
@@ -72,16 +59,8 @@ public class _cMainActivity extends AppCompatActivity {
     // ====== 後端：歷史折線圖 ======
     private static final String HISTORY_API_PATH_COLOR_SERIES = "history/status-bar"; // ApiHelper（自帶 /api 前綴）
 
-    // ====== Ollama（直接呼叫）======
-    // 模擬器請用 10.0.2.2；實機請換成電腦的區網 IP（例：192.168.x.x）
-    private static final String OLLAMA_BASE = "http://163.13.202.117:11434";
-    private static final String OLLAMA_MODEL = "cwchang/llama-3-taiwan-8b-instruct";
-    private static final MediaType JSON_MT = MediaType.parse("application/json; charset=utf-8");
-    private final OkHttpClient ollamaClient = new OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(120, TimeUnit.SECONDS) // 視模型推論調整
-            .build();
+    // ====== 後端：LLM 問答（新）======
+    private static final String OLLAMA_ASK_API_PATH = "ollama/ask"; // 對應 Flask：POST /api/ollama/ask
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,14 +108,14 @@ public class _cMainActivity extends AppCompatActivity {
             fetchColorSeries(organ, start, end, uid);
         });
 
-        // 問答：直接呼叫 Ollama
+        // 問答：改走後端 API（不再直連 Ollama）
         btnAskConfirm.setOnClickListener(v -> {
             String question = (etQuestion.getText() != null) ? etQuestion.getText().toString().trim() : "";
             if (TextUtils.isEmpty(question)) {
                 Toast.makeText(this, "請先輸入問題", Toast.LENGTH_SHORT).show();
                 return;
             }
-            askOllama(question);
+            askViaBackend(question);
         });
 
         setupBottomNav();
@@ -169,82 +148,60 @@ public class _cMainActivity extends AppCompatActivity {
     }
 
     // =========================
-    // Ollama /api/chat（非串流）
+    // 後端 /api/ollama/ask（由後端再去叫 Ollama）
     // =========================
-    private void askOllama(String question) {
+    private void askViaBackend(String question) {
         btnAskConfirm.setEnabled(false);
         tvAnswer.setText("思考中…");
 
-        try {
-            JSONObject sysMsg = new JSONObject()
-                    .put("role", "system")
-                    .put("content", "你是一個中醫小助手，請務必用繁體中文回答所有問題，禁止輸出任何簡體字或簡化字。");
+        // 後端只需要問題字串；系統提示、模型名統一在後端處理
+        AskOllamaRequest req = new AskOllamaRequest(question);
 
-            JSONObject userMsg = new JSONObject()
-                    .put("role", "user")
-                    .put("content","請嚴格用繁體中文回答，若含任何簡體字請自行改寫成繁體。\n問題："+question);
-
-            JSONArray messages = new JSONArray()
-                    .put(sysMsg)   // 先放 system 訊息
-                    .put(userMsg); // 再放使用者問題
-
-            JSONObject body = new JSONObject()
-                    .put("model", OLLAMA_MODEL)
-                    .put("messages", messages)
-                    .put("stream", false);
-
-            Request req = new Request.Builder()
-                    .url(OLLAMA_BASE + "/api/chat")
-                    .post(RequestBody.create(body.toString(), JSON_MT))
-                    .build();
-
-            ollamaClient.newCall(req).enqueue(new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    runOnUiThread(() -> {
+        ApiHelper.httpPost(
+                OLLAMA_ASK_API_PATH,
+                req,
+                AskOllamaResponse.class,
+                new ApiHelper.ApiCallback<AskOllamaResponse>() {
+                    @Override
+                    public void onSuccess(AskOllamaResponse resp) {
                         btnAskConfirm.setEnabled(true);
-                        tvAnswer.setText(
-                                "連線失敗：" + e.getMessage() + "\n\n請檢查：\n" +
-                                        "1) Ollama 是否在執行（預設 11434）\n" +
-                                        "2) IP 是否正確（模擬器用 10.0.2.2；實機用電腦區網 IP）\n" +
-                                        "3) AndroidManifest 是否允許明文 HTTP（usesCleartextTraffic）"
-                        );
-                    });
-                }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    String raw = response.body() != null ? response.body().string() : "";
-                    response.close();
-
-                    runOnUiThread(() -> {
-                        btnAskConfirm.setEnabled(true);
-                        if (!response.isSuccessful()) {
-                            tvAnswer.setText("伺服器錯誤：" + response.code() + "\n" + raw);
+                        if (resp == null) {
+                            tvAnswer.setText("");
+                            Toast.makeText(_cMainActivity.this, "回應為空", Toast.LENGTH_LONG).show();
                             return;
                         }
-                        try {
-                            JSONObject obj = new JSONObject(raw);
-                            JSONObject msg = obj.optJSONObject("message");
-                            String content = (msg != null) ? msg.optString("content", "").trim() : "";
-                            tvAnswer.setText(content.isEmpty() ? "（沒有內容）" : content);
-                        } catch (Exception e) {
-                            tvAnswer.setText(raw);
+                        if (!resp.success) {
+                            tvAnswer.setText("");
+                            Toast.makeText(_cMainActivity.this,
+                                    (resp.message != null ? resp.message : "伺服器處理失敗"),
+                                    Toast.LENGTH_LONG).show();
+                            return;
                         }
-                    });
-                }
-            });
+                        String content = (resp.answer != null) ? resp.answer.trim() : "";
+                        tvAnswer.setText(content.isEmpty() ? "（沒有內容）" : content);
+                    }
 
-        } catch (Exception e) {
-            btnAskConfirm.setEnabled(true);
-            tvAnswer.setText("建立請求失敗：" + e.getMessage());
-        }
+                    @Override
+                    public void onFailure(Throwable t) {
+                        btnAskConfirm.setEnabled(true);
+                        tvAnswer.setText("");
+                        Toast.makeText(_cMainActivity.this, "連線錯誤：" + t.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }
+        );
     }
 
-    /** 想改 /api/generate：把上面 url 換成 OLLAMA_BASE + "/api/generate"，body 改為
-     * new JSONObject().put("model", OLLAMA_MODEL).put("prompt", question).put("stream", false);
-     * 解析改抓 obj.optString("response","")
-     */
+    /** 送往後端的最小請求/回應 DTO（就地定義，避免你另外建檔） */
+    public static class AskOllamaRequest {
+        public String question;
+        public AskOllamaRequest() {}
+        public AskOllamaRequest(String q) { this.question = q; }
+    }
+    public static class AskOllamaResponse {
+        public boolean success;
+        public String answer;
+        public String message;
+    }
 
     /** 繪製多色折線（發紅/發黑/發黃/發白/發青 → 5 條 0/1 線） */
     private void renderMultiColorLineChart(HistoryStatusBarResponseDto r) {
@@ -379,8 +336,22 @@ public class _cMainActivity extends AppCompatActivity {
 
         picker.addOnPositiveButtonClickListener(selection -> {
             if (selection != null && selection.first != null && selection.second != null) {
-                selectedStartMillis = selection.first;
-                selectedEndMillis   = selection.second;
+                long start = selection.first;
+                long end   = selection.second;
+
+                final long DAY_MS = 24L * 60 * 60 * 1000;
+                long daysInclusive = (end - start) / DAY_MS + 1; // 含起訖天數
+
+                if (daysInclusive > 7) {
+                    long clampedEnd = start + 6 * DAY_MS;
+                    Toast.makeText(this, "一次最多只能選 7 天，已自動縮短區間", Toast.LENGTH_SHORT).show();
+                    selectedStartMillis = start;
+                    selectedEndMillis   = clampedEnd;
+                } else {
+                    selectedStartMillis = start;
+                    selectedEndMillis   = end;
+                }
+
                 btnPickRange.setText(formatDate(selectedStartMillis) + " ~ " + formatDate(selectedEndMillis));
             }
         });
