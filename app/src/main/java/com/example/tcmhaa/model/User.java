@@ -6,7 +6,6 @@ public class User {
     public String email;
     // Getter
     public int getUserId() { return user_id; }
-
     public String getName() { return name; }
     public String getEmail() { return email; }
 }
