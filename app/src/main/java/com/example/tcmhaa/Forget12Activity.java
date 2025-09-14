@@ -61,7 +61,7 @@ public class Forget12Activity extends AppCompatActivity {
         }
         int userId = getSharedPreferences("auth", MODE_PRIVATE).getInt("user_id", -1);
         if (userId == -1) {
-            Toast.makeText(this, "請先登入", Toast.LENGTH_LONG).show();
+//            Toast.makeText(this, "請先登入", Toast.LENGTH_LONG).show();
             return;
         }
 
