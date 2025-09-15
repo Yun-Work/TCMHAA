@@ -41,7 +41,8 @@ public class VerifyActivity extends AppCompatActivity {
         if (from != null) {
             email  = from.getStringExtra(EXTRA_EMAIL);
             status = from.getStringExtra(EXTRA_STATUS);
-            userId = from.getIntExtra(EXTRA_USER_ID,-1);
+//            userId = from.getIntExtra(EXTRA_USER_ID,-1);
+            userId = getSharedPreferences("auth", MODE_PRIVATE).getInt("user_id", -1);
 
         }
 

@@ -1,6 +1,7 @@
 package com.example.tcmhaa;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Patterns;
@@ -58,9 +59,13 @@ public class ForgetActivity extends AppCompatActivity {
                             String msg = (resp != null && resp.getMessage() != null)
                                     ? resp.getMessage() : "驗證碼已寄出";
                             ToastHelper.show(getApplicationContext(), msg, Toast.LENGTH_SHORT);
+                            SharedPreferences sp = getSharedPreferences("auth", MODE_PRIVATE);
+
+                            // 寫入 user_id / name / email
+                            sp.edit()
+                                    .putInt("user_id", userId)
+                                    .apply();
                             Intent intent = new Intent(ForgetActivity.this, VerifyActivity.class);
-                            intent.putExtra("status", "2");
-                            intent.putExtra("user_id", userId);
                             startActivity(intent);
                         }
 
