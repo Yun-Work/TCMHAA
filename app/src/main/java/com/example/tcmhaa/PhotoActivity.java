@@ -33,6 +33,7 @@ public class PhotoActivity extends AppCompatActivity {
     private Button btnPickPhoto, btnBack;
     private Uri selectedImageUri;
     private ApiService apiService;
+    private int userId = -1;
 
     // 選取圖片（相簿）
     private final ActivityResultLauncher<String> pickImageLauncher =
@@ -59,6 +60,13 @@ public class PhotoActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo_5_1);
+        userId = getSharedPreferences("auth", MODE_PRIVATE).getInt("user_id", -1);
+        if (userId == -1) {
+            Toast.makeText(this, "請先登入", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
 
         initViews();
         initApiService();
@@ -141,7 +149,8 @@ public class PhotoActivity extends AppCompatActivity {
             Log.d(TAG, "開始分析圖片，尺寸: " + originalBitmap.getWidth() + "x" + originalBitmap.getHeight());
 
             // 修正：使用完整的特徵檢測，包含痣和鬍鬚檢測
-            apiService.analyzeFaceWithFeatureRemoval(originalBitmap, false, false, new ApiService.AnalysisCallback() {
+            int userId = getSharedPreferences("auth", MODE_PRIVATE).getInt("user_id", -1);
+            apiService.analyzeFaceWithFeatureRemoval(originalBitmap, false, false, userId,new ApiService.AnalysisCallback() {
                 @Override
                 public void onSuccess(ApiService.AnalysisResult result) {
                     runOnUiThread(() -> {

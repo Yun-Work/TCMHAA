@@ -1,28 +1,49 @@
 package com.example.tcmhaa;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageButton;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.util.Pair;
 
+import com.example.tcmhaa.dto.HistoryStatusBarRequestDto;
+import com.example.tcmhaa.dto.HistoryStatusBarResponseDto;
+import com.example.tcmhaa.utils.api.ApiHelper;
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.MaterialDatePicker;
 
-import org.json.JSONException;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -36,34 +57,58 @@ public class _cMainActivity extends AppCompatActivity {
 
     private Spinner spOrgan;
     private Button btnPickRange, btnConfirm;
-    private ImageButton btnDownload;
+    private LineChart lineChart;
+    private TextView tvChartPlaceholder;
 
-    // 選擇的日期區間
+    // 問答區
+    private EditText etQuestion;
+    private Button btnAskConfirm;
+    private TextView tvAnswer;
+
+    // 日期區間（毫秒）
     private Long selectedStartMillis;
     private Long selectedEndMillis;
 
-    // 後端 API（依你的實際路徑調整）
-    private static final String HISTORY_API = "http://10.0.2.2:6060/api/history"; // TODO: 改成你的實際端點
-    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    private final OkHttpClient http = new OkHttpClient();
+    // ====== 後端：歷史折線圖 ======
+    private static final String HISTORY_API_PATH_COLOR_SERIES = "history/status-bar"; // ApiHelper（自帶 /api 前綴）
+
+    // ====== Ollama（直接呼叫）======
+    // 模擬器請用 10.0.2.2；實機請換成電腦的區網 IP（例：192.168.x.x）
+    private static final String OLLAMA_BASE = "http://163.13.202.117:11434";
+    private static final String OLLAMA_MODEL = "cwchang/llama-3-taiwan-8b-instruct";
+    private static final MediaType JSON_MT = MediaType.parse("application/json; charset=utf-8");
+    private final OkHttpClient ollamaClient = new OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS) // 視模型推論調整
+            .build();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mainhealthy_c);
 
-        spOrgan      = findViewById(R.id.spOrgan);
-        btnPickRange = findViewById(R.id.btnPickRange);
-        btnConfirm   = findViewById(R.id.btnConfirm);
-        btnDownload  = findViewById(R.id.btnDownload);
+        // 綁定元件
+        spOrgan            = findViewById(R.id.spOrgan);
+        btnPickRange       = findViewById(R.id.btnPickRange);
+        btnConfirm         = findViewById(R.id.btnConfirm);
+        lineChart          = findViewById(R.id.lineChart);
+        tvChartPlaceholder = findViewById(R.id.tvChartPlaceholder);
+        etQuestion         = findViewById(R.id.etQuestion);
+        btnAskConfirm      = findViewById(R.id.btnAskConfirm);
+        tvAnswer           = findViewById(R.id.tvAnswer);
 
-        // 下拉選單資料
+        // 讓回應內網址可點
+        tvAnswer.setAutoLinkMask(Linkify.WEB_URLS);
+        tvAnswer.setMovementMethod(LinkMovementMethod.getInstance());
+
+        // 下拉選單
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 this, R.array.organs_options, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spOrgan.setAdapter(adapter);
 
-        // 預設日期：最近7天
+        // 預設日期：最近 7 天
         Pair<Long, Long> last7Days = getLast7Days();
         selectedStartMillis = last7Days.first;
         selectedEndMillis   = last7Days.second;
@@ -71,28 +116,251 @@ public class _cMainActivity extends AppCompatActivity {
 
         btnPickRange.setOnClickListener(v -> showDateRangePicker());
 
-        // 下載（你原本的邏輯）
-        btnDownload.setOnClickListener(v ->
-                Toast.makeText(this, "這裡執行匯出/下載", Toast.LENGTH_SHORT).show());
-
-        // ✅ 按下確認才查歷史資料並顯示圖表
+        // 歷史顏色折線
         btnConfirm.setOnClickListener(v -> {
             if (selectedStartMillis == null || selectedEndMillis == null) {
                 Toast.makeText(this, "請先選擇時間範圍", Toast.LENGTH_SHORT).show();
                 return;
             }
-            String organ = spOrgan.getSelectedItem() == null
-                    ? "" : spOrgan.getSelectedItem().toString();
-            String startDate = formatDate(selectedStartMillis);
-            String endDate   = formatDate(selectedEndMillis);
+            int uid = getSharedPreferences("auth", MODE_PRIVATE).getInt("user_id", -1);
+            String organ = spOrgan.getSelectedItem() == null ? "" : spOrgan.getSelectedItem().toString();
+            String start = formatDate(selectedStartMillis);
+            String end   = formatDate(selectedEndMillis);
+            fetchColorSeries(organ, start, end, uid);
+        });
 
-            fetchHistory(organ, startDate, endDate);
+        // 問答：直接呼叫 Ollama
+        btnAskConfirm.setOnClickListener(v -> {
+            String question = (etQuestion.getText() != null) ? etQuestion.getText().toString().trim() : "";
+            if (TextUtils.isEmpty(question)) {
+                Toast.makeText(this, "請先輸入問題", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            askOllama(question);
         });
 
         setupBottomNav();
+        setupLineChartStyle();
     }
 
-    /** 打開日期區間選擇器 */
+    /** /api/history/status-bar：多色 0/1 折線資料（維持用 ApiHelper） */
+    private void fetchColorSeries(String organ, String start, String end, int userId) {
+        HistoryStatusBarRequestDto req = new HistoryStatusBarRequestDto(organ, start, end, userId);
+        ApiHelper.httpPost(
+                HISTORY_API_PATH_COLOR_SERIES,
+                req,
+                HistoryStatusBarResponseDto.class,
+                new ApiHelper.ApiCallback<HistoryStatusBarResponseDto>() {
+                    @Override
+                    public void onSuccess(HistoryStatusBarResponseDto resp) {
+                        if (resp == null || resp.hasError()) {
+                            String msg = (resp != null && resp.error != null) ? resp.error : "查詢失敗";
+                            Toast.makeText(_cMainActivity.this, msg, Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        renderMultiColorLineChart(resp);
+                    }
+                    @Override
+                    public void onFailure(Throwable t) {
+                        Toast.makeText(_cMainActivity.this, "連線錯誤：" + t.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }
+        );
+    }
+
+    // =========================
+    // Ollama /api/chat（非串流）
+    // =========================
+    private void askOllama(String question) {
+        btnAskConfirm.setEnabled(false);
+        tvAnswer.setText("思考中…");
+
+        try {
+            JSONObject sysMsg = new JSONObject()
+                    .put("role", "system")
+                    .put("content", "你是一個中醫小助手，請務必用繁體中文回答所有問題，禁止輸出任何簡體字或簡化字。");
+
+            JSONObject userMsg = new JSONObject()
+                    .put("role", "user")
+                    .put("content","請嚴格用繁體中文回答，若含任何簡體字請自行改寫成繁體。\n問題："+question);
+
+            JSONArray messages = new JSONArray()
+                    .put(sysMsg)   // 先放 system 訊息
+                    .put(userMsg); // 再放使用者問題
+
+            JSONObject body = new JSONObject()
+                    .put("model", OLLAMA_MODEL)
+                    .put("messages", messages)
+                    .put("stream", false);
+
+            Request req = new Request.Builder()
+                    .url(OLLAMA_BASE + "/api/chat")
+                    .post(RequestBody.create(body.toString(), JSON_MT))
+                    .build();
+
+            ollamaClient.newCall(req).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    runOnUiThread(() -> {
+                        btnAskConfirm.setEnabled(true);
+                        tvAnswer.setText(
+                                "連線失敗：" + e.getMessage() + "\n\n請檢查：\n" +
+                                        "1) Ollama 是否在執行（預設 11434）\n" +
+                                        "2) IP 是否正確（模擬器用 10.0.2.2；實機用電腦區網 IP）\n" +
+                                        "3) AndroidManifest 是否允許明文 HTTP（usesCleartextTraffic）"
+                        );
+                    });
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    String raw = response.body() != null ? response.body().string() : "";
+                    response.close();
+
+                    runOnUiThread(() -> {
+                        btnAskConfirm.setEnabled(true);
+                        if (!response.isSuccessful()) {
+                            tvAnswer.setText("伺服器錯誤：" + response.code() + "\n" + raw);
+                            return;
+                        }
+                        try {
+                            JSONObject obj = new JSONObject(raw);
+                            JSONObject msg = obj.optJSONObject("message");
+                            String content = (msg != null) ? msg.optString("content", "").trim() : "";
+                            tvAnswer.setText(content.isEmpty() ? "（沒有內容）" : content);
+                        } catch (Exception e) {
+                            tvAnswer.setText(raw);
+                        }
+                    });
+                }
+            });
+
+        } catch (Exception e) {
+            btnAskConfirm.setEnabled(true);
+            tvAnswer.setText("建立請求失敗：" + e.getMessage());
+        }
+    }
+
+    /** 想改 /api/generate：把上面 url 換成 OLLAMA_BASE + "/api/generate"，body 改為
+     * new JSONObject().put("model", OLLAMA_MODEL).put("prompt", question).put("stream", false);
+     * 解析改抓 obj.optString("response","")
+     */
+
+    /** 繪製多色折線（發紅/發黑/發黃/發白/發青 → 5 條 0/1 線） */
+    private void renderMultiColorLineChart(HistoryStatusBarResponseDto r) {
+        List<String> x = (r.x != null) ? r.x : new ArrayList<>();
+
+        final float SHIFT_RED    = -0.24f;
+        final float SHIFT_BLACK  = -0.12f;
+        final float SHIFT_YELLOW =  0.00f;
+        final float SHIFT_WHITE  =  0.12f;
+        final float SHIFT_CYAN   =  0.24f;
+
+        List<Entry> red    = toEntries(r.series != null ? r.series.red    : null, SHIFT_RED);
+        List<Entry> black  = toEntries(r.series != null ? r.series.black  : null, SHIFT_BLACK);
+        List<Entry> yellow = toEntries(r.series != null ? r.series.yellow : null, SHIFT_YELLOW);
+        List<Entry> white  = toEntries(r.series != null ? r.series.white  : null, SHIFT_WHITE);
+        List<Entry> cyan   = toEntries(r.series != null ? r.series.cyan   : null, SHIFT_CYAN);
+
+        List<ILineDataSet> sets = new ArrayList<>();
+        addIfNotAllZero(sets, makeDataSet(red,   "發紅",  Color.parseColor("#E53935")));
+        addIfNotAllZero(sets, makeDataSet(black, "發黑",  Color.parseColor("#212121")));
+        addIfNotAllZero(sets, makeDataSet(yellow,"發黃",  Color.parseColor("#FBC02D")));
+        addIfNotAllZero(sets, makeDataSet(white, "發白",  Color.parseColor("#BDBDBD")));
+        addIfNotAllZero(sets, makeDataSet(cyan,  "發青",  Color.parseColor("#26A69A")));
+
+        if (sets.isEmpty()) {
+            sets.add(makeDataSet(new ArrayList<>(), "無異常", Color.parseColor("#90A4AE")));
+        }
+
+        lineChart.setData(new LineData(sets));
+
+        // X 軸
+        XAxis xAxis = lineChart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setGranularity(1f);
+        xAxis.setLabelCount(Math.min(x.size(), 6));
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(x));
+        xAxis.setAxisMinimum(-0.6f);
+        xAxis.setAxisMaximum(Math.max(0, x.size() - 1) + 0.6f);
+        xAxis.setDrawGridLines(false);
+        xAxis.setDrawAxisLine(true);
+        xAxis.setAxisLineWidth(1f);
+        xAxis.setAxisLineColor(Color.parseColor("#888888"));
+
+        // Y 軸
+        YAxis left = lineChart.getAxisLeft();
+        left.setAxisMinimum(0f);
+        left.setAxisMaximum(1f);
+        left.setGranularity(1f);
+        left.setLabelCount(2, true);
+        left.setValueFormatter(new ValueFormatter() {
+            @Override public String getFormattedValue(float value) { return String.valueOf((int) value); }
+        });
+        left.setDrawGridLines(false);
+        left.setDrawAxisLine(true);
+        left.setAxisLineWidth(1f);
+        left.setAxisLineColor(Color.parseColor("#888888"));
+        lineChart.getAxisRight().setEnabled(false);
+
+        Legend legend = lineChart.getLegend();
+        legend.setEnabled(true);
+        lineChart.getDescription().setEnabled(false);
+
+        tvChartPlaceholder.setVisibility(android.view.View.GONE);
+        lineChart.setVisibility(android.view.View.VISIBLE);
+        lineChart.invalidate();
+    }
+
+    // ===== 小工具 =====
+
+    private List<Entry> toEntries(List<Integer> ys, float xShift) {
+        List<Entry> list = new ArrayList<>();
+        int n = (ys != null) ? ys.size() : 0;
+        for (int i = 0; i < n; i++) {
+            int v = (ys.get(i) == null) ? 0 : ys.get(i);
+            list.add(new Entry(i + xShift, v == 1 ? 1f : 0f));
+        }
+        return list;
+    }
+
+    private LineDataSet makeDataSet(List<Entry> es, String label, int color) {
+        LineDataSet ds = new LineDataSet(es, label);
+        ds.setColor(color);
+        ds.setCircleColor(color);
+        ds.setLineWidth(2f);
+        ds.setDrawCircles(true);
+        ds.setCircleRadius(4f);
+        ds.setDrawCircleHole(true);
+        ds.setCircleHoleRadius(2f);
+        ds.setCircleHoleColor(Color.WHITE);
+        ds.setDrawValues(false);
+        ds.setMode(LineDataSet.Mode.LINEAR);
+        ds.setDrawFilled(false);
+        ds.setHighlightEnabled(true);
+        return ds;
+    }
+
+    private void addIfNotAllZero(List<ILineDataSet> sets, LineDataSet ds) {
+        boolean anyOne = false;
+        for (Entry e : ds.getValues()) { if (e.getY() >= 0.5f) { anyOne = true; break; } }
+        if (anyOne) sets.add(ds);
+    }
+
+    // ===== 折線圖外觀 / 日期選擇 =====
+
+    private void setupLineChartStyle() {
+        lineChart.getDescription().setEnabled(false);
+        lineChart.setNoDataText("尚未載入資料");
+        lineChart.setTouchEnabled(true);
+        lineChart.setDragEnabled(true);
+        lineChart.setScaleEnabled(true);
+        lineChart.setPinchZoom(true);
+        lineChart.setDrawGridBackground(false);
+        lineChart.setDrawBorders(false);
+        lineChart.setBackgroundColor(Color.TRANSPARENT);
+    }
+
     private void showDateRangePicker() {
         CalendarConstraints constraints = new CalendarConstraints.Builder()
                 .setEnd(MaterialDatePicker.todayInUtcMilliseconds())
@@ -111,12 +379,25 @@ public class _cMainActivity extends AppCompatActivity {
 
         picker.addOnPositiveButtonClickListener(selection -> {
             if (selection != null && selection.first != null && selection.second != null) {
-                selectedStartMillis = selection.first;
-                selectedEndMillis   = selection.second;
+                long start = selection.first;
+                long end   = selection.second;
 
-                String startDateStr = formatDate(selectedStartMillis);
-                String endDateStr   = formatDate(selectedEndMillis);
-                btnPickRange.setText(startDateStr + " ~ " + endDateStr);
+                final long DAY_MS = 24L * 60 * 60 * 1000;
+                long daysInclusive = (end - start) / DAY_MS + 1; // 含起訖天數
+
+                if (daysInclusive > 7) {
+                    // 超過 7 天 → 自動縮短到 7 天（起日 + 6 天）
+                    long clampedEnd = start + 6 * DAY_MS;
+                    Toast.makeText(this, "一次最多只能選 7 天，已自動縮短區間", Toast.LENGTH_SHORT).show();
+
+                    selectedStartMillis = start;
+                    selectedEndMillis   = clampedEnd;
+                } else {
+                    selectedStartMillis = start;
+                    selectedEndMillis   = end;
+                }
+
+                btnPickRange.setText(formatDate(selectedStartMillis) + " ~ " + formatDate(selectedEndMillis));
             }
         });
 
@@ -126,46 +407,6 @@ public class _cMainActivity extends AppCompatActivity {
         picker.show(getSupportFragmentManager(), "date_range_picker");
     }
 
-    /** 呼叫後端取歷史資料（器官 + 起訖日期） */
-    private void fetchHistory(String organ, String startDate, String endDate) {
-        try {
-            JSONObject body = new JSONObject();
-            body.put("organ", organ);
-            body.put("start_date", startDate);
-            body.put("end_date", endDate);
-
-            Request request = new Request.Builder()
-                    .url(HISTORY_API)
-                    .post(RequestBody.create(body.toString(), JSON))
-                    .build();
-
-            http.newCall(request).enqueue(new Callback() {
-                @Override public void onFailure(Call call, IOException e) {
-                    runOnUiThread(() ->
-                            Toast.makeText(_cMainActivity.this, "連線失敗：" + e.getMessage(), Toast.LENGTH_LONG).show());
-                }
-
-                @Override public void onResponse(Call call, Response response) throws IOException {
-                    if (!response.isSuccessful()) {
-                        runOnUiThread(() ->
-                                Toast.makeText(_cMainActivity.this, "查詢失敗：" + response.code(), Toast.LENGTH_LONG).show());
-                        return;
-                    }
-                    final String resp = response.body() != null ? response.body().string() : "";
-                    runOnUiThread(() -> {
-                        // TODO: 將 resp 解析後，更新 blockChart 與 tvTextResult
-                        // 這裡先給使用者感知
-                        Toast.makeText(_cMainActivity.this, "已載入歷史資料", Toast.LENGTH_SHORT).show();
-                        // 例如：findViewById<TextView>(R.id.tvTextResult).setText(resp);
-                    });
-                }
-            });
-        } catch (JSONException e) {
-            Toast.makeText(this, "參數錯誤：" + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    /** 最近 7 天 */
     private Pair<Long, Long> getLast7Days() {
         Calendar end = Calendar.getInstance();
         setToStartOfDay(end);
@@ -191,14 +432,20 @@ public class _cMainActivity extends AppCompatActivity {
     }
 
     private void setupBottomNav() {
+        // null-safe，避免 include 失敗造成 NPE
         LinearLayout navA = findViewById(R.id.nav_a);
         LinearLayout navB = findViewById(R.id.nav_b);
         LinearLayout navC = findViewById(R.id.nav_c);
         LinearLayout navD = findViewById(R.id.nav_d);
 
-        navA.setOnClickListener(v -> startActivity(new Intent(this, _aMainActivity.class)));
-        navB.setOnClickListener(v -> startActivity(new Intent(this, _bMainActivity.class)));
-        navC.setOnClickListener(v -> { /* 留在本頁 */ });
-        navD.setOnClickListener(v -> startActivity(new Intent(this, _dMainActivity.class)));
+        if (navA != null) navA.setOnClickListener(v ->
+                startActivity(new Intent(this, _aMainActivity.class)));
+        if (navB != null) navB.setOnClickListener(v ->
+                startActivity(new Intent(this, _bMainActivity.class)));
+        if (navC != null) navC.setOnClickListener(v -> {
+            // 本頁：不跳轉
+        });
+        if (navD != null) navD.setOnClickListener(v ->
+                startActivity(new Intent(this, _dMainActivity.class)));
     }
 }

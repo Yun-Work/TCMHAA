@@ -18,6 +18,7 @@ public class WarningActivity extends AppCompatActivity {
     private boolean hasMoles = false;
     private boolean hasBeard = false;
     private ApiService apiService;
+    private int userId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +38,7 @@ public class WarningActivity extends AppCompatActivity {
 
     private void initApiService() {
         apiService = new ApiService();
+        userId = getSharedPreferences("auth", MODE_PRIVATE).getInt("user_id", -1);
     }
 
     private void setupContent() {
@@ -137,6 +139,7 @@ public class WarningActivity extends AppCompatActivity {
                 originalImageBase64,
                 removeMoles,
                 removeBeard,
+                userId,
                 new ApiService.AnalysisCallback() {
                     @Override
                     public void onSuccess(ApiService.AnalysisResult result) {

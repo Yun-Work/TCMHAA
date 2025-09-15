@@ -1,7 +1,9 @@
 package com.example.tcmhaa;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.method.LinkMovementMethod;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,10 +30,18 @@ public class _dPrivacyActivity extends AppCompatActivity {
         String today = new SimpleDateFormat("yyyy-MM-dd", Locale.TAIWAN).format(new Date());
         tvLast.setText("最後更新：" + today);
 
-        // 主要內文（使用 HTML 格式排版）
+        // 主要內文（HTML 格式排版）
         TextView tvBody = findViewById(R.id.tvBody);
         tvBody.setText(HtmlCompat.fromHtml(getString(R.string.privacy_policy_body),
                 HtmlCompat.FROM_HTML_MODE_LEGACY));
         tvBody.setMovementMethod(LinkMovementMethod.getInstance());
+
+        // 返回按鈕
+        Button btnBack = findViewById(R.id.btnBackPrivacy);
+        btnBack.setOnClickListener(v -> {
+            Intent intent = new Intent(_dPrivacyActivity.this, _dMainActivity.class);
+            startActivity(intent);
+            finish(); // 避免按返回回到隱私頁
+        });
     }
 }

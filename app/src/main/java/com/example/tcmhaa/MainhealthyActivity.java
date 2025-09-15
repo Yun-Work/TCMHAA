@@ -10,10 +10,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainhealthyActivity extends AppCompatActivity {
 
-    // 上方兩顆按鈕
+    // 選擇照片、拍攝照片
     private Button buttonChoosePhoto, buttonTakePhoto;
 
-    // 底部四個導覽
+    // 底部四個_a,_b,_c,_d
     private LinearLayout healthy_1, healthy_2, healthy_3, healthy_4;
 
     @Override
@@ -32,8 +32,7 @@ public class MainhealthyActivity extends AppCompatActivity {
 
         buttonTakePhoto.setOnClickListener(v ->
                 startActivity(new Intent(MainhealthyActivity.this, CameraActivity.class)));  // activity_camera_5_1
-
-        // 2) 綁定底部四個導覽
+        // 2) 綁定底部四個
         healthy_1 = findViewById(R.id.nav_a);
         healthy_2 = findViewById(R.id.nav_b);
         healthy_3 = findViewById(R.id.nav_c);

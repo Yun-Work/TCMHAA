@@ -41,10 +41,10 @@
                     android:id="@+id/spOrgan"
                     android:layout_width="wrap_content"
                     android:layout_height="56dp"
-                    android:spinnerMode="dropdown"
+                    android:entries="@array/organs_options"
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"
-                    android:entries="@array/organs_options" />
+                    android:spinnerMode="dropdown" />
 
                 <!-- 時間軸按鈕：加寬 + 自動縮字 -->
                 <Button
@@ -81,25 +81,66 @@
                 android:layout_marginTop="16dp"
                 android:background="@color/placeholderGray">
 
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/lineChart"
+                    android:layout_width="match_parent"
+                    android:layout_height="280dp"
+                    android:layout_marginTop="12dp" />
+
                 <TextView
+                    android:id="@+id/tvChartPlaceholder"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center"
                     android:text="@string/label_history_chart"
-                    android:textSize="22sp"
                     android:textColor="@color/placeholderText"
-                    android:layout_gravity="center" />
+                    android:textSize="22sp" />
             </FrameLayout>
 
-            <!-- 文字分析結果 -->
-            <TextView
-                android:id="@+id/tvTextResult"
+            <!-- 問答區：問題輸入 + 送出 -->
+            <LinearLayout
+                android:id="@+id/qaRow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/label_text_result"
-                android:textSize="18sp"
-                android:textColor="@color/placeholderText"
-                android:layout_marginTop="16dp"
-                android:gravity="center" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="16dp">
+
+                <EditText
+                    android:id="@+id/etQuestion"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:hint="請輸入想詢問的問題"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:background="@android:drawable/edit_text"
+                    android:singleLine="true"
+                    android:imeOptions="actionDone"/>
+
+                <Button
+                    android:id="@+id/btnAskConfirm"
+                    android:layout_width="96dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="8dp"
+                    android:text="確定"
+                    android:textAllCaps="false"
+                    android:backgroundTint="@color/maincolor"
+                    android:textColor="@android:color/white"/>
+            </LinearLayout>
+
+            <!-- 回應顯示框 -->
+            <TextView
+                android:id="@+id/tvAnswer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="120dp"
+                android:layout_marginTop="10dp"
+                android:padding="12dp"
+                android:text=""
+                android:textSize="16sp"
+                android:textColor="@android:color/black"
+                android:background="@color/placeholderGray" />
         </LinearLayout>
     </ScrollView>
 
@@ -111,20 +152,5 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"/>
 
-    <!-- 固定右下角的下載 FAB（畫在最後，位於最上層） -->
-    <ImageButton
-        android:id="@+id/btnDownload"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        android:layout_above="@id/bottomBar"
-        android:background="@drawable/circle_maincolor_bg"
-        android:elevation="8dp"
-        android:src="@drawable/download"
-        android:scaleType="fitCenter"
-        android:contentDescription="@string/btn_download"
-        app:tint="@android:color/white"
-        tools:ignore="TouchTargetSizeCheck" />
+
 </RelativeLayout>

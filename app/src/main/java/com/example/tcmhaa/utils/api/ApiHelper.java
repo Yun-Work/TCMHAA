@@ -22,7 +22,8 @@ public class ApiHelper {
     }
 
     // Android 模擬器連本機：10.0.2.2
-    private static final String BASE_URL = "http://10.0.2.2:6060/api/";
+    private static final String BASE_URL = "https://tcmha-python.duckdns.org/api/";
+//    private static final String BASE_URL = "http://10.0.2.2:6060/api/";
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
     private static Retrofit retrofit;
@@ -66,13 +67,34 @@ public class ApiHelper {
             public void onResponse(retrofit2.Call<ResponseBody> call, Response<ResponseBody> response) {
                 try {
                     if (!response.isSuccessful()) {
-                        String err = null;
-                        if (response.errorBody() != null) {
-                            err = response.errorBody().string();
+                        // 從 errorBody 抽出乾淨的錯誤訊息（優先 error，其次 message；否則原始字串或預設 HTTP XXX）
+                        String errMsg = "HTTP " + response.code();
+                        try {
+                            String raw = (response.errorBody() != null) ? response.errorBody().string() : null;
+                            if (raw != null && !raw.isEmpty()) {
+                                // 盡量用 JSON 解析掉被 escape 的中文字
+                                try {
+                                    org.json.JSONObject obj = new org.json.JSONObject(raw);
+                                    if (obj.has("error") && !obj.isNull("error")) {
+                                        errMsg = obj.getString("error");
+                                    } else if (obj.has("message") && !obj.isNull("message")) {
+                                        errMsg = obj.getString("message");
+                                    } else {
+                                        // 不是預期的 JSON 格式，就回傳原始字串
+                                        errMsg = raw;
+                                    }
+                                } catch (Exception notJson) {
+                                    // 不是 JSON，就原樣顯示（或可再做簡單清理）
+                                    errMsg = raw;
+                                }
+                            }
+                        } catch (Exception ignore) {
+                            // 解析失敗就用預設 errMsg
                         }
-                        cb.onFailure(new RuntimeException("HTTP " + response.code() + (err != null ? (": " + err) : "")));
+                        cb.onFailure(new RuntimeException(errMsg));
                         return;
                     }
+
                     ResponseBody respBody = response.body();
                     if (respBody == null) {
                         cb.onFailure(new RuntimeException("Empty body"));
@@ -81,7 +103,7 @@ public class ApiHelper {
 
                     String body = respBody.string();
 
-                    // 若呼叫方要字串，直接回傳避免不必要的 JSON 解析
+                    // 呼叫方要字串的話，直接回傳字串
                     if (respClass == String.class) {
                         @SuppressWarnings("unchecked")
                         Resp cast = (Resp) body;
@@ -95,6 +117,7 @@ public class ApiHelper {
                     cb.onFailure(e);
                 }
             }
+
 
             @Override
             public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {

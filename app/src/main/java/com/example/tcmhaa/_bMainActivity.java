@@ -329,7 +329,7 @@ public class _bMainActivity extends AppCompatActivity {
                 resultLayout.addView(divider);
 
                 TextView diagnosisTitle = new TextView(this);
-                diagnosisTitle.setText("診斷建議");
+                diagnosisTitle.setText("可能的症狀");
                 diagnosisTitle.setTextSize(16);
                 diagnosisTitle.setTypeface(null, Typeface.BOLD);
                 diagnosisTitle.setTextColor(getColor(R.color.titlePurple));
