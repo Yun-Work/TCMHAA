@@ -249,6 +249,7 @@ public class _cMainActivity extends AppCompatActivity {
     /** 繪製多色折線（發紅/發黑/發黃/發白/發青 → 5 條 0/1 線） */
     private void renderMultiColorLineChart(HistoryStatusBarResponseDto r) {
         List<String> x = (r.x != null) ? r.x : new ArrayList<>();
+        List<String> xShort = toMonthDayList(x);
 
         final float SHIFT_RED    = -0.24f;
         final float SHIFT_BLACK  = -0.12f;
@@ -280,7 +281,7 @@ public class _cMainActivity extends AppCompatActivity {
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setGranularity(1f);
         xAxis.setLabelCount(Math.min(x.size(), 6));
-        xAxis.setValueFormatter(new IndexAxisValueFormatter(x));
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(xShort));
         xAxis.setAxisMinimum(-0.6f);
         xAxis.setAxisMaximum(Math.max(0, x.size() - 1) + 0.6f);
         xAxis.setDrawGridLines(false);
@@ -448,4 +449,29 @@ public class _cMainActivity extends AppCompatActivity {
         if (navD != null) navD.setOnClickListener(v ->
                 startActivity(new Intent(this, _dMainActivity.class)));
     }
+    // 將 "2025-09-16" 或 "2025/09/16 14:30" 之類格式轉成 "09/16"
+    private String toMonthDay(String s) {
+        if (s == null) return "";
+        // 抓 yyyy[-/年.]MM[-/月.]dd（後面可能還有時間）
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile(
+                "(?:19|20)\\d{2}[-/年.](\\d{1,2})[-/月.](\\d{1,2})"
+        );
+        java.util.regex.Matcher m = p.matcher(s);
+        if (m.find()) {
+            int mm = Integer.parseInt(m.group(1));
+            int dd = Integer.parseInt(m.group(2));
+            return String.format(java.util.Locale.TAIWAN, "%02d/%02d", mm, dd);
+        }
+        // 如果後端已經給「MM/dd」或「MM-dd」就直接回傳
+        return s;
+    }
+
+    private List<String> toMonthDayList(List<String> src) {
+        List<String> out = new ArrayList<>();
+        if (src != null) {
+            for (String s : src) out.add(toMonthDay(s));
+        }
+        return out;
+    }
+
 }
