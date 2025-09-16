@@ -39,7 +39,7 @@
 
                 <Spinner
                     android:id="@+id/spOrgan"
-                    android:layout_width="wrap_content"
+                    android:layout_width="73dp"
                     android:layout_height="56dp"
                     android:entries="@array/organs_options"
                     android:paddingStart="8dp"
@@ -49,19 +49,19 @@
                 <!-- 時間軸按鈕：加寬 + 自動縮字 -->
                 <Button
                     android:id="@+id/btnPickRange"
-                    android:layout_width="0dp"
+                    android:layout_width="221dp"
                     android:layout_height="56dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
                     android:layout_weight="2.4"
-                    android:text="@string/btn_pick_range"
                     android:backgroundTint="@color/maincolor"
                     android:paddingStart="14dp"
                     android:paddingEnd="14dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp"
-                    app:autoSizeTextType="uniform"
-                    app:autoSizeMinTextSize="12sp"
+                    android:text="@string/btn_pick_range"
                     app:autoSizeMaxTextSize="18sp"
-                    app:autoSizeStepGranularity="1sp" />
+                    app:autoSizeMinTextSize="12sp"
+                    app:autoSizeStepGranularity="1sp"
+                    app:autoSizeTextType="uniform" />
 
                 <Button
                     android:id="@+id/btnConfirm"

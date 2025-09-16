@@ -11,7 +11,7 @@ public class SplashActivity extends AppCompatActivity {
 
         Intent i = new Intent(
                 this,
-                AuthStore.isLoggedIn(this) ? WelcomeActivity.class : LoginActivity.class
+                AuthStore.isLoggedIn(this) ? MainhealthyActivity.class : LoginActivity.class
         );
         // 清任務棧，避免返回回到登入/啟動頁
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
