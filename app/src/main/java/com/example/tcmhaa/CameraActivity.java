@@ -94,6 +94,7 @@ public class CameraActivity extends AppCompatActivity {
 
     private void initApiService() {
         apiService = new ApiService();
+        apiService.setUserId(userId);
     }
 
     private void setupPermissionLauncher() {

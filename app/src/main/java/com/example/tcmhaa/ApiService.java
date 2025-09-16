@@ -28,6 +28,8 @@ import okhttp3.ResponseBody;
 public class ApiService {
     private static final String TAG = "ApiService";
 
+    //private static final String BASE_URL = "https://tcmha-python.duckdns.org/";
+    //private static final String BASE_URL = "http://163.13.202.117：6060";
     private static final String BASE_URL = "http://10.0.2.2:6060";
     private static final String ANALYZE_ENDPOINT = "/api/face/upload";
     private static final String HEALTH_ENDPOINT = "/api/face/health";
@@ -229,6 +231,8 @@ public class ApiService {
             return desc.toString();
         }
 
+        // 在你的 ApiService.java 中，替換 AnalysisResult 類的 fromJson 方法
+
         public static AnalysisResult fromJson(JSONObject json) {
             AnalysisResult result = new AnalysisResult();
             try {
@@ -267,24 +271,52 @@ public class ApiService {
                     }
                 }
 
-                // 痣檢測分析
+                // 🔧 修復：安全的痣檢測分析
                 result.hasMoles = json.optBoolean("has_moles", false);
                 result.molesRemoved = json.optBoolean("moles_removed", false);
 
                 JSONObject moleAnalysisJson = json.optJSONObject("mole_analysis");
                 if (moleAnalysisJson != null) {
-                    result.moleCount = moleAnalysisJson.optInt("mole_count", 0);
+                    // 🚨 關鍵修復：安全地處理可能為 null 的 mole_count
+                    Object moleCountObj = moleAnalysisJson.opt("mole_count");
+                    if (moleCountObj instanceof Number) {
+                        result.moleCount = ((Number) moleCountObj).intValue();
+                    } else if (moleCountObj instanceof String) {
+                        try {
+                            result.moleCount = Integer.parseInt((String) moleCountObj);
+                        } catch (NumberFormatException e) {
+                            Log.w("ApiService", "無法解析 mole_count: " + moleCountObj);
+                            result.moleCount = 0;
+                        }
+                    } else {
+                        result.moleCount = 0;
+                    }
                 } else {
                     result.moleCount = 0;
                 }
 
-                // 鬍鬚檢測分析
+                // 🔧 修復：安全的鬍鬚檢測分析
                 result.hasBeard = json.optBoolean("has_beard", false);
                 result.beardRemoved = json.optBoolean("beard_removed", false);
 
                 JSONObject beardAnalysisJson = json.optJSONObject("beard_analysis");
                 if (beardAnalysisJson != null && !beardAnalysisJson.toString().equals("null")) {
-                    result.beardCount = beardAnalysisJson.optInt("beard_count", 0);
+                    // 🚨 關鍵修復：安全地處理可能為 null 的 beard_count
+                    Object beardCountObj = beardAnalysisJson.opt("beard_count");
+                    if (beardCountObj instanceof Number) {
+                        result.beardCount = ((Number) beardCountObj).intValue();
+                    } else if (beardCountObj instanceof String) {
+                        try {
+                            result.beardCount = Integer.parseInt((String) beardCountObj);
+                        } catch (NumberFormatException e) {
+                            Log.w("ApiService", "無法解析 beard_count: " + beardCountObj);
+                            result.beardCount = 0;
+                        }
+                    } else {
+                        result.beardCount = 0;
+                    }
+
+                    // 檢查 beard_analysis 中是否有 has_beard 欄位
                     if (beardAnalysisJson.has("has_beard")) {
                         result.hasBeard = beardAnalysisJson.optBoolean("has_beard", false);
                     }
@@ -292,16 +324,68 @@ public class ApiService {
                     result.beardCount = 0;
                 }
 
+                // 🔧 額外檢查：處理可能在頂層的鬍鬚資訊
+                JSONObject beardInfoJson = json.optJSONObject("beard_info");
+                if (beardInfoJson != null) {
+                    result.hasBeard = beardInfoJson.optBoolean("has_beard", result.hasBeard);
+
+                    Object topBeardCountObj = beardInfoJson.opt("beard_count");
+                    if (topBeardCountObj instanceof Number) {
+                        result.beardCount = ((Number) topBeardCountObj).intValue();
+                    } else if (topBeardCountObj instanceof String) {
+                        try {
+                            result.beardCount = Integer.parseInt((String) topBeardCountObj);
+                        } catch (NumberFormatException e) {
+                            Log.w("ApiService", "無法解析頂層 beard_count: " + topBeardCountObj);
+                        }
+                    }
+                }
+
+                // 🔧 處理頂層的鬍鬚欄位（如果存在）
+                if (json.has("has_beard")) {
+                    result.hasBeard = json.optBoolean("has_beard", false);
+                }
+                if (json.has("beard_count")) {
+                    Object topLevelBeardCount = json.opt("beard_count");
+                    if (topLevelBeardCount instanceof Number) {
+                        result.beardCount = ((Number) topLevelBeardCount).intValue();
+                    } else if (topLevelBeardCount instanceof String) {
+                        try {
+                            result.beardCount = Integer.parseInt((String) topLevelBeardCount);
+                        } catch (NumberFormatException e) {
+                            Log.w("ApiService", "無法解析最頂層 beard_count: " + topLevelBeardCount);
+                        }
+                    }
+                }
+
                 Log.d("ApiService", "JSON解析結果:");
                 Log.d("ApiService", "  has_moles: " + result.hasMoles);
                 Log.d("ApiService", "  has_beard: " + result.hasBeard);
                 Log.d("ApiService", "  mole_count: " + result.moleCount);
                 Log.d("ApiService", "  beard_count: " + result.beardCount);
+                Log.d("ApiService", "  success: " + result.success);
 
             } catch (Exception e) {
                 Log.e("ApiService", "解析JSON結果時發生錯誤", e);
                 result.success = false;
                 result.error = "解析結果失敗: " + e.getMessage();
+
+                // 設置安全的預設值
+                result.abnormalCount = 0;
+                result.diagnosisText = "";
+                result.hasMoles = false;
+                result.molesRemoved = false;
+                result.moleCount = 0;
+                result.hasBeard = false;
+                result.beardRemoved = false;
+                result.beardCount = 0;
+
+                if (result.allRegionResults == null) {
+                    result.allRegionResults = new HashMap<>();
+                }
+                if (result.regionResults == null) {
+                    result.regionResults = new HashMap<>();
+                }
             }
             return result;
         }
