@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat;
 import com.example.tcmhaa.dto.LoginRequestDto;
 import com.example.tcmhaa.dto.LoginResponseDto;
 import com.example.tcmhaa.utils.api.ApiHelper;
+import com.example.tcmhaa.utils.auth.AuthStore;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,6 +70,10 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_1);
+        if (com.example.tcmhaa.utils.auth.AuthStore.isLoggedIn(this)) {
+            goWelcome();  // 會清棧，見下方
+            return;
+        }
 
         etUsername = findViewById(R.id.etUsername);
         etPassword = findViewById(R.id.etPassword);
@@ -96,21 +101,31 @@ public class LoginActivity extends AppCompatActivity {
                                 Toast.makeText(LoginActivity.this, "帳號或密碼錯誤", Toast.LENGTH_LONG).show();
                                 return;
                             }
-                            if (resp.user != null) {
-                                // 先拿到同一個 prefs 物件
-                                SharedPreferences sp = getSharedPreferences("auth", MODE_PRIVATE);
-
-                                // 寫入 user_id / name / email
-                                sp.edit()
-                                        .putInt("user_id", resp.user.user_id)
-                                        .putString("name",  resp.user.name)
-                                        .putString("email", resp.user.email)
-                                        .apply();
-
-                                // ★ 就加在這裡：立刻讀回來印出，確認有存成功
-                                int saved = sp.getInt("user_id", -1);
-                                Log.d("LOGIN", "saved user_id = " + saved);
-                            }
+//                            if (resp.user != null) {
+//                                // 先拿到同一個 prefs 物件
+//                                SharedPreferences sp = getSharedPreferences("auth", MODE_PRIVATE);
+//
+//                                // 寫入 user_id / name / email
+//                                sp.edit()
+//                                        .putInt("user_id", resp.user.user_id)
+//                                        .putString("name",  resp.user.name)
+//                                        .putString("email", resp.user.email)
+//                                        .apply();
+//
+//                                // ★ 就加在這裡：立刻讀回來印出，確認有存成功
+//                                int saved = sp.getInt("user_id", -1);
+//                                Log.d("LOGIN", "saved user_id = " + saved);
+//                            }
+                            // ✅ 統一用 AuthStore 保存登入狀態（沒有 token 就傳 null/0）
+                            AuthStore.saveLogin(
+                                    LoginActivity.this,
+                                    resp.user.user_id,
+                                    resp.user.name,
+                                    resp.user.email,
+                                    null,   // access_token（若後端沒給就填 null）
+                                    null,   // refresh_token（若後端沒給就填 null）
+                                    0L      // token 過期時間（若沒有就 0）
+                            );
                             Toast.makeText(LoginActivity.this,
                                     resp.message != null ? resp.message : "登入成功",
                                     Toast.LENGTH_SHORT).show();
