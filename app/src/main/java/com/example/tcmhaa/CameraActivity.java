@@ -247,24 +247,49 @@ public class CameraActivity extends AppCompatActivity {
 
                                 Log.d(TAG, "開始分析拍攝的照片，尺寸: " + processedBitmap.getWidth() + "x" + processedBitmap.getHeight());
 
-                                // 調用API分析（使用處理後的圖片以提高速度）
-                                apiService.analyzeFace(processedBitmap, new ApiService.AnalysisCallback() {
+                                // 🔧 修正：使用完整的特徵檢測，包含痣和鬍鬚檢測
+                                apiService.analyzeFaceWithFeatureRemoval(processedBitmap, false, false, userId, new ApiService.AnalysisCallback() {
                                     @Override
                                     public void onSuccess(ApiService.AnalysisResult result) {
                                         runOnUiThread(() -> {
                                             progressDialog.dismiss();
                                             Log.d(TAG, "拍攝照片分析成功");
 
-                                            // 💉 先跳 WarningActivity，而不是直接去 _bMainActivity
-                                            Intent intent = new Intent(CameraActivity.this, WarningActivity.class);
+                                            // 🔧 檢查是否有痣或鬍鬚
+                                            boolean hasMoles = result.hasMoles();
+                                            boolean hasBeard = result.hasBeard();
 
-                                            // 將分析結果資料也帶過去，交給 WarningActivity 再傳到 _bMainActivity
+                                            Log.d(TAG, "檢測結果 - 痣: " + hasMoles + ", 鬍鬚: " + hasBeard);
+
                                             AnalysisResult parcelableResult = new AnalysisResult(result);
-                                            intent.putExtra("analysis_result", parcelableResult);
-                                            intent.putExtra("source_type", "camera");
-                                            intent.putExtra("original_image_base64", originalImageBase64);
 
-                                            startActivity(intent);
+                                            if (hasMoles || hasBeard) {
+                                                Log.d(TAG, "檢測到特徵，前往 WarningActivity");
+                                                // 有痣或鬍鬚，前往警告頁面
+                                                Intent intent = new Intent(CameraActivity.this, WarningActivity.class);
+
+                                                intent.putExtra("analysis_result", parcelableResult);
+                                                intent.putExtra("source_type", "camera");
+                                                intent.putExtra("original_image_base64", originalImageBase64);
+                                                intent.putExtra("from_camera", true);
+                                                intent.putExtra("has_moles", hasMoles);
+                                                intent.putExtra("has_beard", hasBeard);
+
+                                                startActivity(intent);
+                                            } else {
+                                                Log.d(TAG, "未檢測到特徵，直接前往 _bMainActivity");
+                                                // 沒有痣也沒有鬍鬚，直接前往主結果頁面
+                                                Intent intent = new Intent(CameraActivity.this, _bMainActivity.class);
+
+                                                intent.putExtra("analysis_result", parcelableResult);
+                                                intent.putExtra("source_type", "camera");
+                                                intent.putExtra("original_image_base64", originalImageBase64);
+                                                intent.putExtra("from_camera", true);
+                                                intent.putExtra("has_moles", false);
+                                                intent.putExtra("has_beard", false);
+
+                                                startActivity(intent);
+                                            }
                                             finish();
                                         });
                                     }
