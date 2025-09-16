@@ -20,43 +20,52 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- LOGO -->
-            <ImageView
-                android:id="@+id/ivLogo"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:src="@drawable/newlogo"
-                android:contentDescription="@string/app_name" />
+            <!-- 頂部：LOGO + 器官下拉 -->
+            <LinearLayout
+                android:id="@+id/rowHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-            <!-- 下拉 + 時間軸 + 確認 -->
+                <ImageView
+                    android:id="@+id/ivLogo"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:src="@drawable/newlogo"
+                    android:contentDescription="@string/app_name" />
+
+                <Spinner
+                    android:id="@+id/spOrgan"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:spinnerMode="dropdown"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:entries="@array/organs_options" />
+            </LinearLayout>
+
+            <!-- 時間軸 + 確認 -->
             <LinearLayout
                 android:id="@+id/rowFilters"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="16dp">
-
-                <Spinner
-                    android:id="@+id/spOrgan"
-                    android:layout_width="wrap_content"
-                    android:layout_height="56dp"
-                    android:spinnerMode="dropdown"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
-                    android:entries="@array/organs_options" />
+                android:layout_marginTop="12dp">
 
                 <!-- 時間軸按鈕：加寬 + 自動縮字 -->
                 <Button
                     android:id="@+id/btnPickRange"
                     android:layout_width="0dp"
                     android:layout_height="56dp"
-                    android:layout_weight="2.4"
+                    android:layout_weight="1"
                     android:text="@string/btn_pick_range"
                     android:backgroundTint="@color/maincolor"
                     android:paddingStart="14dp"
                     android:paddingEnd="14dp"
-                    android:layout_marginStart="8dp"
                     android:layout_marginEnd="8dp"
                     app:autoSizeTextType="uniform"
                     app:autoSizeMinTextSize="12sp"
@@ -65,7 +74,7 @@
 
                 <Button
                     android:id="@+id/btnConfirm"
-                    android:layout_width="84dp"
+                    android:layout_width="96dp"
                     android:layout_height="56dp"
                     android:text="確認"
                     android:textAllCaps="false"
@@ -111,20 +120,5 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"/>
 
-    <!-- 固定右下角的下載 FAB（畫在最後，位於最上層） -->
-    <ImageButton
-        android:id="@+id/btnDownload"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        android:layout_above="@id/bottomBar"
-        android:background="@drawable/circle_maincolor_bg"
-        android:elevation="8dp"
-        android:src="@drawable/download"
-        android:scaleType="fitCenter"
-        android:contentDescription="@string/btn_download"
-        app:tint="@android:color/white"
-        tools:ignore="TouchTargetSizeCheck" />
+
 </RelativeLayout>
