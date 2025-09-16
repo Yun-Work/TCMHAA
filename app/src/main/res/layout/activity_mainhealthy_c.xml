@@ -35,37 +35,45 @@
                     android:src="@drawable/newlogo"
                     android:contentDescription="@string/app_name" />
 
-
-
                 <Spinner
                     android:id="@+id/spOrgan"
-                    android:layout_width="73dp"
+                    android:layout_width="288dp"
                     android:layout_height="56dp"
+                    android:layout_marginStart="12dp"
                     android:entries="@array/organs_options"
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"
                     android:spinnerMode="dropdown" />
+            </LinearLayout>
 
-                <!-- 時間軸按鈕：加寬 + 自動縮字 -->
+            <!-- 第二列：時間軸 + 確認 -->
+            <LinearLayout
+                android:id="@+id/rowFilters"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="12dp">
+
+                <!-- 時間軸按鈕 -->
                 <Button
                     android:id="@+id/btnPickRange"
-                    android:layout_width="221dp"
+                    android:layout_width="0dp"
                     android:layout_height="56dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
                     android:layout_marginEnd="8dp"
-                    android:layout_weight="2.4"
                     android:backgroundTint="@color/maincolor"
                     android:paddingStart="14dp"
                     android:paddingEnd="14dp"
                     android:text="@string/btn_pick_range"
-                    app:autoSizeMaxTextSize="18sp"
+                    app:autoSizeTextType="uniform"
                     app:autoSizeMinTextSize="12sp"
-                    app:autoSizeStepGranularity="1sp"
-                    app:autoSizeTextType="uniform" />
+                    app:autoSizeMaxTextSize="18sp"
+                    app:autoSizeStepGranularity="1sp" />
 
                 <Button
                     android:id="@+id/btnConfirm"
-                    android:layout_width="84dp"
+                    android:layout_width="96dp"
                     android:layout_height="56dp"
                     android:text="確認"
                     android:textAllCaps="false"
@@ -144,7 +152,7 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- 下方導覽列（先畫出來，FAB 放後面才會在最上層） -->
+    <!-- 下方導覽列 -->
     <include
         android:id="@+id/bottomBar"
         layout="@layout/layout_bottom_nav"
@@ -152,5 +160,5 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"/>
 
-
 </RelativeLayout>
+
