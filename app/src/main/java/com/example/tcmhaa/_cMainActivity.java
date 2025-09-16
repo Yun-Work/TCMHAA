@@ -39,6 +39,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import android.widget.AdapterView;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class _cMainActivity extends AppCompatActivity {
 
@@ -46,6 +49,7 @@ public class _cMainActivity extends AppCompatActivity {
     private Button btnPickRange, btnConfirm;
     private LineChart lineChart;
     private TextView tvChartPlaceholder;
+    private TextView textView;
 
     // 問答區
     private EditText etQuestion;
@@ -76,6 +80,7 @@ public class _cMainActivity extends AppCompatActivity {
         etQuestion         = findViewById(R.id.etQuestion);
         btnAskConfirm      = findViewById(R.id.btnAskConfirm);
         tvAnswer           = findViewById(R.id.tvAnswer);
+        textView           = findViewById(R.id.textView);
 
         // 讓回應內網址可點
         tvAnswer.setAutoLinkMask(Linkify.WEB_URLS);
@@ -138,6 +143,15 @@ public class _cMainActivity extends AppCompatActivity {
                             return;
                         }
                         renderMultiColorLineChart(resp);
+                        String locText;
+                        if (resp.locationsDetected != null && !resp.locationsDetected.isEmpty()) {
+                            // 用換行的項目清單顯示
+                            String bullet = android.text.TextUtils.join("\n• ", resp.locationsDetected);
+                            locText = "全息位置：" + bullet;
+                        } else {
+                            locText = "本區間未偵測到對應的全息位置";
+                        }
+                        textView.setText(locText);
                     }
                     @Override
                     public void onFailure(Throwable t) {
