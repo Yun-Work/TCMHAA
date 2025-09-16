@@ -53,7 +53,7 @@
 
         <!-- 🔐 啟動入口（有 intent-filter → 必須 exported=true） -->
         <activity
-            android:name=".LoginActivity"
+            android:name=".SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -62,6 +62,7 @@
         </activity>
 
         <!-- 其他畫面（無 intent-filter，不需顯式 exported） -->
+        <activity android:name=".LoginActivity" />
         <activity android:name=".ForgetActivity" />
         <activity android:name=".VerifyActivity" />
         <activity android:name=".Forget12Activity" />

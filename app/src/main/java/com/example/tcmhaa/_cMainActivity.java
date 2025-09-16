@@ -33,12 +33,25 @@ import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.MaterialDatePicker;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class _cMainActivity extends AppCompatActivity {
 
@@ -343,6 +356,7 @@ public class _cMainActivity extends AppCompatActivity {
                 long daysInclusive = (end - start) / DAY_MS + 1; // 含起訖天數
 
                 if (daysInclusive > 7) {
+                    // 超過 7 天 → 自動縮短到 7 天（起日 + 6 天）
                     long clampedEnd = start + 6 * DAY_MS;
                     Toast.makeText(this, "一次最多只能選 7 天，已自動縮短區間", Toast.LENGTH_SHORT).show();
                     selectedStartMillis = start;
@@ -403,4 +417,29 @@ public class _cMainActivity extends AppCompatActivity {
         if (navD != null) navD.setOnClickListener(v ->
                 startActivity(new Intent(this, _dMainActivity.class)));
     }
+    // 將 "2025-09-16" 或 "2025/09/16 14:30" 之類格式轉成 "09/16"
+    private String toMonthDay(String s) {
+        if (s == null) return "";
+        // 抓 yyyy[-/年.]MM[-/月.]dd（後面可能還有時間）
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile(
+                "(?:19|20)\\d{2}[-/年.](\\d{1,2})[-/月.](\\d{1,2})"
+        );
+        java.util.regex.Matcher m = p.matcher(s);
+        if (m.find()) {
+            int mm = Integer.parseInt(m.group(1));
+            int dd = Integer.parseInt(m.group(2));
+            return String.format(java.util.Locale.TAIWAN, "%02d/%02d", mm, dd);
+        }
+        // 如果後端已經給「MM/dd」或「MM-dd」就直接回傳
+        return s;
+    }
+
+    private List<String> toMonthDayList(List<String> src) {
+        List<String> out = new ArrayList<>();
+        if (src != null) {
+            for (String s : src) out.add(toMonthDay(s));
+        }
+        return out;
+    }
+
 }
