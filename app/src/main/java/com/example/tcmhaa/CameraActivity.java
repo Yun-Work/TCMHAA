@@ -69,7 +69,6 @@ public class CameraActivity extends AppCompatActivity {
             return;
         }
 
-
         // 螢幕常亮與高亮度
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         WindowManager.LayoutParams params = getWindow().getAttributes();
@@ -119,7 +118,7 @@ public class CameraActivity extends AppCompatActivity {
                         finish();
                     }
 
-                    // 相簿權限主要給挑圖頁用（PhotoActivity），這裡先提示
+                    // 相簿權限主要給挑圖預用（PhotoActivity），這裡先提示
                     if (!readOk) {
                         Toast.makeText(this, "未授權讀取相簿，稍後選圖功能可能受限", Toast.LENGTH_SHORT).show();
                     }
@@ -195,6 +194,9 @@ public class CameraActivity extends AppCompatActivity {
             return;
         }
 
+        // 🔧 拍照前先禁用拍照按鈕，避免重複點擊
+        captureButton.setEnabled(false);
+
         // 顯示進度對話框
         AlertDialog progressDialog = new AlertDialog.Builder(this)
                 .setTitle("處理中")
@@ -219,12 +221,20 @@ public class CameraActivity extends AppCompatActivity {
                         public void onImageSaved(ImageCapture.OutputFileResults outputFileResults) {
                             Log.d(TAG, "照片已保存: " + photoFile.getAbsolutePath());
 
+                            // 🔧 拍照成功後暫停相機預覽
+                            runOnUiThread(() -> {
+                                if (cameraProvider != null) {
+                                    cameraProvider.unbindAll();
+                                }
+                            });
+
                             // 讀取拍攝的照片並轉換為Bitmap
                             try {
                                 Bitmap originalBitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
 
                                 if (originalBitmap == null) {
                                     progressDialog.dismiss();
+                                    restoreCamera(); // 🔧 恢復相機
                                     Toast.makeText(CameraActivity.this, "讀取拍攝照片失敗", Toast.LENGTH_SHORT).show();
                                     return;
                                 }
@@ -238,14 +248,14 @@ public class CameraActivity extends AppCompatActivity {
                                 Log.d(TAG, "開始分析拍攝的照片，尺寸: " + processedBitmap.getWidth() + "x" + processedBitmap.getHeight());
 
                                 // 調用API分析（使用處理後的圖片以提高速度）
-                                apiService.analyzeFace(processedBitmap,new ApiService.AnalysisCallback() {
+                                apiService.analyzeFace(processedBitmap, new ApiService.AnalysisCallback() {
                                     @Override
                                     public void onSuccess(ApiService.AnalysisResult result) {
                                         runOnUiThread(() -> {
                                             progressDialog.dismiss();
                                             Log.d(TAG, "拍攝照片分析成功");
 
-                                            // 👉 先跳 WarningActivity，而不是直接去 _bMainActivity
+                                            // 💉 先跳 WarningActivity，而不是直接去 _bMainActivity
                                             Intent intent = new Intent(CameraActivity.this, WarningActivity.class);
 
                                             // 將分析結果資料也帶過去，交給 WarningActivity 再傳到 _bMainActivity
@@ -263,11 +273,12 @@ public class CameraActivity extends AppCompatActivity {
                                     public void onFailure(String error) {
                                         runOnUiThread(() -> {
                                             progressDialog.dismiss();
+                                            restoreCamera(); // 🔧 恢復相機
                                             Log.e(TAG, "拍攝照片分析失敗: " + error);
 
                                             new AlertDialog.Builder(CameraActivity.this)
                                                     .setTitle("分析失敗")
-                                                    .setMessage("面部分析失敗：\n" + error + "\n\n請檢查：\n• 網絡連接是否正常\n• 光線是否充足\n• 面部是否完整對準框線")
+                                                    .setMessage("面部分析失敗：\n" + error + "\n\n請檢查：\n• 網路連接是否正常\n• 光線是否充足\n• 面部是否完整對準框線")
                                                     .setPositiveButton("重新拍攝", (dialog, which) -> {
                                                         // 用戶可以重新拍攝
                                                     })
@@ -279,6 +290,7 @@ public class CameraActivity extends AppCompatActivity {
 
                             } catch (Exception e) {
                                 progressDialog.dismiss();
+                                restoreCamera(); // 🔧 恢復相機
                                 Log.e(TAG, "處理拍攝照片時發生錯誤", e);
                                 Toast.makeText(CameraActivity.this, "處理照片失敗: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                             }
@@ -287,6 +299,7 @@ public class CameraActivity extends AppCompatActivity {
                         @Override
                         public void onError(ImageCaptureException exception) {
                             progressDialog.dismiss();
+                            restoreCamera(); // 🔧 恢復相機
                             Log.e(TAG, "拍照失敗", exception);
                             Toast.makeText(CameraActivity.this,
                                     "拍照失敗: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
@@ -295,9 +308,18 @@ public class CameraActivity extends AppCompatActivity {
                     });
         } catch (Exception e) {
             progressDialog.dismiss();
+            restoreCamera(); // 🔧 恢復相機
             Log.e(TAG, "拍照過程中出錯", e);
             Toast.makeText(this, "拍照過程中出錯: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             logDetailedInfo("拍照過程中出錯", e);
+        }
+    }
+
+    // 🔧 新增恢復相機的方法
+    private void restoreCamera() {
+        captureButton.setEnabled(true);
+        if (cameraProvider != null) {
+            startCamera();
         }
     }
 
