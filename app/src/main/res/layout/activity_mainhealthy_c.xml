@@ -20,22 +20,22 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- LOGO -->
-            <ImageView
-                android:id="@+id/ivLogo"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:src="@drawable/newlogo"
-                android:contentDescription="@string/app_name" />
-
-            <!-- 下拉 + 時間軸 + 確認 -->
+            <!-- 頂部：LOGO + 器官下拉 -->
             <LinearLayout
-                android:id="@+id/rowFilters"
+                android:id="@+id/rowHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="16dp">
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:id="@+id/ivLogo"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:src="@drawable/newlogo"
+                    android:contentDescription="@string/app_name" />
+
+
 
                 <Spinner
                     android:id="@+id/spOrgan"
