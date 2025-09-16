@@ -50,12 +50,27 @@ public class WarningActivity extends AppCompatActivity {
         if (result != null) {
             hasMoles = result.hasAnyMoles();
             hasBeard = result.hasAnyBeard();
-            Log.d(TAG, "檢測結果: 痣=" + hasMoles + ", 鬍鬚=" + hasBeard);
+
+            // 🔥 新增：檢查鬍鬚數量，如果 <= 1 則不視為明顯鬍鬚
+            if (hasBeard && result.getBeardCount() <= 1) {
+                hasBeard = false;
+                Log.d(TAG, "鬍鬚數量 <= 1，不視為明顯鬍鬚");
+            }
+
+            Log.d(TAG, "檢測結果: 痣=" + hasMoles + ", 鬍鬚=" + hasBeard + ", 鬍鬚數量=" + result.getBeardCount());
         } else {
             // 備用方法：從 Intent 額外參數獲取
             hasMoles = from.getBooleanExtra("has_moles", false);
             hasBeard = from.getBooleanExtra("has_beard", false);
-            Log.d(TAG, "從Intent獲取檢測結果: 痣=" + hasMoles + ", 鬍鬚=" + hasBeard);
+
+            // 🔥 新增：檢查 Intent 中的鬍鬚數量
+            int beardCount = from.getIntExtra("beard_count", 0);
+            if (hasBeard && beardCount <= 1) {
+                hasBeard = false;
+                Log.d(TAG, "從Intent獲取：鬍鬚數量 <= 1，不視為明顯鬍鬚");
+            }
+
+            Log.d(TAG, "從Intent獲取檢測結果: 痣=" + hasMoles + ", 鬍鬚=" + hasBeard + ", 鬍鬚數量=" + beardCount);
         }
 
         if (hasMoles || hasBeard) {
@@ -63,6 +78,7 @@ public class WarningActivity extends AppCompatActivity {
             setupWarningContent(result);
         } else {
             // 沒有痣也沒有鬍鬚，直接前往結果頁面
+            Log.d(TAG, "無明顯特徵，直接前往主結果頁面");
             goToMainActivity();
         }
     }
