@@ -147,7 +147,7 @@ public class _cMainActivity extends AppCompatActivity {
                         if (resp.locationsDetected != null && !resp.locationsDetected.isEmpty()) {
                             // 用換行的項目清單顯示
                             String bullet = android.text.TextUtils.join("\n• ", resp.locationsDetected);
-                            locText = "全息位置：\n" + bullet;
+                            locText = "全息位置：\n•" + bullet;
                         } else {
                             locText = "本區間未偵測到對應的全息位置";
                         }
