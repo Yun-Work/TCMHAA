@@ -403,9 +403,8 @@ public class CameraActivity extends AppCompatActivity {
             int newWidth = Math.round(width * scale);
             int newHeight = Math.round(height * scale);
 
-            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
-            bitmap.recycle(); // 釋放原始圖片記憶體
-            return scaledBitmap;
+
+            return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
         }
 
         return bitmap;
