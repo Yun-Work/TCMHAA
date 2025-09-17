@@ -5,15 +5,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
+    <!-- 讓 Toolbar 置於 AppBarLayout 中 -->
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/maincolor"
-        android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
-        app:title="隱私政策"
-        app:navigationIcon="@drawable/ic_arrow_back"/>
+        android:layout_height="wrap_content"
+        android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar">
 
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/maincolor"
+            app:title="隱私政策"
+            app:navigationIcon="@drawable/ic_arrow_back"/>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- 內容區會自動排在 AppBar 之下 -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -29,12 +36,11 @@
                 android:id="@+id/tvLastUpdated"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
                 android:text="最後更新："
                 android:textColor="#808080"
-                android:textSize="14sp"
-                android:layout_marginBottom="8dp"/>
+                android:textSize="14sp" />
 
-            <!-- 主要內文（HTML 渲染） -->
             <TextView
                 android:id="@+id/tvBody"
                 android:layout_width="match_parent"
@@ -46,7 +52,6 @@
                 android:autoLink="email|web"
                 android:linksClickable="true"/>
 
-            <!-- 新增的返回按鈕 -->
             <Button
                 android:id="@+id/btnBackPrivacy"
                 android:layout_width="match_parent"
@@ -55,9 +60,7 @@
                 android:backgroundTint="@color/maincolor"
                 android:text="返回"
                 android:textColor="@android:color/white"
-                android:textSize="18sp"/>
-
+                android:textSize="18sp" />
         </LinearLayout>
     </ScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
