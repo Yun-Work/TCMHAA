@@ -33,16 +33,15 @@ import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.MaterialDatePicker;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import android.widget.AdapterView;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -59,6 +58,7 @@ public class _cMainActivity extends AppCompatActivity {
     private Button btnPickRange, btnConfirm;
     private LineChart lineChart;
     private TextView tvChartPlaceholder;
+    private TextView textView;
 
     // 問答區
     private EditText etQuestion;
@@ -89,6 +89,7 @@ public class _cMainActivity extends AppCompatActivity {
         etQuestion         = findViewById(R.id.etQuestion);
         btnAskConfirm      = findViewById(R.id.btnAskConfirm);
         tvAnswer           = findViewById(R.id.tvAnswer);
+        textView           = findViewById(R.id.textView);
 
         // 讓回應內網址可點
         tvAnswer.setAutoLinkMask(Linkify.WEB_URLS);
@@ -151,6 +152,15 @@ public class _cMainActivity extends AppCompatActivity {
                             return;
                         }
                         renderMultiColorLineChart(resp);
+                        String locText;
+                        if (resp.locationsDetected != null && !resp.locationsDetected.isEmpty()) {
+                            // 用換行的項目清單顯示
+                            String bullet = android.text.TextUtils.join("\n• ", resp.locationsDetected);
+                            locText = "全息位置：\n•" + bullet;
+                        } else {
+                            locText = "本區間未偵測到對應的全息位置";
+                        }
+                        textView.setText(locText);
                     }
                     @Override
                     public void onFailure(Throwable t) {
@@ -219,6 +229,7 @@ public class _cMainActivity extends AppCompatActivity {
     /** 繪製多色折線（發紅/發黑/發黃/發白/發青 → 5 條 0/1 線） */
     private void renderMultiColorLineChart(HistoryStatusBarResponseDto r) {
         List<String> x = (r.x != null) ? r.x : new ArrayList<>();
+        List<String> xShort = toMonthDayList(x);
 
         final float SHIFT_RED    = -0.24f;
         final float SHIFT_BLACK  = -0.12f;
@@ -250,7 +261,7 @@ public class _cMainActivity extends AppCompatActivity {
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setGranularity(1f);
         xAxis.setLabelCount(Math.min(x.size(), 6));
-        xAxis.setValueFormatter(new IndexAxisValueFormatter(x));
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(xShort));
         xAxis.setAxisMinimum(-0.6f);
         xAxis.setAxisMaximum(Math.max(0, x.size() - 1) + 0.6f);
         xAxis.setDrawGridLines(false);

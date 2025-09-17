@@ -12,6 +12,8 @@ public class HistoryStatusBarResponseDto {
     public Series series;    // 顏色 → 0/1 陣列
     public List<String> dominant;     // 每天："發紅"|"發黑"|...|"正常"|"無資料"
     public List<Integer> no_data;     // 每天：1=沒資料，0=有資料
+    @SerializedName("locations_detected")
+    public List<String> locationsDetected;
     public String error;
 
     public boolean hasError() { return error != null && !error.isEmpty(); }

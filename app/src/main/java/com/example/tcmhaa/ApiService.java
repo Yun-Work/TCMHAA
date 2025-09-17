@@ -28,9 +28,9 @@ import okhttp3.ResponseBody;
 public class ApiService {
     private static final String TAG = "ApiService";
 
-    //private static final String BASE_URL = "https://tcmha-python.duckdns.org/";
-    //private static final String BASE_URL = "http://163.13.202.117：6060";
-    private static final String BASE_URL = "http://10.0.2.2:6060";
+//    private static final String BASE_URL = "https://tcmha-python.duckdns.org/";
+    private static final String BASE_URL = "http://163.13.202.117:6060";
+//    private static final String BASE_URL = "http://10.0.2.2:6060";
     private static final String ANALYZE_ENDPOINT = "/api/face/upload";
     private static final String HEALTH_ENDPOINT = "/api/face/health";
 

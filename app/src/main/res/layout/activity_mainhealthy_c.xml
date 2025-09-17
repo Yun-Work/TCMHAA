@@ -20,52 +20,73 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- LOGO -->
-            <ImageView
-                android:id="@+id/ivLogo"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:src="@drawable/newlogo"
-                android:contentDescription="@string/app_name" />
+            <!-- 頂部：LOGO + 器官下拉 -->
+            <LinearLayout
+                android:id="@+id/rowHeader"
+                android:layout_width="match_parent"
+                android:layout_height="106dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <!-- 下拉 + 時間軸 + 確認 -->
+                <ImageView
+                    android:id="@+id/ivLogo"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:contentDescription="@string/app_name"
+                    android:src="@drawable/newlogo" />
+
+                <Spinner
+                    android:id="@+id/spOrgan"
+                    android:layout_width="137dp"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="12dp"
+                    android:entries="@array/organs_options"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:spinnerMode="dropdown" />
+
+                <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="0dp"
+                    android:layout_height="106dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:gravity="start|center_vertical"
+                    android:singleLine="false"
+                    android:text="臉部全息對應位置"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- 第二列：時間軸 + 確認 -->
             <LinearLayout
                 android:id="@+id/rowFilters"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="16dp">
+                android:layout_marginTop="12dp">
 
-                <Spinner
-                    android:id="@+id/spOrgan"
-                    android:layout_width="wrap_content"
-                    android:layout_height="56dp"
-                    android:entries="@array/organs_options"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
-                    android:spinnerMode="dropdown" />
-
-                <!-- 時間軸按鈕：加寬 + 自動縮字 -->
+                <!-- 時間軸按鈕 -->
                 <Button
                     android:id="@+id/btnPickRange"
-                    android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_weight="2.4"
-                    android:text="@string/btn_pick_range"
+                    android:layout_width="274dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
                     android:backgroundTint="@color/maincolor"
                     android:paddingStart="14dp"
                     android:paddingEnd="14dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp"
-                    app:autoSizeTextType="uniform"
-                    app:autoSizeMinTextSize="12sp"
+                    android:text="@string/btn_pick_range"
                     app:autoSizeMaxTextSize="18sp"
-                    app:autoSizeStepGranularity="1sp" />
+                    app:autoSizeMinTextSize="12sp"
+                    app:autoSizeStepGranularity="1sp"
+                    app:autoSizeTextType="uniform" />
 
                 <Button
                     android:id="@+id/btnConfirm"
-                    android:layout_width="84dp"
+                    android:layout_width="96dp"
                     android:layout_height="56dp"
                     android:text="確認"
                     android:textAllCaps="false"
@@ -74,17 +95,19 @@
             </LinearLayout>
 
             <!-- 歷史分析圖表 -->
+
+            <!-- 問答區：問題輸入 + 送出 -->
             <FrameLayout
                 android:id="@+id/blockChart"
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
+                android:layout_height="301dp"
                 android:layout_marginTop="16dp"
                 android:background="@color/placeholderGray">
 
                 <com.github.mikephil.charting.charts.LineChart
                     android:id="@+id/lineChart"
                     android:layout_width="match_parent"
-                    android:layout_height="280dp"
+                    android:layout_height="262dp"
                     android:layout_marginTop="12dp" />
 
                 <TextView
@@ -97,7 +120,6 @@
                     android:textSize="22sp" />
             </FrameLayout>
 
-            <!-- 問答區：問題輸入 + 送出 -->
             <LinearLayout
                 android:id="@+id/qaRow"
                 android:layout_width="match_parent"
@@ -144,7 +166,7 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- 下方導覽列（先畫出來，FAB 放後面才會在最上層） -->
+    <!-- 下方導覽列 -->
     <include
         android:id="@+id/bottomBar"
         layout="@layout/layout_bottom_nav"
@@ -152,5 +174,5 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"/>
 
-
 </RelativeLayout>
+
