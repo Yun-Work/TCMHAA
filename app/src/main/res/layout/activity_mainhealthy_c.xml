@@ -24,7 +24,7 @@
             <LinearLayout
                 android:id="@+id/rowHeader"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="106dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -37,7 +37,7 @@
 
                 <Spinner
                     android:id="@+id/spOrgan"
-                    android:layout_width="143dp"
+                    android:layout_width="137dp"
                     android:layout_height="56dp"
                     android:layout_marginStart="12dp"
                     android:entries="@array/organs_options"
@@ -48,15 +48,15 @@
                 <TextView
                     android:id="@+id/textView"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_weight="1"
+                    android:layout_height="106dp"
                     android:layout_marginStart="8dp"
-                    android:text="臉部全息對應位置"
-                    android:textSize="16sp"
-                    android:textColor="@android:color/black"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
                     android:gravity="start|center_vertical"
-                    android:singleLine="true"
-                    android:ellipsize="end" />
+                    android:singleLine="false"
+                    android:text="臉部全息對應位置"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <!-- 第二列：時間軸 + 確認 -->
@@ -71,18 +71,18 @@
                 <!-- 時間軸按鈕 -->
                 <Button
                     android:id="@+id/btnPickRange"
-                    android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_weight="1"
+                    android:layout_width="274dp"
+                    android:layout_height="match_parent"
                     android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
                     android:backgroundTint="@color/maincolor"
                     android:paddingStart="14dp"
                     android:paddingEnd="14dp"
                     android:text="@string/btn_pick_range"
-                    app:autoSizeTextType="uniform"
-                    app:autoSizeMinTextSize="12sp"
                     app:autoSizeMaxTextSize="18sp"
-                    app:autoSizeStepGranularity="1sp" />
+                    app:autoSizeMinTextSize="12sp"
+                    app:autoSizeStepGranularity="1sp"
+                    app:autoSizeTextType="uniform" />
 
                 <Button
                     android:id="@+id/btnConfirm"
@@ -95,17 +95,19 @@
             </LinearLayout>
 
             <!-- 歷史分析圖表 -->
+
+            <!-- 問答區：問題輸入 + 送出 -->
             <FrameLayout
                 android:id="@+id/blockChart"
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
+                android:layout_height="276dp"
                 android:layout_marginTop="16dp"
                 android:background="@color/placeholderGray">
 
                 <com.github.mikephil.charting.charts.LineChart
                     android:id="@+id/lineChart"
                     android:layout_width="match_parent"
-                    android:layout_height="280dp"
+                    android:layout_height="274dp"
                     android:layout_marginTop="12dp" />
 
                 <TextView
@@ -118,7 +120,6 @@
                     android:textSize="22sp" />
             </FrameLayout>
 
-            <!-- 問答區：問題輸入 + 送出 -->
             <LinearLayout
                 android:id="@+id/qaRow"
                 android:layout_width="match_parent"
