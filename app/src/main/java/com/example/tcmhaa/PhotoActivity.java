@@ -157,11 +157,18 @@ public class PhotoActivity extends AppCompatActivity {
                         progressDialog.dismiss();
                         Log.d(TAG, "分析成功");
 
-                        // 修正：檢查是否有痣或鬍鬚
+                        // 🔧 修正：檢查是否有痣或鬍鬚 - 加入鬍鬚數量檢查
                         boolean hasMoles = result.hasMoles();
                         boolean hasBeard = result.hasBeard();
+                        int beardCount = result.getBeardCount();
 
-                        Log.d(TAG, "檢測結果 - 痣: " + hasMoles + ", 鬍鬚: " + hasBeard);
+                        // 🔥 重要：鬍鬚數量 <= 1 時不視為明顯鬍鬚
+                        if (hasBeard && beardCount <= 1) {
+                            hasBeard = false;
+                            Log.d(TAG, "鬍鬚數量 <= 1，不視為明顯鬍鬚");
+                        }
+
+                        Log.d(TAG, "檢測結果 - 痣: " + hasMoles + ", 鬍鬚: " + hasBeard + ", 鬍鬚數量: " + beardCount);
 
                         if (hasMoles || hasBeard) {
                             Log.d(TAG, "檢測到特徵，前往 WarningActivity");
@@ -175,10 +182,11 @@ public class PhotoActivity extends AppCompatActivity {
                             intent.putExtra("from_photo", true);
                             intent.putExtra("has_moles", hasMoles);
                             intent.putExtra("has_beard", hasBeard);
+                            intent.putExtra("beard_count", beardCount);
 
                             startActivity(intent);
                         } else {
-                            Log.d(TAG, "未檢測到特徵，直接前往 _bMainActivity");
+                            Log.d(TAG, "未檢測到明顯特徵，直接前往 _bMainActivity");
                             // 沒有痣也沒有鬍鬚，直接前往主結果頁面
                             Intent intent = new Intent(PhotoActivity.this, _bMainActivity.class);
 
@@ -189,6 +197,7 @@ public class PhotoActivity extends AppCompatActivity {
                             intent.putExtra("from_photo", true);
                             intent.putExtra("has_moles", false);
                             intent.putExtra("has_beard", false);
+                            intent.putExtra("beard_count", beardCount);
 
                             startActivity(intent);
                         }
