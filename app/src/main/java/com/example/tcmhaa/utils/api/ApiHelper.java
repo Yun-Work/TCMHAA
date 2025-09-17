@@ -23,8 +23,8 @@ public class ApiHelper {
 
     // Android 模擬器連本機：10.0.2.2
 //    private static final String BASE_URL = "https://tcmha-python.duckdns.org/api/";
-    private static final String BASE_URL = "http://10.0.2.2:6060/api/";
-//    private static final String BASE_URL = "http:/163.13.202.117:6060/api/";
+//    private static final String BASE_URL = "http://10.0.2.2:6060/api/";
+    private static final String BASE_URL = "http:/163.13.202.117:6060/api/";
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
     private static Retrofit retrofit;
