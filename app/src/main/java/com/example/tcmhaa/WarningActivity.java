@@ -39,6 +39,16 @@ public class WarningActivity extends AppCompatActivity {
     private void initApiService() {
         apiService = new ApiService();
         userId = getSharedPreferences("auth", MODE_PRIVATE).getInt("user_id", -1);
+
+        if (userId == -1) {
+            Log.e(TAG, "用戶 ID 無效");
+            Toast.makeText(this, "用戶身份驗證失敗", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        apiService.setUserId(userId);
+        Log.d(TAG, "設置用戶 ID: " + userId);
     }
 
     private void setupContent() {
@@ -51,19 +61,19 @@ public class WarningActivity extends AppCompatActivity {
             hasMoles = result.hasAnyMoles();
             hasBeard = result.hasAnyBeard();
 
-            // 🔥 新增：檢查鬍鬚數量，如果 <= 1 則不視為明顯鬍鬚
+            // 重要：檢查鬍鬚數量，如果 <= 1 則不視為明顯鬍鬚
             if (hasBeard && result.getBeardCount() <= 1) {
                 hasBeard = false;
                 Log.d(TAG, "鬍鬚數量 <= 1，不視為明顯鬍鬚");
             }
 
-            Log.d(TAG, "檢測結果: 痣=" + hasMoles + ", 鬍鬚=" + hasBeard + ", 鬍鬚數量=" + result.getBeardCount());
+            Log.d(TAG, "從 AnalysisResult 檢測結果: 痣=" + hasMoles + ", 鬍鬚=" + hasBeard + ", 鬍鬚數量=" + result.getBeardCount());
         } else {
             // 備用方法：從 Intent 額外參數獲取
             hasMoles = from.getBooleanExtra("has_moles", false);
             hasBeard = from.getBooleanExtra("has_beard", false);
 
-            // 🔥 新增：檢查 Intent 中的鬍鬚數量
+            // 新增：檢查 Intent 中的鬍鬚數量
             int beardCount = from.getIntExtra("beard_count", 0);
             if (hasBeard && beardCount <= 1) {
                 hasBeard = false;
@@ -136,19 +146,47 @@ public class WarningActivity extends AppCompatActivity {
         Intent from = getIntent();
         String originalImageBase64 = from.getStringExtra("original_image_base64");
 
+        // 關鍵修復：添加詳細的 Base64 數據驗證
         if (originalImageBase64 == null) {
+            Log.e(TAG, "originalImageBase64 為 null");
             progressDialog.dismiss();
             Toast.makeText(this, "原始圖像數據遺失", Toast.LENGTH_SHORT).show();
             goToMainActivity();
             return;
         }
 
+        if (originalImageBase64.isEmpty()) {
+            Log.e(TAG, "originalImageBase64 為空字符串");
+            progressDialog.dismiss();
+            Toast.makeText(this, "原始圖像數據為空", Toast.LENGTH_SHORT).show();
+            goToMainActivity();
+            return;
+        }
 
+        // 新增：驗證 Base64 格式
+        if (!originalImageBase64.startsWith("data:image/")) {
+            Log.e(TAG, "originalImageBase64 格式不正確: " + originalImageBase64.substring(0, Math.min(50, originalImageBase64.length())));
+            progressDialog.dismiss();
+            Toast.makeText(this, "圖像數據格式錯誤", Toast.LENGTH_SHORT).show();
+            goToMainActivity();
+            return;
+        }
+
+        Log.d(TAG, "Base64 數據驗證通過，長度: " + originalImageBase64.length());
 
         boolean removeMoles = hasMoles;
         boolean removeBeard = hasBeard;
 
         Log.d(TAG, "用戶選擇移除特徵 - removeMoles: " + removeMoles + ", removeBeard: " + removeBeard);
+
+        // 修復：確保 userId 正確獲取
+        if (userId == -1) {
+            Log.e(TAG, "用戶 ID 無效");
+            progressDialog.dismiss();
+            Toast.makeText(this, "用戶身份驗證失敗", Toast.LENGTH_SHORT).show();
+            goToMainActivity();
+            return;
+        }
 
         // 重新分析，移除檢測到的特徵
         apiService.analyzeFaceWithFeatureRemoval(
@@ -174,6 +212,9 @@ public class WarningActivity extends AppCompatActivity {
                             intent.putExtra("beard_removed", removeBeard);
                             intent.putExtra("has_moles", false); // 已處理
                             intent.putExtra("has_beard", false); // 已處理
+
+                            // 新增：驗證日誌
+                            Log.d(TAG, "傳遞給 _bMainActivity 的 Base64 長度: " + originalImageBase64.length());
 
                             startActivity(intent);
                             finish();
@@ -232,6 +273,14 @@ public class WarningActivity extends AppCompatActivity {
             // 標記特徵未被移除
             intent.putExtra("moles_removed", false);
             intent.putExtra("beard_removed", false);
+
+            // 新增：驗證 Base64 數據是否正確傳遞
+            String originalImageBase64 = from.getStringExtra("original_image_base64");
+            if (originalImageBase64 != null) {
+                Log.d(TAG, "goToMainActivity - Base64 數據長度: " + originalImageBase64.length());
+            } else {
+                Log.e(TAG, "goToMainActivity - Base64 數據為 null");
+            }
         }
 
         startActivity(intent);

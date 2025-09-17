@@ -239,27 +239,24 @@ public class CameraActivity extends AppCompatActivity {
                                     return;
                                 }
 
-                                Log.d(TAG, "原始照片尺寸: " + originalBitmap.getWidth() + "x" + originalBitmap.getHeight());
+                                // 如果圖片太大，進行縮放
+                                Bitmap processedBitmap = scaleBitmapIfNeeded(originalBitmap);
 
-                                // 關鍵修復：先保存原始圖片的Base64數據
+                                // 🔧 關鍵修復：確保 originalImageBase64 正確生成
                                 String originalImageBase64 = bitmapToBase64(originalBitmap);
 
-                                // 檢查 Base64 轉換是否成功
+                                // 🔧 新增：驗證 Base64 數據
                                 if (originalImageBase64 == null || originalImageBase64.isEmpty()) {
                                     progressDialog.dismiss();
                                     restoreCamera();
-                                    Toast.makeText(CameraActivity.this, "圖像數據處理失敗", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(CameraActivity.this, "圖片數據轉換失敗", Toast.LENGTH_SHORT).show();
                                     return;
                                 }
 
-                                Log.d(TAG, "原始圖像Base64長度: " + originalImageBase64.length());
+                                Log.d(TAG, "開始分析拍攝的照片，尺寸: " + processedBitmap.getWidth() + "x" + processedBitmap.getHeight());
+                                Log.d(TAG, "Base64 數據長度: " + originalImageBase64.length());
 
-                                // 如果圖片太大，進行縮放（僅用於分析，不影響顯示）
-                                Bitmap processedBitmap = scaleBitmapIfNeeded(originalBitmap);
-
-                                Log.d(TAG, "開始分析拍攝的照片，處理後尺寸: " + processedBitmap.getWidth() + "x" + processedBitmap.getHeight());
-
-                                // 調用API分析（使用處理後的圖片以提高速度，但保留原圖Base64）
+                                // 🔧 修正：使用完整的特徵檢測，包含痣和鬍鬚檢測
                                 apiService.analyzeFaceWithFeatureRemoval(processedBitmap, false, false, userId, new ApiService.AnalysisCallback() {
                                     @Override
                                     public void onSuccess(ApiService.AnalysisResult result) {
@@ -267,51 +264,37 @@ public class CameraActivity extends AppCompatActivity {
                                             progressDialog.dismiss();
                                             Log.d(TAG, "拍攝照片分析成功");
 
-                                            // 檢查是否有痣或鬍鬚 - 加入數量檢查
+                                            // 檢查是否有痣或鬍鬚
                                             boolean hasMoles = result.hasMoles();
                                             boolean hasBeard = result.hasBeard();
-                                            int beardCount = result.getBeardCount();
 
-                                            // 重要：鬍鬚數量 <= 1 時不視為明顯鬍鬚
-                                            if (hasBeard && beardCount <= 1) {
-                                                hasBeard = false;
-                                                Log.d(TAG, "鬍鬚數量 <= 1，不視為明顯鬍鬚");
-                                            }
-
-                                            Log.d(TAG, "檢測結果 - 痣: " + hasMoles + ", 鬍鬚: " + hasBeard + ", 鬍鬚數量: " + beardCount);
-                                            Log.d(TAG, "準備傳遞的圖像數據長度: " + originalImageBase64.length());
+                                            Log.d(TAG, "檢測結果 - 痣: " + hasMoles + ", 鬍鬚: " + hasBeard);
 
                                             AnalysisResult parcelableResult = new AnalysisResult(result);
 
+                                            // 🔧 修復：創建 Intent 時確保所有必要數據都正確傳遞
+                                            Intent intent;
                                             if (hasMoles || hasBeard) {
                                                 Log.d(TAG, "檢測到特徵，前往 WarningActivity");
-                                                // 有痣或鬍鬚，前往警告頁面
-                                                Intent intent = new Intent(CameraActivity.this, WarningActivity.class);
-
-                                                intent.putExtra("analysis_result", parcelableResult);
-                                                intent.putExtra("source_type", "camera");
-                                                intent.putExtra("original_image_base64", originalImageBase64);
-                                                intent.putExtra("from_camera", true);
-                                                intent.putExtra("has_moles", hasMoles);
-                                                intent.putExtra("has_beard", hasBeard);
-                                                intent.putExtra("beard_count", beardCount);
-
-                                                startActivity(intent);
+                                                intent = new Intent(CameraActivity.this, WarningActivity.class);
                                             } else {
-                                                Log.d(TAG, "未檢測到明顯特徵，直接前往 _bMainActivity");
-                                                // 關鍵修復：確保直接跳轉時也傳遞完整數據
-                                                Intent intent = new Intent(CameraActivity.this, _bMainActivity.class);
-
-                                                intent.putExtra("analysis_result", parcelableResult);
-                                                intent.putExtra("source_type", "camera");
-                                                intent.putExtra("original_image_base64", originalImageBase64);
-                                                intent.putExtra("from_camera", true);
-                                                intent.putExtra("has_moles", false);
-                                                intent.putExtra("has_beard", false);
-                                                intent.putExtra("beard_count", beardCount);
-
-                                                startActivity(intent);
+                                                Log.d(TAG, "未檢測到特徵，直接前往 _bMainActivity");
+                                                intent = new Intent(CameraActivity.this, _bMainActivity.class);
                                             }
+
+                                            // 🔧 關鍵修復：確保所有數據正確傳遞
+                                            intent.putExtra("analysis_result", parcelableResult);
+                                            intent.putExtra("source_type", "camera");
+                                            intent.putExtra("original_image_base64", originalImageBase64);
+                                            intent.putExtra("from_camera", true);
+                                            intent.putExtra("has_moles", hasMoles);
+                                            intent.putExtra("has_beard", hasBeard);
+
+                                            // 🔧 新增：額外的驗證日誌
+                                            Log.d(TAG, "傳遞的 Base64 數據長度: " + originalImageBase64.length());
+                                            Log.d(TAG, "傳遞的 Base64 開頭: " + originalImageBase64.substring(0, Math.min(50, originalImageBase64.length())));
+
+                                            startActivity(intent);
                                             finish();
                                         });
                                     }
@@ -362,7 +345,7 @@ public class CameraActivity extends AppCompatActivity {
         }
     }
 
-    // 新增恢復相機的方法
+    // 🔧 新增恢復相機的方法
     private void restoreCamera() {
         captureButton.setEnabled(true);
         if (cameraProvider != null) {
@@ -388,68 +371,53 @@ public class CameraActivity extends AppCompatActivity {
         return bitmap;
     }
 
-    // 改進的Bitmap轉Base64方法
+    // 添加Bitmap轉Base64的方法
     private String bitmapToBase64(Bitmap bitmap) {
-        if (bitmap == null) {
-            Log.e(TAG, "Bitmap為null，無法轉換");
-            return null;
-        }
-
         try {
-            Log.d(TAG, "開始轉換Bitmap到Base64，原始尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
+            if (bitmap == null) {
+                Log.e(TAG, "Bitmap 為 null");
+                return null;
+            }
+
+            if (bitmap.isRecycled()) {
+                Log.e(TAG, "Bitmap 已被回收");
+                return null;
+            }
 
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-            // 為顯示用途保持較好的質量，但控制檔案大小
-            int quality = 85; // 提高質量從80到85
-
-            // 檢查圖片大小，如果太大則調整質量
-            int pixels = bitmap.getWidth() * bitmap.getHeight();
-            if (pixels > 2000000) { // 超過200萬像素
-                quality = 75;
-                Log.d(TAG, "大圖片，調整質量為: " + quality);
-            }
-
+            // 為顯示用途保持較好的質量
+            int quality = 80;
             boolean compressSuccess = bitmap.compress(Bitmap.CompressFormat.JPEG, quality, byteArrayOutputStream);
 
             if (!compressSuccess) {
-                Log.e(TAG, "Bitmap壓縮失敗");
+                Log.e(TAG, "Bitmap 壓縮失敗");
                 return null;
             }
 
             byte[] byteArray = byteArrayOutputStream.toByteArray();
-
-            if (byteArray.length == 0) {
-                Log.e(TAG, "壓縮後數據為空");
+            if (byteArray == null || byteArray.length == 0) {
+                Log.e(TAG, "壓縮後的字節數組為空");
                 return null;
             }
 
-            Log.d(TAG, "壓縮後大小: " + byteArray.length + " bytes");
-
             String base64String = Base64.encodeToString(byteArray, Base64.NO_WRAP);
 
-            if (base64String.isEmpty()) {
-                Log.e(TAG, "Base64編碼結果為空");
+            if (base64String == null || base64String.isEmpty()) {
+                Log.e(TAG, "Base64 編碼失敗");
                 return null;
             }
 
             String result = "data:image/jpeg;base64," + base64String;
-            Log.d(TAG, "Base64轉換成功，最終長度: " + result.length());
-
-            // 清理資源
-            try {
-                byteArrayOutputStream.close();
-            } catch (IOException e) {
-                Log.w(TAG, "關閉ByteArrayOutputStream失敗", e);
-            }
+            Log.d(TAG, "Base64 轉換成功，長度: " + result.length());
 
             return result;
 
         } catch (OutOfMemoryError e) {
-            Log.e(TAG, "內存不足，Bitmap轉Base64失敗", e);
+            Log.e(TAG, "記憶體不足，Bitmap 轉 Base64 失敗", e);
             return null;
         } catch (Exception e) {
-            Log.e(TAG, "Bitmap轉Base64失敗", e);
+            Log.e(TAG, "Bitmap 轉 Base64 失敗", e);
             return null;
         }
     }

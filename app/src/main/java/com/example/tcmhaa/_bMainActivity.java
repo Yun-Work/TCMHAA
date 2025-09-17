@@ -92,6 +92,7 @@ public class _bMainActivity extends AppCompatActivity {
         // 如果有新的分析結果，更新全局緩存
         if (newAnalysisResult != null) {
             Log.d(TAG, "收到新的分析結果，更新全局緩存");
+            Log.d(TAG, "新的 Base64 數據長度: " + (newOriginalImageBase64 != null ? newOriginalImageBase64.length() : "null"));
 
             analysisResult = newAnalysisResult;
             sourceType = newSourceType;
@@ -172,6 +173,15 @@ public class _bMainActivity extends AppCompatActivity {
             // 清除現有內容
             blockUserPhoto.removeAllViews();
 
+            // 詳細的 Base64 數據驗證和日誌
+            Log.d(TAG, "開始顯示原始照片");
+            if (originalImageBase64 != null) {
+                Log.d(TAG, "Base64 數據長度: " + originalImageBase64.length());
+                Log.d(TAG, "Base64 開頭: " + originalImageBase64.substring(0, Math.min(50, originalImageBase64.length())));
+            } else {
+                Log.e(TAG, "originalImageBase64 為 null");
+            }
+
             if (originalImageBase64 != null && !originalImageBase64.isEmpty()) {
                 // 創建ImageView來顯示照片
                 ImageView imageView = new ImageView(this);
@@ -187,23 +197,63 @@ public class _bMainActivity extends AppCompatActivity {
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
                 try {
-                    // 解析base64並設置為圖片
+                    // 改進的 Base64 解析邏輯
                     String base64Image = originalImageBase64;
+
+                    // 檢查並移除 data URL 前綴
                     if (base64Image.contains(",")) {
-                        base64Image = base64Image.split(",")[1];
+                        String[] parts = base64Image.split(",");
+                        if (parts.length > 1) {
+                            base64Image = parts[1];
+                            Log.d(TAG, "移除 data URL 前綴後的 Base64 長度: " + base64Image.length());
+                        } else {
+                            Log.e(TAG, "Base64 格式錯誤：無法找到逗號分隔符後的數據");
+                            showPhotoError();
+                            return;
+                        }
                     }
 
-                    byte[] imageBytes = Base64.decode(base64Image, Base64.DEFAULT);
+                    // 驗證 Base64 字符串是否為空
+                    if (base64Image.isEmpty()) {
+                        Log.e(TAG, "處理後的 Base64 字符串為空");
+                        showPhotoError();
+                        return;
+                    }
+
+                    // 解碼 Base64
+                    byte[] imageBytes;
+                    try {
+                        imageBytes = Base64.decode(base64Image, Base64.DEFAULT);
+                    } catch (IllegalArgumentException e) {
+                        Log.e(TAG, "Base64 解碼失敗：格式不正確", e);
+                        showPhotoError();
+                        return;
+                    }
+
+                    if (imageBytes == null || imageBytes.length == 0) {
+                        Log.e(TAG, "Base64 解碼後的字節數組為空");
+                        showPhotoError();
+                        return;
+                    }
+
+                    Log.d(TAG, "Base64 解碼成功，字節數組長度: " + imageBytes.length);
+
+                    // 解析為 Bitmap
                     Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
 
                     if (bitmap != null) {
+                        Log.d(TAG, "Bitmap 創建成功，尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
                         imageView.setImageBitmap(bitmap);
                         blockUserPhoto.addView(imageView);
                         Log.d(TAG, "成功顯示原始照片");
                     } else {
+                        Log.e(TAG, "BitmapFactory.decodeByteArray 返回 null");
                         showPhotoError();
                     }
 
+                } catch (OutOfMemoryError e) {
+                    Log.e(TAG, "記憶體不足，無法解析圖片", e);
+                    showPhotoError();
                 } catch (Exception e) {
                     Log.e(TAG, "解析照片時發生錯誤", e);
                     showPhotoError();
@@ -211,6 +261,7 @@ public class _bMainActivity extends AppCompatActivity {
 
             } else {
                 // 如果沒有照片，顯示佔位符
+                Log.w(TAG, "沒有照片數據，顯示佔位符");
                 showPhotoPlaceholder();
             }
 
@@ -221,19 +272,37 @@ public class _bMainActivity extends AppCompatActivity {
     }
 
     private void showPhotoPlaceholder() {
+        LinearLayout placeholderLayout = new LinearLayout(this);
+        placeholderLayout.setOrientation(LinearLayout.VERTICAL);
+        placeholderLayout.setGravity(Gravity.CENTER);
+
         TextView placeholderView = new TextView(this);
         placeholderView.setText("📷\n照片已分析");
-        placeholderView.setTextSize(24);
+        placeholderView.setTextSize(20);
         placeholderView.setGravity(Gravity.CENTER);
         placeholderView.setTextColor(getColor(android.R.color.darker_gray));
+        placeholderLayout.addView(placeholderView);
+
+        TextView infoView = new TextView(this);
+        infoView.setText("原始照片數據不可用");
+        infoView.setTextSize(12);
+        infoView.setGravity(Gravity.CENTER);
+        infoView.setTextColor(getColor(android.R.color.darker_gray));
+        LinearLayout.LayoutParams infoParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        infoParams.topMargin = 8;
+        infoView.setLayoutParams(infoParams);
+        placeholderLayout.addView(infoView);
 
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.WRAP_CONTENT
         );
         params.gravity = Gravity.CENTER;
-        placeholderView.setLayoutParams(params);
-        blockUserPhoto.addView(placeholderView);
+        placeholderLayout.setLayoutParams(params);
+        blockUserPhoto.addView(placeholderLayout);
     }
 
     private void displayAnalysisText() {
@@ -358,17 +427,38 @@ public class _bMainActivity extends AppCompatActivity {
 
     private void showPhotoError() {
         blockUserPhoto.removeAllViews();
+
+        LinearLayout errorLayout = new LinearLayout(this);
+        errorLayout.setOrientation(LinearLayout.VERTICAL);
+        errorLayout.setGravity(Gravity.CENTER);
+
         TextView errorView = new TextView(this);
-        errorView.setText("照片顯示失敗");
+        errorView.setText("📷\n照片顯示失敗");
         errorView.setTextColor(getColor(android.R.color.holo_red_dark));
         errorView.setTextSize(16);
+        errorView.setGravity(Gravity.CENTER);
+        errorLayout.addView(errorView);
+
+        TextView detailView = new TextView(this);
+        detailView.setText("圖像數據可能已損壞");
+        detailView.setTextColor(getColor(android.R.color.darker_gray));
+        detailView.setTextSize(12);
+        detailView.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams detailParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        detailParams.topMargin = 8;
+        detailView.setLayoutParams(detailParams);
+        errorLayout.addView(detailView);
+
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.WRAP_CONTENT
         );
         params.gravity = Gravity.CENTER;
-        errorView.setLayoutParams(params);
-        blockUserPhoto.addView(errorView);
+        errorLayout.setLayoutParams(params);
+        blockUserPhoto.addView(errorLayout);
     }
 
     private void showTextError() {
