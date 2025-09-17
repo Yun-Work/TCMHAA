@@ -74,7 +74,7 @@ public class _dProfileActivity extends AppCompatActivity {
                     }
                     @Override
                     public void onFailure(Throwable t) {
-                        toast("連線錯誤：" + t.getMessage());
+                        toast( t.getMessage());
                     }
                 }
         );
@@ -121,7 +121,7 @@ public class _dProfileActivity extends AppCompatActivity {
                     }
                     @Override
                     public void onFailure(Throwable t) {
-                        toast("連線錯誤：" + t.getMessage());
+                        toast(t.getMessage());
                     }
                 }
         );
