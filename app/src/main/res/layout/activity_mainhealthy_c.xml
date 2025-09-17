@@ -53,7 +53,7 @@
                     android:layout_weight="1"
                     android:ellipsize="end"
                     android:gravity="start|center_vertical"
-                    android:singleLine="true"
+                    android:singleLine="false"
                     android:text="臉部全息對應位置"
                     android:textColor="@android:color/black"
                     android:textSize="16sp" />
