@@ -188,13 +188,17 @@ public class CameraActivity extends AppCompatActivity {
         }, ContextCompat.getMainExecutor(this));
     }
 
+
     private void takePicture() {
         if (imageCapture == null) {
             Toast.makeText(this, "相機未初始化，請稍候", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // 🔧 拍照前先禁用拍照按鈕，避免重複點擊
+
+        _bMainActivity.clearGlobalCache();
+
+        // 拍照前先禁用拍照按鈕，避免重複點擊
         captureButton.setEnabled(false);
 
         // 顯示進度對話框
@@ -221,7 +225,7 @@ public class CameraActivity extends AppCompatActivity {
                         public void onImageSaved(ImageCapture.OutputFileResults outputFileResults) {
                             Log.d(TAG, "照片已保存: " + photoFile.getAbsolutePath());
 
-                            // 🔧 拍照成功後暫停相機預覽
+                            // 拍照成功後暫停相機預覽
                             runOnUiThread(() -> {
                                 if (cameraProvider != null) {
                                     cameraProvider.unbindAll();
@@ -234,7 +238,7 @@ public class CameraActivity extends AppCompatActivity {
 
                                 if (originalBitmap == null) {
                                     progressDialog.dismiss();
-                                    restoreCamera(); // 🔧 恢復相機
+                                    restoreCamera();
                                     Toast.makeText(CameraActivity.this, "讀取拍攝照片失敗", Toast.LENGTH_SHORT).show();
                                     return;
                                 }
@@ -242,12 +246,37 @@ public class CameraActivity extends AppCompatActivity {
                                 // 如果圖片太大，進行縮放
                                 Bitmap processedBitmap = scaleBitmapIfNeeded(originalBitmap);
 
-                                // 🔧 關鍵：保存原始圖片的Base64數據（用於顯示）
+                                // 檢查處理後的Bitmap是否仍然有效
+                                if (processedBitmap == null) {
+                                    progressDialog.dismiss();
+                                    restoreCamera();
+                                    Toast.makeText(CameraActivity.this, "照片處理失敗", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+
+                                Log.d(TAG, "處理後的Bitmap尺寸: " + processedBitmap.getWidth() + "x" + processedBitmap.getHeight());
+
+                                // 關鍵：保存原始圖片的Base64數據（用於顯示）
                                 String originalImageBase64 = bitmapToBase64(originalBitmap);
+
+                                // 詳細的調試日誌
+                                Log.d(TAG, "=== Base64 數據檢查 ===");
+                                Log.d(TAG, "originalImageBase64 是否為 null: " + (originalImageBase64 == null));
+                                if (originalImageBase64 != null) {
+                                    Log.d(TAG, "Base64 字符串長度: " + originalImageBase64.length());
+                                    Log.d(TAG, "Base64 前50字符: " + originalImageBase64.substring(0, Math.min(50, originalImageBase64.length())));
+                                    Log.d(TAG, "是否包含 data:image 前綴: " + originalImageBase64.startsWith("data:image"));
+                                } else {
+                                    Log.e(TAG, "Base64 轉換失敗，返回 null");
+                                    progressDialog.dismiss();
+                                    restoreCamera();
+                                    Toast.makeText(CameraActivity.this, "照片數據處理失敗", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
 
                                 Log.d(TAG, "開始分析拍攝的照片，尺寸: " + processedBitmap.getWidth() + "x" + processedBitmap.getHeight());
 
-                                // 🔧 修正：使用完整的特徵檢測，包含痣和鬍鬚檢測
+                                // 修正：使用完整的特徵檢測，包含痣和鬍鬚檢測
                                 apiService.analyzeFaceWithFeatureRemoval(processedBitmap, false, false, userId, new ApiService.AnalysisCallback() {
                                     @Override
                                     public void onSuccess(ApiService.AnalysisResult result) {
@@ -255,7 +284,14 @@ public class CameraActivity extends AppCompatActivity {
                                             progressDialog.dismiss();
                                             Log.d(TAG, "拍攝照片分析成功");
 
-                                            // 🔧 檢查是否有痣或鬍鬚
+                                            // 再次檢查 Base64 數據
+                                            Log.d(TAG, "=== 準備跳轉前數據檢查 ===");
+                                            Log.d(TAG, "originalImageBase64 是否為 null: " + (originalImageBase64 == null));
+                                            if (originalImageBase64 != null) {
+                                                Log.d(TAG, "跳轉前 Base64 長度: " + originalImageBase64.length());
+                                            }
+
+                                            // 檢查是否有痣或鬍鬚
                                             boolean hasMoles = result.hasMoles();
                                             boolean hasBeard = result.hasBeard();
 
@@ -268,6 +304,8 @@ public class CameraActivity extends AppCompatActivity {
                                                 // 有痣或鬍鬚，前往警告頁面
                                                 Intent intent = new Intent(CameraActivity.this, WarningActivity.class);
 
+                                                // 在 putExtra 前後都添加日誌
+                                                Log.d(TAG, "準備傳遞 Base64 數據到 WarningActivity");
                                                 intent.putExtra("analysis_result", parcelableResult);
                                                 intent.putExtra("source_type", "camera");
                                                 intent.putExtra("original_image_base64", originalImageBase64);
@@ -275,19 +313,26 @@ public class CameraActivity extends AppCompatActivity {
                                                 intent.putExtra("has_moles", hasMoles);
                                                 intent.putExtra("has_beard", hasBeard);
 
+                                                Log.d(TAG, "Intent extras 設置完成，開始跳轉");
                                                 startActivity(intent);
                                             } else {
                                                 Log.d(TAG, "未檢測到特徵，直接前往 _bMainActivity");
                                                 // 沒有痣也沒有鬍鬚，直接前往主結果頁面
                                                 Intent intent = new Intent(CameraActivity.this, _bMainActivity.class);
 
+                                                // 同樣添加詳細日誌
+                                                Log.d(TAG, "準備傳遞 Base64 數據到 _bMainActivity");
+                                                Log.d(TAG, "傳遞的 originalImageBase64 長度: " + (originalImageBase64 != null ? originalImageBase64.length() : "null"));
+
                                                 intent.putExtra("analysis_result", parcelableResult);
                                                 intent.putExtra("source_type", "camera");
                                                 intent.putExtra("original_image_base64", originalImageBase64);
+                                                intent.putExtra("use_static_image", false); // 直接跳轉，不使用靜態數據
                                                 intent.putExtra("from_camera", true);
                                                 intent.putExtra("has_moles", false);
                                                 intent.putExtra("has_beard", false);
 
+                                                Log.d(TAG, "Intent extras 設置完成，開始跳轉到 _bMainActivity");
                                                 startActivity(intent);
                                             }
                                             finish();
@@ -298,7 +343,7 @@ public class CameraActivity extends AppCompatActivity {
                                     public void onFailure(String error) {
                                         runOnUiThread(() -> {
                                             progressDialog.dismiss();
-                                            restoreCamera(); // 🔧 恢復相機
+                                            restoreCamera();
                                             Log.e(TAG, "拍攝照片分析失敗: " + error);
 
                                             new AlertDialog.Builder(CameraActivity.this)
@@ -315,7 +360,7 @@ public class CameraActivity extends AppCompatActivity {
 
                             } catch (Exception e) {
                                 progressDialog.dismiss();
-                                restoreCamera(); // 🔧 恢復相機
+                                restoreCamera();
                                 Log.e(TAG, "處理拍攝照片時發生錯誤", e);
                                 Toast.makeText(CameraActivity.this, "處理照片失敗: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                             }
@@ -324,7 +369,7 @@ public class CameraActivity extends AppCompatActivity {
                         @Override
                         public void onError(ImageCaptureException exception) {
                             progressDialog.dismiss();
-                            restoreCamera(); // 🔧 恢復相機
+                            restoreCamera();
                             Log.e(TAG, "拍照失敗", exception);
                             Toast.makeText(CameraActivity.this,
                                     "拍照失敗: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
@@ -333,7 +378,7 @@ public class CameraActivity extends AppCompatActivity {
                     });
         } catch (Exception e) {
             progressDialog.dismiss();
-            restoreCamera(); // 🔧 恢復相機
+            restoreCamera();
             Log.e(TAG, "拍照過程中出錯", e);
             Toast.makeText(this, "拍照過程中出錯: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             logDetailedInfo("拍照過程中出錯", e);
@@ -369,49 +414,45 @@ public class CameraActivity extends AppCompatActivity {
     // 添加Bitmap轉Base64的方法
     private String bitmapToBase64(Bitmap bitmap) {
         if (bitmap == null) {
-            Log.e(TAG, "Bitmap為null，無法轉換為Base64");
+            Log.e(TAG, "輸入的 Bitmap 為 null");
             return null;
         }
+
+        Log.d(TAG, "開始 Base64 轉換，Bitmap 尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
 
         try {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
             // 為顯示用途保持較好的質量
             int quality = 80;
+            Log.d(TAG, "開始壓縮 Bitmap，質量: " + quality);
+
             boolean compressSuccess = bitmap.compress(Bitmap.CompressFormat.JPEG, quality, byteArrayOutputStream);
 
             if (!compressSuccess) {
-                Log.e(TAG, "Bitmap壓縮失敗");
+                Log.e(TAG, "Bitmap 壓縮失敗");
                 return null;
             }
 
             byte[] byteArray = byteArrayOutputStream.toByteArray();
+            Log.d(TAG, "壓縮完成，字節數組長度: " + byteArray.length);
 
-            if (byteArray == null || byteArray.length == 0) {
+            if (byteArray.length == 0) {
                 Log.e(TAG, "壓縮後的字節數組為空");
                 return null;
             }
 
             String base64String = Base64.encodeToString(byteArray, Base64.NO_WRAP);
+            Log.d(TAG, "Base64 編碼完成，長度: " + base64String.length());
 
-            if (base64String == null || base64String.isEmpty()) {
-                Log.e(TAG, "Base64編碼失敗");
-                return null;
-            }
+            String result = "data:image/jpeg;base64," + base64String;
+            Log.d(TAG, "Base64 轉換成功，最終長度: " + result.length());
 
-            Log.d(TAG, "Base64轉換成功，長度: " + base64String.length());
-            return "data:image/jpeg;base64," + base64String;
+            return result;
 
         } catch (Exception e) {
-            Log.e(TAG, "Bitmap轉Base64失敗", e);
+            Log.e(TAG, "Base64 轉換過程中發生異常", e);
             return null;
-        } finally {
-            // 確保流被關閉
-            try {
-                // ByteArrayOutputStream不需要顯式關閉，但為了保險起見
-            } catch (Exception e) {
-                Log.w(TAG, "關閉流時發生異常", e);
-            }
         }
     }
 

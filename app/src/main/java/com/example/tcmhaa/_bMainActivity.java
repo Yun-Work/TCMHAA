@@ -55,7 +55,7 @@ public class _bMainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        // 每次 onResume 都嘗試恢復全局數據
+        // 每次onResume都嘗試恢復全局數據
         if (hasGlobalResult && globalAnalysisResult != null) {
             analysisResult = globalAnalysisResult;
             sourceType = globalSourceType;
@@ -71,7 +71,7 @@ public class _bMainActivity extends AppCompatActivity {
         blockTextResult = findViewById(R.id.blockTextResult);
         btnDone = findViewById(R.id.btnDone);
 
-        // 修改：完成按鈕跳轉到 MainhealthyActivity
+        // 修改：完成按鈕跳轉到MainhealthyActivity
         btnDone.setOnClickListener(v -> {
             Intent intent = new Intent(_bMainActivity.this, MainhealthyActivity.class);
             // 清除任務堆疊，確保返回到主頁面
@@ -84,15 +84,41 @@ public class _bMainActivity extends AppCompatActivity {
     private void handleAnalysisResult() {
         Intent intent = getIntent();
 
+        Log.d(TAG, "=== _bMainActivity 開始處理數據 ===");
+
         // 檢查是否有新的分析結果
         AnalysisResult newAnalysisResult = intent.getParcelableExtra("analysis_result");
         String newSourceType = intent.getStringExtra("source_type");
-        String newOriginalImageBase64 = intent.getStringExtra("original_image_base64");
+
+        // 修改：檢查是否應該從靜態變量獲取圖片數據
+        String newOriginalImageBase64 = null;
+        boolean useStaticImage = intent.getBooleanExtra("use_static_image", false);
+
+        Log.d(TAG, "接收到的數據檢查:");
+        Log.d(TAG, "- newAnalysisResult: " + (newAnalysisResult != null ? "存在" : "null"));
+        Log.d(TAG, "- newSourceType: " + newSourceType);
+        Log.d(TAG, "- useStaticImage: " + useStaticImage);
+
+        if (useStaticImage) {
+            // 從WarningActivity的靜態變量獲取圖片數據
+            newOriginalImageBase64 = WarningActivity.getStoredImageData();
+            Log.d(TAG, "從WarningActivity靜態變量獲取圖片數據，長度: " +
+                    (newOriginalImageBase64 != null ? newOriginalImageBase64.length() : "null"));
+        } else {
+            // 直接從Intent獲取（適用於直接跳轉的情況，如PhotoActivity）
+            newOriginalImageBase64 = intent.getStringExtra("original_image_base64");
+            Log.d(TAG, "從Intent獲取圖片數據，長度: " +
+                    (newOriginalImageBase64 != null ? newOriginalImageBase64.length() : "null"));
+        }
+
+        if (newOriginalImageBase64 != null && newOriginalImageBase64.length() > 50) {
+            Log.d(TAG, "- Base64 前50字符: " + newOriginalImageBase64.substring(0, 50));
+        }
 
         // 如果有新的分析結果，更新全局緩存
         if (newAnalysisResult != null) {
             Log.d(TAG, "收到新的分析結果，更新全局緩存");
-            Log.d(TAG, "新的 Base64 數據長度: " + (newOriginalImageBase64 != null ? newOriginalImageBase64.length() : "null"));
+            Log.d(TAG, "新的Base64數據長度: " + (newOriginalImageBase64 != null ? newOriginalImageBase64.length() : "null"));
 
             analysisResult = newAnalysisResult;
             sourceType = newSourceType;
@@ -103,6 +129,10 @@ public class _bMainActivity extends AppCompatActivity {
             globalSourceType = sourceType;
             globalOriginalImageBase64 = originalImageBase64;
             hasGlobalResult = true;
+
+            Log.d(TAG, "全局緩存更新完成");
+            Log.d(TAG, "globalOriginalImageBase64長度: " +
+                    (globalOriginalImageBase64 != null ? globalOriginalImageBase64.length() : "null"));
 
             displayAnalysisResult();
             return;
@@ -119,7 +149,7 @@ public class _bMainActivity extends AppCompatActivity {
         }
 
         // 如果既沒有新資料也沒有緩存，顯示錯誤
-        Log.e(TAG, "未收到分析結果");
+        Log.e(TAG, "未收到分析結果且無緩存數據");
         Toast.makeText(this, "未收到分析結果", Toast.LENGTH_SHORT).show();
         showErrorState();
     }
@@ -132,6 +162,8 @@ public class _bMainActivity extends AppCompatActivity {
         globalSourceType = null;
         globalOriginalImageBase64 = null;
         hasGlobalResult = false;
+        // 同時清理WarningActivity的靜態數據
+        WarningActivity.clearStoredImageData();
         Log.d("_bMainActivity", "全局緩存已清除");
     }
 
@@ -173,13 +205,28 @@ public class _bMainActivity extends AppCompatActivity {
             // 清除現有內容
             blockUserPhoto.removeAllViews();
 
-            // 詳細的 Base64 數據驗證和日誌
-            Log.d(TAG, "開始顯示原始照片");
+            // 詳細的Base64數據驗證和日誌
+            Log.d(TAG, "=== 開始顯示原始照片 ===");
+            Log.d(TAG, "originalImageBase64狀態檢查:");
+            Log.d(TAG, "- 是否為null: " + (originalImageBase64 == null));
+
             if (originalImageBase64 != null) {
-                Log.d(TAG, "Base64 數據長度: " + originalImageBase64.length());
-                Log.d(TAG, "Base64 開頭: " + originalImageBase64.substring(0, Math.min(50, originalImageBase64.length())));
+                Log.d(TAG, "- 長度: " + originalImageBase64.length());
+                Log.d(TAG, "- 是否為空字符串: " + originalImageBase64.isEmpty());
+                Log.d(TAG, "- 前50字符: " + originalImageBase64.substring(0, Math.min(50, originalImageBase64.length())));
+                Log.d(TAG, "- 是否包含data:image: " + originalImageBase64.startsWith("data:image"));
+
+                // 檢查是否包含有效的Base64數據
+                if (originalImageBase64.contains(",")) {
+                    String[] parts = originalImageBase64.split(",");
+                    Log.d(TAG, "- split後部分數量: " + parts.length);
+                    if (parts.length > 1) {
+                        Log.d(TAG, "- Base64部分長度: " + parts[1].length());
+                        Log.d(TAG, "- Base64部分前20字符: " + parts[1].substring(0, Math.min(20, parts[1].length())));
+                    }
+                }
             } else {
-                Log.e(TAG, "originalImageBase64 為 null");
+                Log.e(TAG, "originalImageBase64為null - 這是問題所在！");
             }
 
             if (originalImageBase64 != null && !originalImageBase64.isEmpty()) {
@@ -197,57 +244,58 @@ public class _bMainActivity extends AppCompatActivity {
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
                 try {
-                    // 改進的 Base64 解析邏輯
+                    // 改進的Base64解析邏輯
                     String base64Image = originalImageBase64;
 
-                    // 檢查並移除 data URL 前綴
+                    // 檢查並移除data URL前綴
                     if (base64Image.contains(",")) {
                         String[] parts = base64Image.split(",");
                         if (parts.length > 1) {
                             base64Image = parts[1];
-                            Log.d(TAG, "移除 data URL 前綴後的 Base64 長度: " + base64Image.length());
+                            Log.d(TAG, "移除data URL前綴後的Base64長度: " + base64Image.length());
                         } else {
-                            Log.e(TAG, "Base64 格式錯誤：無法找到逗號分隔符後的數據");
+                            Log.e(TAG, "Base64格式錯誤：無法找到逗號分隔符後的數據");
                             showPhotoError();
                             return;
                         }
                     }
 
-                    // 驗證 Base64 字符串是否為空
+                    // 驗證Base64字符串是否為空
                     if (base64Image.isEmpty()) {
-                        Log.e(TAG, "處理後的 Base64 字符串為空");
+                        Log.e(TAG, "處理後的Base64字符串為空");
                         showPhotoError();
                         return;
                     }
 
-                    // 解碼 Base64
+                    // 解碼Base64
                     byte[] imageBytes;
                     try {
+                        Log.d(TAG, "開始解碼Base64...");
                         imageBytes = Base64.decode(base64Image, Base64.DEFAULT);
+                        Log.d(TAG, "Base64解碼成功，字節數組長度: " + imageBytes.length);
                     } catch (IllegalArgumentException e) {
-                        Log.e(TAG, "Base64 解碼失敗：格式不正確", e);
+                        Log.e(TAG, "Base64解碼失敗：格式不正確", e);
                         showPhotoError();
                         return;
                     }
 
                     if (imageBytes == null || imageBytes.length == 0) {
-                        Log.e(TAG, "Base64 解碼後的字節數組為空");
+                        Log.e(TAG, "Base64解碼後的字節數組為空");
                         showPhotoError();
                         return;
                     }
 
-                    Log.d(TAG, "Base64 解碼成功，字節數組長度: " + imageBytes.length);
-
-                    // 解析為 Bitmap
+                    // 解析為Bitmap
+                    Log.d(TAG, "開始創建Bitmap...");
                     Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
 
                     if (bitmap != null) {
-                        Log.d(TAG, "Bitmap 創建成功，尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
+                        Log.d(TAG, "Bitmap創建成功，尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
                         imageView.setImageBitmap(bitmap);
                         blockUserPhoto.addView(imageView);
                         Log.d(TAG, "成功顯示原始照片");
                     } else {
-                        Log.e(TAG, "BitmapFactory.decodeByteArray 返回 null");
+                        Log.e(TAG, "BitmapFactory.decodeByteArray返回null");
                         showPhotoError();
                     }
 
@@ -545,5 +593,15 @@ public class _bMainActivity extends AppCompatActivity {
         navB.setOnClickListener(v -> { /* 留在本頁 */ });
         navC.setOnClickListener(v -> startActivity(new Intent(this, _cMainActivity.class)));
         navD.setOnClickListener(v -> startActivity(new Intent(this, _dMainActivity.class)));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // 當確定不再需要圖片數據時清理
+        if (isFinishing()) {
+            // 清理WarningActivity的靜態數據
+            WarningActivity.clearStoredImageData();
+        }
     }
 }
