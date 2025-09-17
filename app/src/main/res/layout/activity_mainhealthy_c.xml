@@ -47,12 +47,16 @@
 
                 <TextView
                     android:id="@+id/textView"
-                    android:layout_width="169dp"
-                    android:layout_height="61dp"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
                     android:layout_weight="1"
-                    android:text="TextView"
-                    android:textAlignment="viewStart"
-                    android:textSize="16sp" />
+                    android:layout_marginStart="8dp"
+                    android:text="臉部全息對應位置"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/black"
+                    android:gravity="start|center_vertical"
+                    android:singleLine="true"
+                    android:ellipsize="end" />
             </LinearLayout>
 
             <!-- 第二列：時間軸 + 確認 -->
